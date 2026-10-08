@@ -1,0 +1,5 @@
+{
+  "_readme": "Real keyword metrics only. Paste data exported from Google Keyword Planner, Google Search Console or a paid SEO tool; never type in guesses. Keys are lowercase keywords. Every field is optional. cpc is INR, competition 0-1, seoDifficulty 0-100, trend -1..1. Until a keyword has an entry here (or is imported on /admin/keywords) its metrics show as unavailable and its score is marked estimated.",
+  "source": null,
+  "metrics": {}
+}

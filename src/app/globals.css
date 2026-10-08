@@ -1,0 +1,366 @@
+@import 'tailwindcss';
+
+/* ------------------------------------------------------------------ *
+ * Pashmore design tokens
+ *
+ * Warm ivory ground, deep charcoal type, antique gold used sparingly.
+ * Everything here is exposed to Tailwind as a utility (bg-ivory, text-gold…).
+ * ------------------------------------------------------------------ */
+
+@theme {
+  --color-ivory: #faf7f2;
+  --color-ivory-deep: #f3eee5;
+  --color-cream: #f4eee4;
+  --color-sand: #e7dcc9;
+  --color-beige: #d9c9b2;
+  --color-taupe: #7f6e5b;
+  --color-taupe-light: #c4b6a1;
+  --color-mocha: #665642;
+  --color-brown: #4a3b2e;
+  --color-charcoal: #1f1d1a;
+  --color-charcoal-soft: #33302b;
+  --color-ink: #12110f;
+  --color-gold: #b08d4f;
+  --color-gold-soft: #c9a961;
+  --color-gold-pale: #e4d5b7;
+  --color-burgundy: #5c2233;
+  --color-line: #e4ddd1;
+  --color-line-strong: #d4c9b8;
+
+  --font-serif: var(--font-cormorant), 'Cormorant Garamond', 'Playfair Display',
+    Georgia, 'Times New Roman', serif;
+  --font-sans: var(--font-inter), 'Inter', ui-sans-serif, system-ui, -apple-system,
+    'Segoe UI', Roboto, sans-serif;
+
+  --ease-luxe: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-drape: cubic-bezier(0.65, 0, 0.35, 1);
+
+  --breakpoint-xs: 24rem;
+  --breakpoint-3xl: 100rem;
+}
+
+/* ------------------------------------------------------------------ *
+ * Base
+ * ------------------------------------------------------------------ */
+
+@layer base {
+  * {
+    border-color: var(--color-line);
+  }
+
+  html {
+    scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    background-color: var(--color-ivory);
+    color: var(--color-charcoal);
+    font-family: var(--font-sans);
+    font-feature-settings: 'kern', 'liga', 'calt';
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: var(--font-serif);
+    font-weight: 400;
+    letter-spacing: -0.01em;
+    text-wrap: balance;
+  }
+
+  /* A single, consistent focus treatment everywhere. Never removed. */
+  :focus-visible {
+    outline: 2px solid var(--color-gold);
+    outline-offset: 3px;
+    border-radius: 2px;
+  }
+
+  ::selection {
+    background-color: var(--color-gold-pale);
+    color: var(--color-ink);
+  }
+
+  /* Reserve the scrollbar gutter so opening a modal cannot shift the layout. */
+  html {
+    scrollbar-gutter: stable;
+  }
+
+  input,
+  textarea,
+  select,
+  button {
+    font: inherit;
+    color: inherit;
+  }
+
+  /* Images are always given explicit dimensions via next/image; this is a
+     belt-and-braces guard against CLS from any raw <img>. */
+  img,
+  video {
+    max-width: 100%;
+    height: auto;
+  }
+}
+
+/* ------------------------------------------------------------------ *
+ * Reusable primitives
+ * ------------------------------------------------------------------ */
+
+@utility container-luxe {
+  width: 100%;
+  margin-inline: auto;
+  padding-inline: 1.25rem;
+  max-width: 100rem;
+
+  @media (width >= 48rem) {
+    padding-inline: 2.5rem;
+  }
+
+  @media (width >= 90rem) {
+    padding-inline: 4rem;
+  }
+}
+
+@utility eyebrow {
+  font-size: 0.6875rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  font-weight: 500;
+}
+
+@utility link-underline {
+  background-image: linear-gradient(currentColor, currentColor);
+  background-size: 0% 1px;
+  background-repeat: no-repeat;
+  background-position: 0 100%;
+  transition: background-size 400ms var(--ease-luxe);
+
+  &:hover {
+    background-size: 100% 1px;
+  }
+}
+
+/* Editorial rule used under section headings */
+@utility rule-gold {
+  &::after {
+    content: '';
+    display: block;
+    width: 2.5rem;
+    height: 1px;
+    margin-top: 1.25rem;
+    background-color: var(--color-gold);
+  }
+}
+
+/* ------------------------------------------------------------------ *
+ * Animation
+ * ------------------------------------------------------------------ */
+
+@keyframes pashmore-fade-up {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 16px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes pashmore-shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+/* Radix publishes the measured panel height on --radix-accordion-content-height. */
+@keyframes accordion-down {
+  from {
+    height: 0;
+    opacity: 0;
+  }
+  to {
+    height: var(--radix-accordion-content-height);
+    opacity: 1;
+  }
+}
+
+@keyframes accordion-up {
+  from {
+    height: var(--radix-accordion-content-height);
+    opacity: 1;
+  }
+  to {
+    height: 0;
+    opacity: 0;
+  }
+}
+
+/* Overlay + drawer choreography (consumed by components/ui/dialog.tsx) */
+@keyframes overlay-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes overlay-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+@keyframes slide-in-right {
+  from {
+    transform: translate3d(100%, 0, 0);
+  }
+  to {
+    transform: none;
+  }
+}
+@keyframes slide-out-right {
+  from {
+    transform: none;
+  }
+  to {
+    transform: translate3d(100%, 0, 0);
+  }
+}
+@keyframes slide-in-left {
+  from {
+    transform: translate3d(-100%, 0, 0);
+  }
+  to {
+    transform: none;
+  }
+}
+@keyframes slide-out-left {
+  from {
+    transform: none;
+  }
+  to {
+    transform: translate3d(-100%, 0, 0);
+  }
+}
+@keyframes slide-in-bottom {
+  from {
+    transform: translate3d(0, 100%, 0);
+  }
+  to {
+    transform: none;
+  }
+}
+@keyframes slide-out-bottom {
+  from {
+    transform: none;
+  }
+  to {
+    transform: translate3d(0, 100%, 0);
+  }
+}
+@keyframes slide-in-top {
+  from {
+    transform: translate3d(0, -100%, 0);
+    opacity: 0;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+@keyframes slide-out-top {
+  from {
+    transform: none;
+    opacity: 1;
+  }
+  to {
+    transform: translate3d(0, -100%, 0);
+    opacity: 0;
+  }
+}
+@keyframes modal-in {
+  from {
+    opacity: 0;
+    transform: translate3d(-50%, -48%, 0) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(-50%, -50%, 0) scale(1);
+  }
+}
+@keyframes modal-out {
+  from {
+    opacity: 1;
+    transform: translate3d(-50%, -50%, 0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translate3d(-50%, -50%, 0) scale(0.98);
+  }
+}
+
+.skeleton {
+  position: relative;
+  overflow: hidden;
+  background-color: var(--color-ivory-deep);
+}
+
+.skeleton::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background-image: linear-gradient(
+    90deg,
+    transparent,
+    color-mix(in srgb, white 62%, transparent),
+    transparent
+  );
+  animation: pashmore-shimmer 1.8s infinite;
+}
+
+/* ------------------------------------------------------------------ *
+ * Reduced motion — parallax, shimmer and reveals all stand down.
+ * ------------------------------------------------------------------ */
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .skeleton::after {
+    display: none;
+  }
+}
+
+/* Hide scrollbars on horizontal carousels without losing keyboard scrolling. */
+.scrollbar-none {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+
+/* Used by the fullscreen viewer and drawers to lock the page. */
+body[data-scroll-locked='true'] {
+  overflow: hidden;
+  touch-action: none;
+}
