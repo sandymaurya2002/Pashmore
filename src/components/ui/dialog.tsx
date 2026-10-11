@@ -64,6 +64,7 @@ export interface DialogContentProps
   /** Renders the default close affordance in the corner. */
   showClose?: boolean
   closeLabel?: string
+  closeClassName?: string
   overlayClassName?: string
 }
 
@@ -71,7 +72,16 @@ export const DialogContent = React.forwardRef<
   React.ComponentRef<typeof DialogPrimitive.Content>,
   DialogContentProps
 >(function DialogContent(
-  { className, children, side, showClose = true, closeLabel = 'Close', overlayClassName, ...props },
+  {
+    className,
+    children,
+    side,
+    showClose = true,
+    closeLabel = 'Close',
+    closeClassName,
+    overlayClassName,
+    ...props
+  },
   ref,
 ) {
   return (
@@ -85,7 +95,10 @@ export const DialogContent = React.forwardRef<
         {children}
         {showClose && (
           <DialogPrimitive.Close
-            className="absolute right-4 top-4 z-10 flex h-9 w-9 items-center justify-center text-charcoal/85 transition-colors duration-200 hover:text-charcoal"
+            className={cn(
+              'absolute right-4 top-4 z-10 flex h-9 w-9 items-center justify-center text-charcoal/85 transition-colors duration-200 hover:text-charcoal',
+              closeClassName,
+            )}
             aria-label={closeLabel}
           >
             <X className="h-4.5 w-4.5" strokeWidth={1.25} />

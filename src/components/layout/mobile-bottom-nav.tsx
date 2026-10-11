@@ -26,7 +26,7 @@ export function MobileBottomNav() {
   return (
     <nav
       aria-label="Mobile shortcuts"
-      className="fixed inset-x-0 bottom-0 z-30 border-t border-line bg-ivory/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-md md:hidden"
+      className="fixed inset-x-0 bottom-0 z-30 border-t border-ivory/10 bg-burgundy/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-md md:hidden"
     >
       <ul className="grid grid-cols-5">
         <BottomItem href="/" label="Home" active={pathname === '/'}>
@@ -43,7 +43,7 @@ export function MobileBottomNav() {
           <button
             type="button"
             onClick={openSearch}
-            className="flex w-full flex-col items-center gap-1 py-2.5 text-charcoal/85"
+            className="flex w-full flex-col items-center gap-1 py-2.5 text-ivory/85"
           >
             <Search className="h-[1.15rem] w-[1.15rem]" strokeWidth={1.25} />
             <span className="text-[0.5625rem] uppercase tracking-[0.14em]">Search</span>
@@ -61,7 +61,7 @@ export function MobileBottomNav() {
           <button
             type="button"
             onClick={openCart}
-            className="relative flex w-full flex-col items-center gap-1 py-2.5 text-charcoal/85"
+            className="relative flex w-full flex-col items-center gap-1 py-2.5 text-ivory/85"
             aria-label={count ? `Shopping bag, ${count} items` : 'Shopping bag'}
           >
             <span className="relative">
@@ -96,14 +96,21 @@ function BottomItem({
         aria-current={active ? 'page' : undefined}
         className={cn(
           'flex flex-col items-center gap-1 py-2.5 transition-colors',
-          active ? 'text-charcoal' : 'text-charcoal/75',
+          active ? 'text-ivory [&_svg]:stroke-2' : 'text-ivory/75',
         )}
       >
         <span className="relative">
           {children}
           {badge ? <Dot value={badge} /> : null}
         </span>
-        <span className="text-[0.5625rem] uppercase tracking-[0.14em]">{label}</span>
+        <span
+          className={cn(
+            'text-[0.5625rem] uppercase tracking-[0.14em]',
+            active && 'font-semibold',
+          )}
+        >
+          {label}
+        </span>
       </Link>
     </li>
   )

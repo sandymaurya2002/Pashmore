@@ -118,8 +118,9 @@ export function ProductCarousel({
         className={cn(
           'scrollbar-none mt-12 flex snap-x snap-mandatory gap-6 overflow-x-auto',
           // Matches the container gutters so the first card lines up with the
-          // heading while the rest bleed off the right edge.
-          'px-5 md:px-10 3xl:px-16',
+          // heading while the rest bleed off the right edge. Scroll padding
+          // must match, or snapping parks each card flush against the edge.
+          'px-5 scroll-px-5 md:px-10 md:scroll-px-10 3xl:px-16 3xl:scroll-px-16',
         )}
       >
         {products.map((product) => (
