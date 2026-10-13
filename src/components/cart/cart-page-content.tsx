@@ -18,14 +18,26 @@ import { formatPrice, pluralise } from '@/lib/utils'
 import type { Product } from '@/types'
 
 export function CartPageContent({ recommendations }: { recommendations: Product[] }) {
-  const { items, totals, hydrated, updateQuantity, removeItem, applyCoupon, coupon, removeCoupon } =
-    useCart()
+  const {
+    items,
+    totals,
+    hydrated,
+    error,
+    pendingKey,
+    reload,
+    updateQuantity,
+    removeItem,
+    applyCoupon,
+    coupon,
+    removeCoupon,
+  } = useCart()
   const { toast } = useToast()
   const [code, setCode] = React.useState('')
 
   const suggestions = recommendations
     .filter((product) => !items.some((item) => item.productSlug === product.slug))
     .slice(0, 4)
+  const hasUnavailable = items.some((item) => !item.inStock)
 
   if (!hydrated) {
     return (
@@ -37,6 +49,22 @@ export function CartPageContent({ recommendations }: { recommendations: Product[
         </div>
         <div className="skeleton h-64 w-full" />
       </div>
+    )
+  }
+
+  if (error && !items.length) {
+    return (
+      <EmptyState
+        className="mt-6"
+        icon={<ShoppingBag className="h-6 w-6" strokeWidth={1} />}
+        title="We couldn’t load your bag"
+        description={error}
+        action={
+          <Button variant="outline" onClick={() => void reload()}>
+            Try again
+          </Button>
+        }
+      />
     )
   }
 
@@ -55,9 +83,10 @@ export function CartPageContent({ recommendations }: { recommendations: Product[
     )
   }
 
-  function onApplyCoupon(event: React.FormEvent) {
+  async function onApplyCoupon(event: React.FormEvent) {
     event.preventDefault()
-    const result = applyCoupon(code)
+    if (!code.trim()) return
+    const result = await applyCoupon(code)
     toast({
       title: result.ok ? 'Discount applied' : 'Could not apply code',
       description: result.message,
@@ -75,8 +104,10 @@ export function CartPageContent({ recommendations }: { recommendations: Product[
           </p>
 
           <ul className="divide-y divide-line">
-            {items.map((item) => (
-              <li key={item.key} className="flex gap-5 py-6">
+            {items.map((item) => {
+              const pending = pendingKey === item.key || pendingKey === 'cart'
+              return (
+              <li key={item.key} className="flex gap-5 py-6" aria-busy={pending}>
                 <Link
                   href={`/products/${item.productSlug}`}
                   className="relative aspect-4/5 w-24 shrink-0 overflow-hidden bg-ivory-deep sm:w-32"
@@ -106,12 +137,16 @@ export function CartPageContent({ recommendations }: { recommendations: Product[
                           {[item.color, item.size].filter(Boolean).join(' · ')}
                         </p>
                       )}
+                      {!item.inStock && (
+                        <p className="mt-1.5 text-xs text-burgundy">No longer available</p>
+                      )}
                     </div>
                     <button
                       type="button"
-                      onClick={() => removeItem(item.key)}
+                      onClick={() => void removeItem(item.key)}
+                      disabled={pending}
                       aria-label={`Remove ${item.name}`}
-                      className="p-1 text-taupe transition-colors hover:text-burgundy"
+                      className="p-1 text-taupe transition-colors hover:text-burgundy disabled:opacity-40"
                     >
                       <Trash2 className="h-4 w-4" strokeWidth={1.25} />
                     </button>
@@ -121,8 +156,9 @@ export function CartPageContent({ recommendations }: { recommendations: Product[
                     <div className="inline-flex items-center border border-line-strong">
                       <button
                         type="button"
-                        onClick={() => updateQuantity(item.key, item.quantity - 1)}
-                        className="flex h-9 w-9 items-center justify-center text-charcoal transition-colors hover:text-gold"
+                        onClick={() => void updateQuantity(item.key, item.quantity - 1)}
+                        disabled={pending}
+                        className="flex h-9 w-9 items-center justify-center text-charcoal transition-colors hover:text-gold disabled:opacity-30"
                         aria-label={`Decrease quantity of ${item.name}`}
                       >
                         <Minus className="h-3 w-3" strokeWidth={1.5} />
@@ -132,8 +168,8 @@ export function CartPageContent({ recommendations }: { recommendations: Product[
                       </span>
                       <button
                         type="button"
-                        onClick={() => updateQuantity(item.key, item.quantity + 1)}
-                        disabled={item.quantity >= item.maxQuantity}
+                        onClick={() => void updateQuantity(item.key, item.quantity + 1)}
+                        disabled={pending || !item.inStock || item.quantity >= item.maxQuantity}
                         className="flex h-9 w-9 items-center justify-center text-charcoal transition-colors hover:text-gold disabled:opacity-30"
                         aria-label={`Increase quantity of ${item.name}`}
                       >
@@ -147,10 +183,20 @@ export function CartPageContent({ recommendations }: { recommendations: Product[
                   </div>
                 </div>
               </li>
-            ))}
+              )
+            })}
           </ul>
 
-          <form onSubmit={onApplyCoupon} className="mt-8 border-t border-line pt-8">
+          {hasUnavailable && (
+            <p className="mt-2 border-t border-line pt-4 text-xs text-burgundy">
+              Some pieces in your bag are no longer available. Remove them before checkout.
+            </p>
+          )}
+
+          <form
+            onSubmit={(event) => void onApplyCoupon(event)}
+            className="mt-8 border-t border-line pt-8"
+          >
             <label htmlFor="coupon" className="eyebrow mb-3 block text-taupe">
               Discount code
             </label>
@@ -162,8 +208,8 @@ export function CartPageContent({ recommendations }: { recommendations: Product[
                 placeholder="Enter code"
                 className="max-w-56"
               />
-              <Button type="submit" variant="outline">
-                Apply
+              <Button type="submit" variant="outline" disabled={pendingKey === 'coupon'}>
+                {pendingKey === 'coupon' ? 'Applying…' : 'Apply'}
               </Button>
             </div>
             {coupon && (
@@ -171,7 +217,8 @@ export function CartPageContent({ recommendations }: { recommendations: Product[
                 <span className="text-charcoal">{coupon.code}</span> applied — {coupon.label}.{' '}
                 <button
                   type="button"
-                  onClick={removeCoupon}
+                  onClick={() => void removeCoupon()}
+                  disabled={pendingKey === 'coupon'}
                   className="underline underline-offset-2 hover:text-charcoal"
                 >
                   Remove

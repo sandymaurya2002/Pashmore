@@ -11,6 +11,8 @@ interface EmptyStateProps {
   secondaryLabel?: string
   className?: string
   icon?: React.ReactNode
+  /** Rendered in place of the link buttons, e.g. a retry button. */
+  action?: React.ReactNode
 }
 
 export function EmptyState({
@@ -22,6 +24,7 @@ export function EmptyState({
   secondaryLabel,
   className,
   icon,
+  action,
 }: EmptyStateProps) {
   return (
     <div className={cn('flex flex-col items-center py-20 text-center', className)}>
@@ -40,7 +43,9 @@ export function EmptyState({
         {description}
       </p>
 
-      {(actionHref || secondaryHref) && (
+      {action && <div className="mt-9">{action}</div>}
+
+      {!action && (actionHref || secondaryHref) && (
         <div className="mt-9 flex flex-col gap-3 sm:flex-row">
           {actionHref && actionLabel && (
             <Button asChild>

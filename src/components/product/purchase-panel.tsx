@@ -43,8 +43,8 @@ export function PurchasePanel({ product }: { product: Product }) {
     return () => observer.disconnect()
   }, [])
 
-  function onBuyNow() {
-    if (selection.addToCart()) router.push('/checkout')
+  async function onBuyNow() {
+    if (await selection.addToCart()) router.push('/checkout')
   }
 
   const inventory = selection.variant?.inventory ?? 0
@@ -123,9 +123,9 @@ export function PurchasePanel({ product }: { product: Product }) {
               size="lg"
               className="h-13 flex-1"
               onClick={() => selection.addToCart()}
-              disabled={!selection.available}
+              disabled={!selection.available || selection.adding}
             >
-              {selection.available ? 'Add to Bag' : 'Out of Stock'}
+              {!selection.available ? 'Out of Stock' : selection.adding ? 'Adding…' : 'Add to Bag'}
             </Button>
             <WishlistButton
               slug={product.slug}
@@ -138,13 +138,13 @@ export function PurchasePanel({ product }: { product: Product }) {
             size="lg"
             className="h-13"
             onClick={onBuyNow}
-            disabled={!selection.available}
+            disabled={!selection.available || selection.adding}
           >
             Buy Now
           </Button>
         </div>
 
-        {selection.variant && (
+        {selection.variant?.sku && (
           <p className="text-xs text-taupe">
             SKU: <span className="tabular-nums">{selection.variant.sku}</span>
           </p>
@@ -193,7 +193,7 @@ export function PurchasePanel({ product }: { product: Product }) {
           </div>
           <Button
             onClick={() => selection.addToCart()}
-            disabled={!selection.available}
+            disabled={!selection.available || selection.adding}
             tabIndex={ctaVisible ? -1 : 0}
             className="h-11 px-6"
           >

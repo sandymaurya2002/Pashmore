@@ -1,7 +1,7 @@
 'use client'
 
 import * as React from 'react'
-import { useCart, cartItemKey } from '@/context/cart-context'
+import { useCart } from '@/context/cart-context'
 import { useToast } from '@/context/toast-context'
 import { clamp } from '@/lib/utils'
 import type { Product, ProductVariant } from '@/types'
@@ -18,6 +18,7 @@ export function useProductSelection(product: Product) {
   const [colorSlug, setColorSlug] = React.useState(() => product.colors[0]?.slug)
   const [sizeSlug, setSizeSlug] = React.useState(() => product.sizes[0]?.slug)
   const [quantity, setQuantity] = React.useState(1)
+  const [adding, setAdding] = React.useState(false)
 
   // A different product means a fresh selection.
   React.useEffect(() => {
@@ -26,13 +27,21 @@ export function useProductSelection(product: Product) {
     setQuantity(1)
   }, [product.slug, product.colors, product.sizes])
 
-  const variant: ProductVariant | undefined = React.useMemo(
-    () =>
-      product.variants.find(
-        (entry) => entry.colorSlug === colorSlug && entry.sizeSlug === sizeSlug,
-      ),
-    [product.variants, colorSlug, sizeSlug],
-  )
+  const variant: ProductVariant | undefined = React.useMemo(() => {
+    // A product sold without variants is bought by its product id, as in the Worker.
+    if (!product.variants.length) {
+      return {
+        id: product.id,
+        sku: '',
+        price: product.price,
+        compareAtPrice: product.compareAtPrice,
+        inventory: product.inventory,
+      }
+    }
+    return product.variants.find(
+      (entry) => entry.colorSlug === colorSlug && entry.sizeSlug === sizeSlug,
+    )
+  }, [product, colorSlug, sizeSlug])
 
   const available = (variant?.inventory ?? 0) > 0
   const maxQuantity = Math.max(1, Math.min(variant?.inventory ?? 1, 10))
@@ -64,7 +73,7 @@ export function useProductSelection(product: Product) {
   const colorName = product.colors.find((c) => c.slug === colorSlug)?.name
   const sizeName = product.sizes.find((s) => s.slug === sizeSlug)?.name
 
-  const addToCart = React.useCallback(() => {
+  const addToCart = React.useCallback(async () => {
     if (!variant || !available) {
       toast({
         title: 'Currently unavailable',
@@ -73,39 +82,23 @@ export function useProductSelection(product: Product) {
       })
       return false
     }
+    if (adding) return false
 
-    addItem({
-      key: cartItemKey(product.slug, colorSlug, sizeSlug),
-      productSlug: product.slug,
-      variantId: variant.id,
-      name: product.name,
-      image: product.images[0],
-      color: colorName,
-      size: sizeName,
-      unitPrice: variant.price,
-      compareAtPrice: variant.compareAtPrice,
-      quantity,
-      maxQuantity,
-    })
-
-    toast({
-      title: 'Added to your bag',
-      description: `${product.name}${colorName ? ` — ${colorName}` : ''}`,
-    })
-    return true
-  }, [
-    addItem,
-    available,
-    colorName,
-    colorSlug,
-    maxQuantity,
-    product,
-    quantity,
-    sizeName,
-    sizeSlug,
-    toast,
-    variant,
-  ])
+    // The Worker checks stock and price again; failures surface as a toast.
+    setAdding(true)
+    try {
+      const added = await addItem({ variantId: variant.id, productSlug: product.slug, quantity })
+      if (added) {
+        toast({
+          title: 'Added to your bag',
+          description: `${product.name}${colorName ? ` — ${colorName}` : ''}`,
+        })
+      }
+      return added
+    } finally {
+      setAdding(false)
+    }
+  }, [adding, addItem, available, colorName, product.name, product.slug, quantity, toast, variant])
 
   return {
     colorSlug,
@@ -122,5 +115,6 @@ export function useProductSelection(product: Product) {
     colorName,
     sizeName,
     addToCart,
+    adding,
   }
 }

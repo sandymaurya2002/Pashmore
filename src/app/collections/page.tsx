@@ -7,7 +7,7 @@ import { SectionHeading } from '@/components/ui/section-heading'
 import { Reveal } from '@/components/motion/reveal'
 import { JsonLd } from '@/components/seo/json-ld'
 
-import { getAllCollections, getProductsByCollection } from '@/services/catalog'
+import { getAllCollections } from '@/services/catalog'
 import { buildMetadata, pageTitle } from '@/lib/seo'
 import { breadcrumbSchema, graph, webPageSchema } from '@/lib/jsonld'
 import type { Breadcrumb, Collection, CollectionGroup } from '@/types'
@@ -22,7 +22,7 @@ export const metadata: Metadata = buildMetadata({
   path: '/collections',
 })
 
-export const revalidate = 3600
+export const dynamic = 'force-dynamic'
 
 const GROUP_ORDER: Array<{ group: CollectionGroup; label: string; description: string }> = [
   {
@@ -52,14 +52,6 @@ const crumbs: Breadcrumb[] = [
 export default async function CollectionsIndexPage() {
   const collections = await getAllCollections()
   const visible = collections.filter((collection) => !collection.hidden)
-
-  const counts = new Map<string, number>()
-  await Promise.all(
-    visible.map(async (collection) => {
-      const products = await getProductsByCollection(collection.slug)
-      counts.set(collection.slug, products.length)
-    }),
-  )
 
   return (
     <>
@@ -93,10 +85,7 @@ export default async function CollectionsIndexPage() {
                 <ul className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
                   {entries.map((collection, index) => (
                     <Reveal as="li" key={collection.slug} delay={Math.min(index, 5) * 0.05}>
-                      <CollectionCard
-                        collection={collection}
-                        count={counts.get(collection.slug) ?? 0}
-                      />
+                      <CollectionCard collection={collection} />
                     </Reveal>
                   ))}
                 </ul>
@@ -109,13 +98,7 @@ export default async function CollectionsIndexPage() {
   )
 }
 
-function CollectionCard({
-  collection,
-  count,
-}: {
-  collection: Collection
-  count: number
-}) {
+function CollectionCard({ collection }: { collection: Collection }) {
   return (
     <Link href={`/collections/${collection.slug}`} className="group block">
       <article>
@@ -137,7 +120,11 @@ function CollectionCard({
           <h3 className="font-serif text-xl text-charcoal transition-colors duration-300 group-hover:text-gold">
             {collection.name}
           </h3>
-          <span className="shrink-0 text-xs tabular-nums text-taupe">{count}</span>
+          {collection.productCount !== undefined && (
+            <span className="shrink-0 text-xs tabular-nums text-taupe">
+              {collection.productCount}
+            </span>
+          )}
         </div>
         <p className="mt-2 line-clamp-2 text-sm leading-relaxed text-mocha">
           {collection.description}

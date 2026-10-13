@@ -18,9 +18,8 @@ import {
   AccordionTrigger,
 } from '@/components/ui/accordion'
 
-import { getAllProducts, getProductBySlug, getRelatedProducts } from '@/services/catalog'
-import { collectionBySlug } from '@/data/collections'
-import { categoryBySlug } from '@/data/taxonomy'
+import { getAllCollections, getProductBySlug, getRelatedProducts } from '@/services/catalog'
+import { failSoft } from '@/server/fail-soft'
 import { buildMetadata, metaDescription, pageTitle } from '@/lib/seo'
 import { productKeywords } from '@/lib/keywords'
 import { breadcrumbSchema, faqSchema, graph, productSchema } from '@/lib/jsonld'
@@ -30,14 +29,13 @@ interface PageProps {
   params: Promise<{ slug: string }>
 }
 
-export async function generateStaticParams() {
-  const products = await getAllProducts()
-  return products.map((product) => ({ slug: product.slug }))
-}
+// Stock and price must be current, so the page renders per request; the
+// product fetch itself is served from the Data Cache (see services/catalog).
+export const dynamic = 'force-dynamic'
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params
-  const product = await getProductBySlug(slug)
+  const product = await failSoft(getProductBySlug(slug), null, 'product:metadata')
   if (!product) return {}
 
   return buildMetadata({
@@ -54,20 +52,26 @@ export default async function ProductPage({ params }: PageProps) {
   const product = await getProductBySlug(slug)
   if (!product) notFound()
 
-  const related = await getRelatedProducts(product, 4)
-  const category = categoryBySlug.get(product.categorySlug)
-  const categoryHref = `/collections/${product.categorySlug}`
+  const [related, allCollections] = await Promise.all([
+    failSoft(getRelatedProducts(product, 4), [], 'product:related'),
+    failSoft(getAllCollections(), [], 'product:collections'),
+  ])
+  const collectionNamed = (entry: string) => allCollections.find((c) => c.slug === entry)
+  const categoryName = product.categoryName ?? collectionNamed(product.categorySlug)?.name
+  const categoryHref = product.categorySlug
+    ? `/collections/${product.categorySlug}`
+    : '/collections'
 
   const crumbs: Breadcrumb[] = [
     { name: 'Home', href: '/' },
     { name: 'Collections', href: '/collections' },
-    { name: category?.name ?? 'Shop', href: categoryHref },
+    { name: categoryName ?? 'Shop', href: categoryHref },
     { name: product.name, href: `/products/${product.slug}` },
   ]
 
   const collections = product.collectionSlugs
-    .map((entry) => collectionBySlug.get(entry))
-    .filter((entry): entry is NonNullable<typeof entry> => Boolean(entry))
+    .map(collectionNamed)
+    .filter((entry): entry is NonNullable<typeof entry> => Boolean(entry) && !entry?.hidden)
     .slice(0, 6)
 
   return (
@@ -96,7 +100,7 @@ export default async function ProductPage({ params }: PageProps) {
               href={categoryHref}
               className="eyebrow text-taupe transition-colors hover:text-charcoal"
             >
-              {category?.name ?? product.material}
+              {categoryName ?? product.material}
             </Link>
             {product.badges.map((badge) => (
               <ProductBadgeChip key={badge} badge={badge} />
@@ -138,21 +142,23 @@ export default async function ProductPage({ params }: PageProps) {
               </AccordionContent>
             </AccordionItem>
 
-            <AccordionItem value="details">
-              <AccordionTrigger>Details & Specifications</AccordionTrigger>
-              <AccordionContent>
-                <dl className="grid grid-cols-1 gap-x-8 gap-y-3 sm:grid-cols-2">
-                  {product.specifications.map((spec) => (
-                    <div key={spec.label} className="flex flex-col">
-                      <dt className="text-[0.6875rem] uppercase tracking-[0.12em] text-taupe">
-                        {spec.label}
-                      </dt>
-                      <dd className="mt-1 text-charcoal">{spec.value}</dd>
-                    </div>
-                  ))}
-                </dl>
-              </AccordionContent>
-            </AccordionItem>
+            {product.specifications.length > 0 && (
+              <AccordionItem value="details">
+                <AccordionTrigger>Details & Specifications</AccordionTrigger>
+                <AccordionContent>
+                  <dl className="grid grid-cols-1 gap-x-8 gap-y-3 sm:grid-cols-2">
+                    {product.specifications.map((spec) => (
+                      <div key={spec.label} className="flex flex-col">
+                        <dt className="text-[0.6875rem] uppercase tracking-[0.12em] text-taupe">
+                          {spec.label}
+                        </dt>
+                        <dd className="mt-1 text-charcoal">{spec.value}</dd>
+                      </div>
+                    ))}
+                  </dl>
+                </AccordionContent>
+              </AccordionItem>
+            )}
 
             <AccordionItem value="craft">
               <AccordionTrigger>Material & Craft</AccordionTrigger>
@@ -168,35 +174,39 @@ export default async function ProductPage({ params }: PageProps) {
               </AccordionContent>
             </AccordionItem>
 
-            <AccordionItem value="size">
-              <AccordionTrigger>Size & Fit</AccordionTrigger>
-              <AccordionContent>
-                <ul className="flex flex-col gap-2">
-                  {product.sizes.map((size) => (
-                    <li key={size.slug}>
-                      <span className="text-charcoal">{size.name}</span>
-                      {size.measurement && (
-                        <span className="text-mocha"> — {size.measurement}</span>
-                      )}
-                    </li>
-                  ))}
-                </ul>
-                <p className="mt-4">
-                  Handwoven dimensions carry a tolerance of ±2 cm. Measurements are taken
-                  flat, excluding fringe.
-                </p>
-              </AccordionContent>
-            </AccordionItem>
+            {product.sizes.length > 0 && (
+              <AccordionItem value="size">
+                <AccordionTrigger>Size & Fit</AccordionTrigger>
+                <AccordionContent>
+                  <ul className="flex flex-col gap-2">
+                    {product.sizes.map((size) => (
+                      <li key={size.slug}>
+                        <span className="text-charcoal">{size.name}</span>
+                        {size.measurement && (
+                          <span className="text-mocha"> — {size.measurement}</span>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                  <p className="mt-4">
+                    Handwoven dimensions carry a tolerance of ±2 cm. Measurements are taken
+                    flat, excluding fringe.
+                  </p>
+                </AccordionContent>
+              </AccordionItem>
+            )}
 
             <AccordionItem value="care">
               <AccordionTrigger>Care Instructions</AccordionTrigger>
               <AccordionContent>
-                <ul className="flex list-disc flex-col gap-2 pl-4">
-                  {product.careInstructions.map((instruction) => (
-                    <li key={instruction}>{instruction}</li>
-                  ))}
-                </ul>
-                <p className="mt-4">
+                {product.careInstructions.length > 0 && (
+                  <ul className="mb-4 flex list-disc flex-col gap-2 pl-4">
+                    {product.careInstructions.map((instruction) => (
+                      <li key={instruction}>{instruction}</li>
+                    ))}
+                  </ul>
+                )}
+                <p>
                   A fuller guide is in our journal:{' '}
                   <Link
                     href="/blog/how-to-care-for-pashmina"
@@ -288,7 +298,7 @@ export default async function ProductPage({ params }: PageProps) {
             id="you-may-also-like"
             title="You May Also Like"
             href={categoryHref}
-            linkLabel={`All ${category?.name ?? 'pieces'}`}
+            linkLabel={`All ${categoryName ?? 'pieces'}`}
           />
           <ProductGrid products={related} className="mt-12" />
         </section>

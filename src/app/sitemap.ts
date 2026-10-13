@@ -8,7 +8,13 @@ import { siteUrl } from '@/lib/site'
  * Public pages only. Cart, checkout, account, wishlist, login and internal
  * search are deliberately absent — they are transactional surfaces with nothing
  * to index, and robots.txt disallows them too.
+ *
+ * Generated per request from the live catalogue. If the Worker is unreachable
+ * this errors (5xx) so crawlers retry, rather than publishing a sitemap with
+ * every product missing.
  */
+export const dynamic = 'force-dynamic'
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const [products, collections] = await Promise.all([getAllProducts(), getAllCollections()])
   const posts = getAllPosts()
@@ -49,7 +55,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       })),
     ...products.map((product) => ({
       url: `${siteUrl}/products/${product.slug}`,
-      lastModified: new Date(product.publishedAt),
+      lastModified: product.publishedAt ? new Date(product.publishedAt) : now,
       changeFrequency: 'weekly' as const,
       priority: 0.8,
     })),

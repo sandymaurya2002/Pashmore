@@ -1,28 +1,46 @@
 import 'server-only'
 
-import { products, productBySlug } from '@/data/products'
-import { collections, collectionBySlug } from '@/data/collections'
-import { categoryBySlug, colorBySlug, materialBySlug, patternBySlug, sizeBySlug } from '@/data/taxonomy'
+import { ApiError } from '@/lib/api/envelope'
+import {
+  EMPTY_FACETS,
+  normalizeCollection,
+  normalizeCollections,
+  normalizeFacets,
+  normalizeProduct,
+  normalizeProducts,
+  normalizeSearch,
+} from '@/lib/normalize/catalog'
+import { asNumber } from '@/lib/normalize/primitives'
+import { workerFetch, type QueryValue } from '@/server/worker'
 import type {
   Availability,
   Collection,
-  FilterFacets,
-  FilterOption,
   Product,
   ProductFilters,
   ProductQueryResult,
+  SearchResult,
   SortKey,
 } from '@/types'
 
 /**
  * The catalogue service is the only module that knows where product data comes
- * from. Swapping the bundled demo data for a headless backend means changing
- * the bodies of these functions and nothing else — every caller is already
- * async and already talks in domain types.
+ * from: the Cloudflare Worker API backed by D1 (records) and R2 (images).
  *
- * When NEXT_PUBLIC_API_BASE_URL is configured, replace the local lookups here
- * with `apiFetch` calls from `@/services/api`.
+ * Reads are cached in the Next Data Cache for CATALOG_REVALIDATE seconds and
+ * tagged, so `/api/revalidate` can purge them the moment the admin publishes.
+ * Failures surface as `ApiError` — there is no demo fallback.
  */
+
+export const CATALOG_REVALIDATE = 60
+export const CATALOG_TAG = 'catalog'
+
+/** The Worker caps list pages at 100 and batch lookups at 24 slugs. */
+const MAX_PAGE_SIZE = 100
+const MAX_BATCH = 24
+
+function cached(...tags: string[]) {
+  return { revalidate: CATALOG_REVALIDATE, tags: [CATALOG_TAG, ...tags] }
+}
 
 export function getAvailability(product: Product): Availability {
   if (product.inventory <= 0) return 'out-of-stock'
@@ -30,219 +48,173 @@ export function getAvailability(product: Product): Availability {
   return 'in-stock'
 }
 
-export async function getAllProducts(): Promise<Product[]> {
-  return products
-}
+/* ------------------------------------------------------------------ *
+ * Products
+ * ------------------------------------------------------------------ */
 
 export async function getProductBySlug(slug: string): Promise<Product | null> {
-  return productBySlug.get(slug) ?? null
+  try {
+    const { data } = await workerFetch<unknown>(`/products/${encodeURIComponent(slug)}`, {
+      cache: cached('products', `product:${slug}`),
+    })
+    return normalizeProduct(data)
+  } catch (error) {
+    if (error instanceof ApiError && (error.isNotFound || error.code === 'VALIDATION_ERROR')) {
+      return null
+    }
+    throw error
+  }
 }
 
-export async function getAllCollections(): Promise<Collection[]> {
-  return collections
+/** Every published product, page by page. Used by the sitemap and keyword tools. */
+export async function getAllProducts(): Promise<Product[]> {
+  const all: Product[] = []
+  for (let page = 1; page <= 50; page += 1) {
+    const { data, meta } = await workerFetch<unknown>('/products', {
+      query: { page, limit: MAX_PAGE_SIZE, sort: 'newest', facets: false, availability: 'out-of-stock' },
+      cache: cached('products'),
+    })
+    all.push(...normalizeProducts(data))
+    if (page >= asNumber(meta.totalPages, 1)) break
+  }
+  return all
 }
 
-export async function getCollectionBySlug(slug: string): Promise<Collection | null> {
-  return collectionBySlug.get(slug) ?? null
-}
+export async function getProductsBySlugs(slugs: string[]): Promise<Product[]> {
+  const unique = Array.from(new Set(slugs.filter(Boolean)))
+  if (!unique.length) return []
 
-/** Products belonging to a collection, either by direct membership or category. */
-export function selectCollectionProducts(collection: Collection): Product[] {
-  const categorySlugs = new Set(collection.includeCategorySlugs ?? [])
-  return products.filter(
-    (product) =>
-      product.collectionSlugs.includes(collection.slug) ||
-      product.categorySlug === collection.slug ||
-      categorySlugs.has(product.categorySlug),
+  const chunks: string[][] = []
+  for (let index = 0; index < unique.length; index += MAX_BATCH) {
+    chunks.push(unique.slice(index, index + MAX_BATCH))
+  }
+  const pages = await Promise.all(
+    chunks.map((chunk) =>
+      workerFetch<unknown>('/products/batch', {
+        query: { slugs: chunk },
+        cache: cached('products'),
+      }),
+    ),
   )
+  const bySlug = new Map(
+    pages.flatMap(({ data }) => normalizeProducts(data)).map((product) => [product.slug, product]),
+  )
+  // Preserve the caller's order; unknown or unpublished slugs simply drop out.
+  return unique.map((slug) => bySlug.get(slug)).filter((p): p is Product => Boolean(p))
 }
 
-export async function getProductsByCollection(slug: string): Promise<Product[]> {
-  const collection = collectionBySlug.get(slug)
-  if (!collection) return []
-  return selectCollectionProducts(collection)
+async function listRail(sort: SortKey, limit: number): Promise<Product[]> {
+  const { data } = await workerFetch<unknown>('/products', {
+    query: { sort, limit: Math.min(limit, MAX_PAGE_SIZE), facets: false },
+    cache: cached('products'),
+  })
+  return normalizeProducts(data).slice(0, limit)
+}
+
+export function getNewArrivals(limit = 8): Promise<Product[]> {
+  return listRail('newest', limit)
+}
+
+export function getBestSellers(limit = 8): Promise<Product[]> {
+  return listRail('best-selling', limit)
+}
+
+export async function getRelatedProducts(product: Product, limit = 4): Promise<Product[]> {
+  const { data } = await workerFetch<unknown>(
+    `/products/${encodeURIComponent(product.slug)}/related`,
+    { query: { limit }, cache: cached('products', `product:${product.slug}`) },
+  )
+  return normalizeProducts(data)
+    .filter((entry) => entry.slug !== product.slug)
+    .slice(0, limit)
 }
 
 /* ------------------------------------------------------------------ *
- * Filtering, sorting, faceting
+ * Collections
  * ------------------------------------------------------------------ */
 
-function matchesFilters(product: Product, filters: ProductFilters): boolean {
-  if (filters.category.length && !filters.category.includes(product.categorySlug)) return false
-  if (filters.material.length && !filters.material.includes(product.materialSlug)) return false
-  if (filters.pattern.length && !filters.pattern.includes(product.patternSlug)) return false
-
-  if (filters.collection.length) {
-    const inCollection = filters.collection.some((slug) =>
-      product.collectionSlugs.includes(slug),
-    )
-    if (!inCollection) return false
-  }
-
-  if (filters.color.length) {
-    const hasColor = product.colors.some((color) => filters.color.includes(color.slug))
-    if (!hasColor) return false
-  }
-
-  if (filters.size.length) {
-    const hasSize = product.sizes.some((size) => filters.size.includes(size.slug))
-    if (!hasSize) return false
-  }
-
-  // "in-stock" hides sold-out lines. Selecting "out-of-stock" opts them back in.
-  const includeOutOfStock = filters.availability.includes('out-of-stock')
-  const onlyInStock = filters.availability.includes('in-stock')
-  const available = getAvailability(product) !== 'out-of-stock'
-  if (onlyInStock && !available) return false
-  if (!includeOutOfStock && !onlyInStock && !available) return false
-
-  if (filters.minPrice !== undefined && product.price < filters.minPrice) return false
-  if (filters.maxPrice !== undefined && product.price > filters.maxPrice) return false
-
-  return true
+export async function getAllCollections(): Promise<Collection[]> {
+  const { data } = await workerFetch<unknown>('/collections', { cache: cached('collections') })
+  return normalizeCollections(data)
 }
 
-function sortProducts(list: Product[], sort: SortKey): Product[] {
-  const sorted = [...list]
-  switch (sort) {
-    case 'newest':
-      return sorted.sort(
-        (a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime(),
-      )
-    case 'price-low':
-      return sorted.sort((a, b) => a.price - b.price)
-    case 'price-high':
-      return sorted.sort((a, b) => b.price - a.price)
-    case 'best-selling':
-      return sorted.sort((a, b) => b.popularity - a.popularity)
-    case 'featured':
-    default:
-      // Featured weights badges above raw popularity so curated pieces surface.
-      return sorted.sort((a, b) => featuredScore(b) - featuredScore(a))
-  }
-}
-
-function featuredScore(product: Product): number {
-  let score = product.popularity
-  if (product.badges.includes('exclusive')) score += 24
-  if (product.badges.includes('limited')) score += 16
-  if (product.badges.includes('bestseller')) score += 12
-  if (product.badges.includes('new')) score += 8
-  return score
-}
-
-function buildOptions(
-  list: Product[],
-  extract: (product: Product) => string[],
-  label: (value: string) => string | undefined,
-  hex?: (value: string) => string | undefined,
-): FilterOption[] {
-  const counts = new Map<string, number>()
-  for (const product of list) {
-    for (const value of new Set(extract(product))) {
-      counts.set(value, (counts.get(value) ?? 0) + 1)
+export async function getCollectionBySlug(slug: string): Promise<Collection | null> {
+  try {
+    const { data } = await workerFetch<unknown>(`/collections/${encodeURIComponent(slug)}`, {
+      cache: cached('collections', `collection:${slug}`),
+    })
+    return normalizeCollection(data)
+  } catch (error) {
+    if (error instanceof ApiError && (error.isNotFound || error.code === 'VALIDATION_ERROR')) {
+      return null
     }
+    throw error
   }
-  return Array.from(counts.entries())
-    .map(([value, count]) => ({
-      value,
-      count,
-      label: label(value) ?? value,
-      hex: hex?.(value),
-    }))
-    .sort((a, b) => b.count - a.count || a.label.localeCompare(b.label))
 }
 
-export function buildFacets(list: Product[]): FilterFacets {
-  const prices = list.map((p) => p.price)
-  return {
-    category: buildOptions(
-      list,
-      (p) => [p.categorySlug],
-      (value) => categoryBySlug.get(value)?.name,
-    ),
-    color: buildOptions(
-      list,
-      (p) => p.colors.map((c) => c.slug),
-      (value) => colorBySlug.get(value)?.name,
-      (value) => colorBySlug.get(value)?.hex,
-    ),
-    material: buildOptions(
-      list,
-      (p) => [p.materialSlug],
-      (value) => materialBySlug.get(value)?.name,
-    ),
-    size: buildOptions(
-      list,
-      (p) => p.sizes.map((s) => s.slug),
-      (value) => sizeBySlug.get(value)?.name,
-    ),
-    pattern: buildOptions(
-      list,
-      (p) => [p.patternSlug],
-      (value) => patternBySlug.get(value)?.name,
-    ),
-    collection: buildOptions(
-      list,
-      (p) => p.collectionSlugs,
-      (value) => collectionBySlug.get(value)?.name,
-    ),
-    availability: [
-      {
-        label: 'In Stock',
-        value: 'in-stock',
-        count: list.filter((p) => getAvailability(p) !== 'out-of-stock').length,
-      },
-      {
-        label: 'Include Out of Stock',
-        value: 'out-of-stock',
-        count: list.filter((p) => getAvailability(p) === 'out-of-stock').length,
-      },
-    ],
-    priceRange: {
-      min: prices.length ? Math.min(...prices) : 0,
-      max: prices.length ? Math.max(...prices) : 0,
-    },
-  }
-}
+/* ------------------------------------------------------------------ *
+ * Filtering, sorting, faceting — performed by the Worker
+ * ------------------------------------------------------------------ */
 
 export interface QueryOptions {
-  /** Restrict the base set to a collection before filtering. */
+  /** Restrict the base set to a collection (including aggregate category rules). */
   collectionSlug?: string
   filters?: ProductFilters
   sort?: SortKey
   search?: string
+  page?: number
+  limit?: number
 }
 
-const EMPTY_FILTERS: ProductFilters = {
-  category: [],
-  color: [],
-  material: [],
-  size: [],
-  pattern: [],
-  collection: [],
-  availability: [],
+export const PAGE_SIZE = 48
+
+function filterQuery(filters?: ProductFilters): Record<string, QueryValue> {
+  if (!filters) return {}
+  return {
+    category: filters.category,
+    color: filters.color,
+    material: filters.material,
+    size: filters.size,
+    pattern: filters.pattern,
+    collection: filters.collection,
+    availability: filters.availability,
+    minPrice: filters.minPrice,
+    maxPrice: filters.maxPrice,
+  }
 }
 
 export async function queryProducts(options: QueryOptions = {}): Promise<ProductQueryResult> {
-  const { collectionSlug, filters = EMPTY_FILTERS, sort = 'featured', search } = options
+  const { collectionSlug, filters, sort = 'featured', search, page = 1, limit = PAGE_SIZE } = options
+  const path = collectionSlug
+    ? `/collections/${encodeURIComponent(collectionSlug)}/products`
+    : '/products'
 
-  let base = products
-  if (collectionSlug) {
-    const collection = collectionBySlug.get(collectionSlug)
-    base = collection ? selectCollectionProducts(collection) : []
-  }
-  if (search) base = searchProducts(base, search)
-
-  // Facets are computed against the collection scope rather than the filtered
-  // result, so counts do not collapse to zero as the customer narrows down.
-  const facets = buildFacets(base)
-  const filtered = base.filter((product) => matchesFilters(product, filters))
-
-  return {
-    products: sortProducts(filtered, sort),
-    total: filtered.length,
-    facets,
+  try {
+    const { data, meta } = await workerFetch<unknown>(path, {
+      query: {
+        ...filterQuery(filters),
+        sort,
+        q: search?.trim() || undefined,
+        page,
+        limit: Math.min(limit, MAX_PAGE_SIZE),
+      },
+      cache: cached('products', ...(collectionSlug ? [`collection:${collectionSlug}`] : [])),
+    })
+    const products = normalizeProducts(data)
+    const total = asNumber(meta.total, products.length)
+    return {
+      products,
+      total,
+      page: asNumber(meta.page, page),
+      totalPages: asNumber(meta.totalPages, Math.max(1, Math.ceil(total / limit))),
+      facets: normalizeFacets(meta.facets),
+    }
+  } catch (error) {
+    // An unknown collection is a 404 for the page, not an outage.
+    if (collectionSlug && error instanceof ApiError && error.isNotFound) {
+      return { products: [], total: 0, page: 1, totalPages: 1, facets: EMPTY_FACETS }
+    }
+    throw error
   }
 }
 
@@ -250,102 +222,12 @@ export async function queryProducts(options: QueryOptions = {}): Promise<Product
  * Search
  * ------------------------------------------------------------------ */
 
-function searchProducts(list: Product[], term: string): Product[] {
-  const needle = term.trim().toLowerCase()
-  if (!needle) return list
-  const tokens = needle.split(/\s+/)
-
-  return list
-    .map((product) => {
-      const haystack = [
-        product.name,
-        product.tagline,
-        product.material,
-        product.pattern,
-        product.craft,
-        product.description,
-        ...product.colors.map((c) => c.name),
-        ...product.collectionSlugs,
-        product.categorySlug,
-      ]
-        .join(' ')
-        .toLowerCase()
-
-      const score = tokens.reduce((total, token) => {
-        if (!haystack.includes(token)) return total - 100
-        return total + (product.name.toLowerCase().includes(token) ? 10 : 3)
-      }, 0)
-
-      return { product, score }
-    })
-    .filter((entry) => entry.score > 0)
-    .sort((a, b) => b.score - a.score || b.product.popularity - a.product.popularity)
-    .map((entry) => entry.product)
-}
-
-export async function searchCatalog(term: string, limit = 8) {
-  const matched = searchProducts(products, term)
-  const needle = term.trim().toLowerCase()
-
-  const matchedCollections = needle
-    ? collections
-        .filter(
-          (collection) =>
-            !collection.hidden &&
-            (collection.name.toLowerCase().includes(needle) ||
-              collection.description.toLowerCase().includes(needle)),
-        )
-        .slice(0, 4)
-    : []
-
-  return {
-    products: matched.slice(0, limit),
-    total: matched.length,
-    collections: matchedCollections,
-  }
-}
-
-/* ------------------------------------------------------------------ *
- * Merchandising helpers
- * ------------------------------------------------------------------ */
-
-export async function getNewArrivals(limit = 8): Promise<Product[]> {
-  return [...products]
-    .sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime())
-    .slice(0, limit)
-}
-
-export async function getBestSellers(limit = 8): Promise<Product[]> {
-  return [...products].sort((a, b) => b.popularity - a.popularity).slice(0, limit)
-}
-
-export async function getRelatedProducts(product: Product, limit = 4): Promise<Product[]> {
-  const explicit = (product.relatedSlugs ?? [])
-    .map((slug) => productBySlug.get(slug))
-    .filter((entry): entry is Product => Boolean(entry))
-
-  if (explicit.length >= limit) return explicit.slice(0, limit)
-
-  // Fall back to shared collections, then to the same category.
-  const scored = products
-    .filter((candidate) => candidate.slug !== product.slug)
-    .filter((candidate) => !explicit.some((e) => e.slug === candidate.slug))
-    .map((candidate) => {
-      const shared = candidate.collectionSlugs.filter((slug) =>
-        product.collectionSlugs.includes(slug),
-      ).length
-      const sameCategory = candidate.categorySlug === product.categorySlug ? 3 : 0
-      const sameMaterial = candidate.materialSlug === product.materialSlug ? 2 : 0
-      return { candidate, score: shared + sameCategory + sameMaterial }
-    })
-    .sort((a, b) => b.score - a.score || b.candidate.popularity - a.candidate.popularity)
-    .map((entry) => entry.candidate)
-
-  return [...explicit, ...scored].slice(0, limit)
-}
-
-export async function getProductsBySlugs(slugs: string[]): Promise<Product[]> {
-  return slugs
-    .map((slug) => productBySlug.get(slug))
-    .filter((product): product is Product => Boolean(product))
+export async function searchCatalog(term: string, limit = 8): Promise<SearchResult> {
+  const q = term.trim().slice(0, 80)
+  if (!q) return { products: [], collections: [], total: 0 }
+  const { data } = await workerFetch<unknown>('/search', {
+    query: { q, limit: Math.min(Math.max(limit, 1), 24) },
+    cache: cached('products', 'collections'),
+  })
+  return normalizeSearch(data)
 }

@@ -1,10 +1,12 @@
 import type { Metadata } from 'next'
 import { ProfileForm } from '@/components/account/profile-form'
-import { demoCustomer } from '@/data/account'
+import { getCustomer } from '@/server/account'
 
 export const metadata: Metadata = { title: 'Profile' }
 
-export default function ProfilePage() {
+export default async function ProfilePage() {
+  const customer = await getCustomer('/account/profile')
+
   return (
     <div>
       <h2 className="font-serif text-2xl text-charcoal">Profile</h2>
@@ -13,7 +15,7 @@ export default function ProfilePage() {
         Pashmore journal.
       </p>
 
-      <ProfileForm customer={demoCustomer} />
+      <ProfileForm customer={customer} />
     </div>
   )
 }

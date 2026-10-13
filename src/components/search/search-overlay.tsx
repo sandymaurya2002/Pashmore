@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
 import { useUI } from '@/context/ui-context'
 import { useDebouncedValue } from '@/hooks/use-debounced-value'
 import { popularSearches } from '@/data/navigation'
+import { bff } from '@/lib/api/browser'
 import { formatPrice } from '@/lib/utils'
 import type { ProductImage } from '@/types'
 
@@ -35,6 +36,7 @@ export function SearchOverlay() {
   const [term, setTerm] = React.useState('')
   const [results, setResults] = React.useState<SearchResponse>(EMPTY)
   const [loading, setLoading] = React.useState(false)
+  const [failed, setFailed] = React.useState(false)
   const debounced = useDebouncedValue(term, 220)
 
   // Reset when the panel closes so it never reopens showing stale results.
@@ -42,6 +44,7 @@ export function SearchOverlay() {
     if (!searchOpen) {
       setTerm('')
       setResults(EMPTY)
+      setFailed(false)
     }
   }, [searchOpen])
 
@@ -50,19 +53,28 @@ export function SearchOverlay() {
     if (query.length < 2) {
       setResults(EMPTY)
       setLoading(false)
+      setFailed(false)
       return
     }
 
     const controller = new AbortController()
     setLoading(true)
 
-    fetch(`/api/search?q=${encodeURIComponent(query)}`, { signal: controller.signal })
-      .then((response) => (response.ok ? response.json() : EMPTY))
-      .then((data: SearchResponse) => setResults(data))
-      .catch(() => {
-        /* aborted or offline — leave the previous results in place */
+    bff<SearchResponse>(`/api/search?q=${encodeURIComponent(query)}`, {
+      signal: controller.signal,
+    })
+      .then(({ data }) => {
+        setResults(data)
+        setFailed(false)
       })
-      .finally(() => setLoading(false))
+      .catch((error: unknown) => {
+        if ((error as Error)?.name === 'AbortError') return
+        setResults(EMPTY)
+        setFailed(true)
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setLoading(false)
+      })
 
     return () => controller.abort()
   }, [debounced])
@@ -160,6 +172,21 @@ export function SearchOverlay() {
                     ))}
                   </ul>
                 </section>
+              </div>
+            ) : failed && !loading ? (
+              <div className="py-10 text-center" role="alert">
+                <p className="font-serif text-2xl text-charcoal">Search is unavailable right now</p>
+                <p className="mt-3 text-sm text-mocha">
+                  Please try again in a moment, or browse the{' '}
+                  <Link
+                    href="/collections"
+                    onClick={closeSearch}
+                    className="link-underline text-charcoal"
+                  >
+                    full collection
+                  </Link>
+                  .
+                </p>
               </div>
             ) : results.products.length === 0 && !loading ? (
               <div className="py-10 text-center">

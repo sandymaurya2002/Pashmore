@@ -2,7 +2,9 @@ import { cn } from '@/lib/utils'
 import type { OrderStatus } from '@/types'
 
 const LABELS: Record<OrderStatus, string> = {
+  pending: 'Awaiting payment',
   placed: 'Placed',
+  confirmed: 'Confirmed',
   processing: 'Processing',
   shipped: 'Shipped',
   delivered: 'Delivered',
@@ -11,7 +13,9 @@ const LABELS: Record<OrderStatus, string> = {
 }
 
 const TONES: Record<OrderStatus, string> = {
+  pending: 'border-line-strong text-taupe',
   placed: 'border-line-strong text-mocha',
+  confirmed: 'border-line-strong text-mocha',
   processing: 'border-gold/50 text-gold',
   shipped: 'border-gold/50 text-gold',
   delivered: 'border-charcoal/30 text-charcoal',

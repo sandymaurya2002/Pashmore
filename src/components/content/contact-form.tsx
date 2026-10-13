@@ -5,6 +5,8 @@ import { z } from 'zod'
 
 import { Button } from '@/components/ui/button'
 import { Input, Textarea, FieldError, FieldLabel } from '@/components/ui/input'
+import { ApiError } from '@/lib/api/envelope'
+import { bff, errorMessage } from '@/lib/api/browser'
 
 const schema = z.object({
   name: z.string().min(2, 'Please enter your name.'),
@@ -32,6 +34,7 @@ export function ContactForm() {
   })
   const [errors, setErrors] = React.useState<Record<string, string>>({})
   const [status, setStatus] = React.useState<'idle' | 'pending' | 'sent'>('idle')
+  const [formError, setFormError] = React.useState<string | null>(null)
 
   async function onSubmit(event: React.FormEvent) {
     event.preventDefault()
@@ -48,10 +51,16 @@ export function ContactForm() {
     }
 
     setErrors({})
+    setFormError(null)
     setStatus('pending')
-    // Demo build: point this at your care-team inbox or ticketing API.
-    await new Promise((resolve) => setTimeout(resolve, 700))
-    setStatus('sent')
+    try {
+      await bff('/api/contact', { method: 'POST', body: result.data })
+      setStatus('sent')
+    } catch (error) {
+      if (error instanceof ApiError && error.details) setErrors(error.details)
+      setFormError(errorMessage(error, 'Your message could not be sent. Please try again.'))
+      setStatus('idle')
+    }
   }
 
   if (status === 'sent') {
@@ -121,6 +130,12 @@ export function ContactForm() {
         />
         <FieldError>{errors.message}</FieldError>
       </div>
+
+      {formError && (
+        <p role="alert" className="text-sm leading-relaxed text-burgundy">
+          {formError}
+        </p>
+      )}
 
       <Button
         type="submit"

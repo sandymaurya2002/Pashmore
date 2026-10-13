@@ -8,7 +8,7 @@ export default function AccountWishlistPage() {
     <div>
       <h2 className="font-serif text-2xl text-charcoal">Wishlist</h2>
       <p className="mt-3 max-w-lg text-sm leading-relaxed text-mocha">
-        Saved on this device. Sign in and your wishlist will follow you across devices.
+        Saved to your account, so your wishlist follows you across devices.
       </p>
 
       <div className="mt-8">

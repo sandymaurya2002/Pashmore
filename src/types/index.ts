@@ -1,10 +1,9 @@
 /**
  * Pashmore domain model.
  *
- * These types are the contract between the UI and whatever supplies the data.
+ * These types are the contract between the UI and the Cloudflare Worker API.
  * Nothing in `src/components` may reach for a concrete data source — it consumes
- * these shapes only, so the same components run against the bundled demo
- * catalogue today and a headless commerce API tomorrow.
+ * these shapes only. Worker responses are mapped onto them by `src/lib/normalize`.
  */
 
 export type Currency = 'INR'
@@ -78,6 +77,7 @@ export interface Product {
   gender: Gender
   /** Primary category slug — drives breadcrumbs and canonical collection. */
   categorySlug: string
+  categoryName?: string
   /** Every collection this product belongs to. */
   collectionSlugs: string[]
   material: string
@@ -160,6 +160,8 @@ export interface Collection {
   /** Excludes the collection from /collections index listings. */
   hidden?: boolean
   featured?: boolean
+  /** Published products in the collection, when the API supplies it. */
+  productCount?: number
 }
 
 /* ---------------------------------------------------------------- *
@@ -167,10 +169,11 @@ export interface Collection {
  * ---------------------------------------------------------------- */
 
 export interface CartItem {
-  /** Stable line key: `${productSlug}:${colorSlug}:${sizeSlug}`. */
+  /** Server-side cart line id. */
   key: string
   productSlug: string
   variantId: string
+  sku?: string
   name: string
   image: ProductImage
   color?: string
@@ -179,6 +182,15 @@ export interface CartItem {
   compareAtPrice?: number
   quantity: number
   maxQuantity: number
+  inStock: boolean
+}
+
+export interface Cart {
+  items: CartItem[]
+  totals: CartTotals
+  coupon: Coupon | null
+  freeShippingThreshold: number
+  remainingForFreeShipping: number
 }
 
 export interface CartTotals {
@@ -222,12 +234,16 @@ export interface Customer {
   lastName: string
   email: string
   phone?: string
-  addresses: Address[]
+  acceptsMarketing: boolean
   createdAt: string
 }
 
+export type AddressInput = Omit<Address, 'id'>
+
 export type OrderStatus =
+  | 'pending'
   | 'placed'
+  | 'confirmed'
   | 'processing'
   | 'shipped'
   | 'delivered'
@@ -251,9 +267,11 @@ export interface Order {
   status: OrderStatus
   items: OrderItem[]
   totals: CartTotals
-  shippingAddress: Address
-  paymentMethod: string
+  shippingAddress: Omit<Address, 'id' | 'label'>
+  shippingMethod?: string
+  paymentMethod?: string
   trackingNumber?: string
+  carrier?: string
   estimatedDelivery?: string
 }
 
@@ -385,7 +403,15 @@ export interface FilterFacets {
 export interface ProductQueryResult {
   products: Product[]
   total: number
+  page: number
+  totalPages: number
   facets: FilterFacets
+}
+
+export interface SearchResult {
+  products: Product[]
+  collections: Array<{ slug: string; name: string }>
+  total: number
 }
 
 export interface Breadcrumb {

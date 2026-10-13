@@ -13,7 +13,6 @@ import { JsonLd } from '@/components/seo/json-ld'
 import { graph, organisationSchema, websiteSchema } from '@/lib/jsonld'
 import { site, siteUrl } from '@/lib/site'
 import { siteKeywords } from '@/lib/keywords'
-import { getBestSellers } from '@/services/catalog'
 
 const serif = Cormorant_Garamond({
   subsets: ['latin'],
@@ -76,11 +75,7 @@ export const viewport: Viewport = {
   maximumScale: 5,
 }
 
-export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  // Resolved on the server so the cart drawer's recommendations cost the client
-  // nothing until the drawer is actually opened.
-  const cartRecommendations = await getBestSellers(4)
-
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en-IN" className={`${serif.variable} ${sans.variable}`}>
       <body className="min-h-dvh bg-ivory antialiased">
@@ -99,7 +94,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             footer={<SiteFooter />}
             overlays={
               <>
-                <CartDrawer recommendations={cartRecommendations} />
+                <CartDrawer />
                 <SearchOverlay />
                 <MobileBottomNav />
               </>

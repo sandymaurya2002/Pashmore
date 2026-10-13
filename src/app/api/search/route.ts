@@ -1,5 +1,5 @@
-import { NextResponse } from 'next/server'
 import { searchCatalog } from '@/services/catalog'
+import { fail, ok } from '@/server/http'
 
 /**
  * Instant-search endpoint for the header overlay.
@@ -9,30 +9,28 @@ import { searchCatalog } from '@/services/catalog'
  */
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url)
-  const term = (searchParams.get('q') ?? '').slice(0, 80)
+  const term = (searchParams.get('q') ?? '').trim().slice(0, 80)
 
-  if (term.trim().length < 2) {
-    return NextResponse.json({ products: [], collections: [], total: 0 })
+  if (term.length < 2) return ok({ products: [], collections: [], total: 0 })
+
+  try {
+    const result = await searchCatalog(term, 6)
+    return ok(
+      {
+        total: result.total,
+        products: result.products.map((product) => ({
+          slug: product.slug,
+          name: product.name,
+          material: product.material,
+          price: product.price,
+          compareAtPrice: product.compareAtPrice,
+          image: product.images[0],
+        })),
+        collections: result.collections,
+      },
+      { headers: { 'Cache-Control': 'public, max-age=30, stale-while-revalidate=300' } },
+    )
+  } catch (error) {
+    return fail(error, 'api/search')
   }
-
-  const result = await searchCatalog(term, 6)
-
-  return NextResponse.json(
-    {
-      total: result.total,
-      products: result.products.map((product) => ({
-        slug: product.slug,
-        name: product.name,
-        material: product.material,
-        price: product.price,
-        compareAtPrice: product.compareAtPrice,
-        image: product.images[0],
-      })),
-      collections: result.collections.map((collection) => ({
-        slug: collection.slug,
-        name: collection.name,
-      })),
-    },
-    { headers: { 'Cache-Control': 'public, max-age=30, stale-while-revalidate=300' } },
-  )
 }

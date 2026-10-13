@@ -16,14 +16,9 @@ import {
   AccordionTrigger,
 } from '@/components/ui/accordion'
 
-import {
-  blogCategoryBySlug,
-  getAllPosts,
-  getPostBySlug,
-  getRelatedPosts,
-} from '@/data/blog'
-import { collectionBySlug } from '@/data/collections'
-import { getProductsBySlugs } from '@/services/catalog'
+import { blogCategoryBySlug, getPostBySlug, getRelatedPosts } from '@/data/blog'
+import { getAllCollections, getProductsBySlugs } from '@/services/catalog'
+import { failSoft } from '@/server/fail-soft'
 import { buildMetadata, metaDescription, pageTitle } from '@/lib/seo'
 import { blogKeywords } from '@/lib/keywords'
 import { blogPostingSchema, breadcrumbSchema, faqSchema, graph } from '@/lib/jsonld'
@@ -34,9 +29,9 @@ interface PageProps {
   params: Promise<{ slug: string }>
 }
 
-export function generateStaticParams() {
-  return getAllPosts().map((post) => ({ slug: post.slug }))
-}
+// The article is static content, but the "pieces mentioned" grid shows live
+// stock and prices, so the page renders per request.
+export const dynamic = 'force-dynamic'
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params
@@ -63,9 +58,14 @@ export default async function BlogPostPage({ params }: PageProps) {
 
   const category = blogCategoryBySlug.get(post.category)
   const related = getRelatedPosts(post, 3)
-  const products = await getProductsBySlugs(post.relatedProductSlugs ?? [])
+  const [products, allCollections] = await Promise.all([
+    failSoft(getProductsBySlugs(post.relatedProductSlugs ?? []), [], 'blog:products'),
+    post.relatedCollectionSlugs?.length
+      ? failSoft(getAllCollections(), [], 'blog:collections')
+      : Promise.resolve([]),
+  ])
   const collections = (post.relatedCollectionSlugs ?? [])
-    .map((entry) => collectionBySlug.get(entry))
+    .map((entry) => allCollections.find((collection) => collection.slug === entry))
     .filter((entry): entry is NonNullable<typeof entry> => Boolean(entry))
 
   const crumbs: Breadcrumb[] = [

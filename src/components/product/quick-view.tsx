@@ -70,8 +70,8 @@ function QuickViewBody({
   const [imageIndex, setImageIndex] = React.useState(0)
   const image = product.images[imageIndex] ?? product.images[0]
 
-  function onBuyNow() {
-    if (selection.addToCart()) {
+  async function onBuyNow() {
+    if (await selection.addToCart()) {
       onOpenChange(false)
       router.push('/checkout')
     }
@@ -169,11 +169,11 @@ function QuickViewBody({
           <div className="flex gap-3">
             <Button
               onClick={() => selection.addToCart()}
-              disabled={!selection.available}
+              disabled={!selection.available || selection.adding}
               className="h-13 flex-1"
               size="lg"
             >
-              {selection.available ? 'Add to Bag' : 'Out of Stock'}
+              {!selection.available ? 'Out of Stock' : selection.adding ? 'Adding…' : 'Add to Bag'}
             </Button>
             <WishlistButton
               slug={product.slug}
@@ -186,7 +186,7 @@ function QuickViewBody({
             size="lg"
             className="h-13"
             onClick={onBuyNow}
-            disabled={!selection.available}
+            disabled={!selection.available || selection.adding}
           >
             Buy Now
           </Button>

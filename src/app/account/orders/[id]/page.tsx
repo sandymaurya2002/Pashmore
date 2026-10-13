@@ -6,27 +6,18 @@ import { ChevronLeft } from 'lucide-react'
 
 import { OrderStatusChip } from '@/components/account/order-status-chip'
 import { OrderSummary } from '@/components/cart/order-summary'
-import { getOrderById, getOrders } from '@/services/orders'
+import { getOrder } from '@/server/account'
 import { formatDate, formatPrice } from '@/lib/utils'
 
 interface PageProps {
   params: Promise<{ id: string }>
 }
 
-export async function generateStaticParams() {
-  const orders = await getOrders()
-  return orders.map((order) => ({ id: order.id }))
-}
-
-export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-  const { id } = await params
-  const order = await getOrderById(id)
-  return { title: order ? `Order ${order.number}` : 'Order' }
-}
+export const metadata: Metadata = { title: 'Order' }
 
 export default async function OrderDetailPage({ params }: PageProps) {
   const { id } = await params
-  const order = await getOrderById(id)
+  const order = await getOrder(id)
   if (!order) notFound()
 
   return (
@@ -42,7 +33,9 @@ export default async function OrderDetailPage({ params }: PageProps) {
       <div className="mt-5 flex flex-wrap items-baseline justify-between gap-4">
         <div>
           <h2 className="font-serif text-2xl text-charcoal">Order {order.number}</h2>
-          <p className="mt-1.5 text-xs text-taupe">Placed {formatDate(order.placedAt)}</p>
+          {order.placedAt && (
+            <p className="mt-1.5 text-xs text-taupe">Placed {formatDate(order.placedAt)}</p>
+          )}
         </div>
         <OrderStatusChip status={order.status} />
       </div>
@@ -52,6 +45,7 @@ export default async function OrderDetailPage({ params }: PageProps) {
           <p className="text-sm text-charcoal">
             Tracking number{' '}
             <span className="tabular-nums">{order.trackingNumber}</span>
+            {order.carrier && <span className="text-mocha"> · {order.carrier}</span>}
           </p>
           {order.estimatedDelivery && (
             <p className="mt-1 text-xs text-taupe">
@@ -67,8 +61,8 @@ export default async function OrderDetailPage({ params }: PageProps) {
             Items
           </h3>
           <ul className="divide-y divide-line border-y border-line">
-            {order.items.map((item) => (
-              <li key={item.productSlug} className="flex gap-5 py-5">
+            {order.items.map((item, index) => (
+              <li key={`${item.productSlug}-${index}`} className="flex gap-5 py-5">
                 <Link
                   href={`/products/${item.productSlug}`}
                   className="relative aspect-4/5 w-20 shrink-0 overflow-hidden bg-ivory-deep"
@@ -120,12 +114,14 @@ export default async function OrderDetailPage({ params }: PageProps) {
             </address>
           </section>
 
-          <section aria-labelledby="order-payment" className="mt-8">
-            <h3 id="order-payment" className="eyebrow mb-3 text-taupe">
-              Payment
-            </h3>
-            <p className="text-sm text-mocha">{order.paymentMethod}</p>
-          </section>
+          {order.paymentMethod && (
+            <section aria-labelledby="order-payment" className="mt-8">
+              <h3 id="order-payment" className="eyebrow mb-3 text-taupe">
+                Payment
+              </h3>
+              <p className="text-sm text-mocha">{order.paymentMethod}</p>
+            </section>
+          )}
         </section>
 
         <aside>

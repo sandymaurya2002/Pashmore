@@ -5,20 +5,27 @@ import { Package } from 'lucide-react'
 
 import { EmptyState } from '@/components/ui/empty-state'
 import { OrderStatusChip } from '@/components/account/order-status-chip'
-import { getOrders } from '@/services/orders'
+import { Pagination } from '@/components/collection/pagination'
+import { getOrders } from '@/server/account'
+import { parsePage, type SearchParams } from '@/lib/query'
 import { formatDate, formatPrice, pluralise } from '@/lib/utils'
 
 export const metadata: Metadata = { title: 'Orders' }
 
-export default async function OrdersPage() {
-  const orders = await getOrders()
+interface PageProps {
+  searchParams: Promise<SearchParams>
+}
 
-  if (!orders.length) {
+export default async function OrdersPage({ searchParams }: PageProps) {
+  const params = await searchParams
+  const { orders, page, totalPages } = await getOrders(parsePage(params))
+
+  if (!orders.length && page === 1) {
     return (
       <EmptyState
         icon={<Package className="h-6 w-6" strokeWidth={1} />}
         title="No orders yet"
-        description="When you place an order it will appear here, with tracking and invoices."
+        description="When you place an order it will appear here, with its status and tracking."
         actionHref="/collections"
         actionLabel="Start Shopping"
       />
@@ -40,7 +47,7 @@ export default async function OrdersPage() {
                 <div>
                   <p className="font-serif text-lg text-charcoal">{order.number}</p>
                   <p className="mt-1 text-xs text-taupe">
-                    Placed {formatDate(order.placedAt)} ·{' '}
+                    {order.placedAt ? `Placed ${formatDate(order.placedAt)} · ` : ''}
                     {order.totals.itemCount} {pluralise(order.totals.itemCount, 'item')} ·{' '}
                     {formatPrice(order.totals.total)}
                   </p>
@@ -48,26 +55,36 @@ export default async function OrdersPage() {
                 <OrderStatusChip status={order.status} />
               </div>
 
-              <ul className="mt-5 flex flex-wrap gap-2">
-                {order.items.map((item) => (
-                  <li
-                    key={`${order.id}-${item.productSlug}`}
-                    className="relative aspect-4/5 w-14 overflow-hidden bg-ivory-deep"
-                  >
-                    <Image
-                      src={item.image.url}
-                      alt={item.image.alt}
-                      fill
-                      sizes="56px"
-                      className="object-cover"
-                    />
-                  </li>
-                ))}
-              </ul>
+              {order.items.length > 0 && (
+                <ul className="mt-5 flex flex-wrap gap-2">
+                  {order.items.map((item, index) => (
+                    <li
+                      key={`${order.id}-${item.productSlug}-${index}`}
+                      className="relative aspect-4/5 w-14 overflow-hidden bg-ivory-deep"
+                    >
+                      <Image
+                        src={item.image.url}
+                        alt={item.image.alt}
+                        fill
+                        sizes="56px"
+                        className="object-cover"
+                      />
+                    </li>
+                  ))}
+                </ul>
+              )}
             </Link>
           </li>
         ))}
       </ul>
+
+      <Pagination
+        page={page}
+        totalPages={totalPages}
+        pathname="/account/orders"
+        searchParams={params}
+        className="mt-10"
+      />
     </div>
   )
 }

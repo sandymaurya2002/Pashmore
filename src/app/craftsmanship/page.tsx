@@ -14,7 +14,8 @@ import {
   AccordionTrigger,
 } from '@/components/ui/accordion'
 
-import { getProductsByCollection } from '@/services/catalog'
+import { queryProducts } from '@/services/catalog'
+import { failSoft } from '@/server/fail-soft'
 import { buildMetadata, pageTitle } from '@/lib/seo'
 import { breadcrumbSchema, faqSchema, graph, webPageSchema } from '@/lib/jsonld'
 import type { Breadcrumb, ProductFaq } from '@/types'
@@ -105,8 +106,16 @@ const FAQS: ProductFaq[] = [
   },
 ]
 
+export const dynamic = 'force-dynamic'
+
 export default async function CraftsmanshipPage() {
-  const products = await getProductsByCollection('heritage-collection')
+  const products = await failSoft(
+    queryProducts({ collectionSlug: 'heritage-collection', limit: 4 }).then(
+      (result) => result.products,
+    ),
+    [],
+    'craftsmanship:heritage',
+  )
 
   return (
     <>

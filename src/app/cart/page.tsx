@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { CartPageContent } from '@/components/cart/cart-page-content'
 import { getBestSellers } from '@/services/catalog'
+import { failSoft } from '@/server/fail-soft'
 import { buildMetadata, pageTitle } from '@/lib/seo'
 
 export const metadata: Metadata = buildMetadata({
@@ -10,8 +11,10 @@ export const metadata: Metadata = buildMetadata({
   noIndex: true,
 })
 
+export const dynamic = 'force-dynamic'
+
 export default async function CartPage() {
-  const recommendations = await getBestSellers(4)
+  const recommendations = await failSoft(getBestSellers(4), [], 'cart:recommendations')
 
   return (
     <div className="container-luxe pb-24 pt-12">

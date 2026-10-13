@@ -10,7 +10,7 @@ import type { KeywordReport } from '@/types/keywords'
 
 /**
  * The keyword service is the only module that knows where keyword facts and
- * metrics come from. Today: the local catalogue plus a static metrics JSON.
+ * metrics come from. Today: the live Worker catalogue plus a static metrics JSON.
  * To move to a database or a metrics API (Keyword Planner, Search Console,
  * DataForSEO…), replace `getMetrics` and nothing else changes.
  */

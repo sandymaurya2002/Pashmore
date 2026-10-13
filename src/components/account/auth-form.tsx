@@ -2,39 +2,54 @@
 
 import * as React from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { z } from 'zod'
 
 import { Button } from '@/components/ui/button'
 import { Input, FieldError, FieldLabel } from '@/components/ui/input'
 import { Checkbox } from '@/components/ui/checkbox'
 import { useToast } from '@/context/toast-context'
+import { useSession } from '@/context/session-context'
+import { ApiError } from '@/lib/api/envelope'
+import { bff, errorMessage } from '@/lib/api/browser'
 
-type Mode = 'login' | 'register' | 'forgot'
+type Mode = 'login' | 'register' | 'forgot' | 'reset'
+
+/** Mirrors the Worker's password rule so customers hear about it before submitting. */
+const newPassword = z
+  .string()
+  .min(8, 'Use at least 8 characters.')
+  .max(128, 'That password is too long.')
+  .refine((value) => /[a-zA-Z]/.test(value), 'Include at least one letter.')
+  .refine((value) => /[0-9]/.test(value), 'Include at least one number.')
+
+const email = z.string().trim().email('Please enter a valid email address.')
 
 const schemas = {
   login: z.object({
-    email: z.string().email('Please enter a valid email address.'),
-    password: z.string().min(8, 'Passwords are at least 8 characters.'),
+    email,
+    password: z.string().min(1, 'Please enter your password.'),
   }),
   register: z.object({
-    firstName: z.string().min(2, 'Please enter your first name.'),
-    lastName: z.string().min(1, 'Please enter your last name.'),
-    email: z.string().email('Please enter a valid email address.'),
-    password: z.string().min(8, 'Choose a password of at least 8 characters.'),
+    firstName: z.string().trim().min(2, 'Please enter your first name.'),
+    lastName: z.string().trim().min(1, 'Please enter your last name.'),
+    email,
+    password: newPassword,
   }),
-  forgot: z.object({
-    email: z.string().email('Please enter a valid email address.'),
-  }),
+  forgot: z.object({ email }),
+  reset: z.object({ password: newPassword }),
 }
 
-/**
- * Presentational authentication forms with real client-side validation.
- *
- * There is no auth provider in the demo build; `onSubmit` is the single place
- * to call signIn / signUp once one is wired in.
- */
-export function AuthForm({ mode }: { mode: Mode }) {
+/** Only same-site paths are honoured as post-login destinations. */
+function safeNext(): string {
+  const next = new URLSearchParams(window.location.search).get('next')
+  return next && next.startsWith('/') && !next.startsWith('//') ? next : '/account'
+}
+
+export function AuthForm({ mode, token }: { mode: Mode; token?: string }) {
   const { toast } = useToast()
+  const { signIn, register } = useSession()
+  const router = useRouter()
   const [values, setValues] = React.useState({
     firstName: '',
     lastName: '',
@@ -42,12 +57,53 @@ export function AuthForm({ mode }: { mode: Mode }) {
     password: '',
   })
   const [errors, setErrors] = React.useState<Record<string, string>>({})
+  const [formError, setFormError] = React.useState<string | null>(null)
   const [remember, setRemember] = React.useState(true)
   const [submitting, setSubmitting] = React.useState(false)
+  const [sent, setSent] = React.useState(false)
 
   function set(field: keyof typeof values) {
     return (event: React.ChangeEvent<HTMLInputElement>) =>
       setValues((current) => ({ ...current, [field]: event.target.value }))
+  }
+
+  async function submit() {
+    switch (mode) {
+      case 'login':
+        await signIn(values.email.trim(), values.password, remember)
+        router.replace(safeNext())
+        router.refresh()
+        return
+      case 'register':
+        await register({
+          firstName: values.firstName.trim(),
+          lastName: values.lastName.trim(),
+          email: values.email.trim(),
+          password: values.password,
+        })
+        toast({ title: 'Account created', description: 'Welcome to Pashmore.' })
+        router.replace(safeNext())
+        router.refresh()
+        return
+      case 'forgot': {
+        const { data } = await bff<{ message: string }>('/api/auth/forgot-password', {
+          method: 'POST',
+          body: { email: values.email.trim() },
+        })
+        setSent(true)
+        toast({ title: 'Check your inbox', description: data.message, tone: 'info' })
+        return
+      }
+      case 'reset': {
+        const { data } = await bff<{ message: string }>('/api/auth/reset-password', {
+          method: 'POST',
+          body: { token, password: values.password },
+        })
+        toast({ title: 'Password updated', description: data.message })
+        router.replace('/login')
+        return
+      }
+    }
   }
 
   async function onSubmit(event: React.FormEvent) {
@@ -65,20 +121,33 @@ export function AuthForm({ mode }: { mode: Mode }) {
     }
 
     setErrors({})
+    setFormError(null)
     setSubmitting(true)
-    await new Promise((resolve) => setTimeout(resolve, 600))
-    setSubmitting(false)
+    try {
+      await submit()
+    } catch (error) {
+      if (error instanceof ApiError && error.details) setErrors(error.details)
+      setFormError(
+        errorMessage(
+          error,
+          mode === 'login' ? 'We could not sign you in. Please try again.' : 'Something went wrong. Please try again.',
+        ),
+      )
+    } finally {
+      setSubmitting(false)
+    }
+  }
 
-    toast({
-      title:
-        mode === 'forgot'
-          ? 'Reset link sent'
-          : mode === 'register'
-            ? 'Account created'
-            : 'Signed in',
-      description: 'Demo mode — connect an authentication provider to complete this flow.',
-      tone: 'info',
-    })
+  if (mode === 'reset' && !token) {
+    return (
+      <p className="mt-10 text-sm leading-relaxed text-mocha">
+        This reset link is incomplete. Please{' '}
+        <Link href="/forgot-password" className="link-underline text-charcoal">
+          request a new one
+        </Link>
+        .
+      </p>
+    )
   }
 
   return (
@@ -110,26 +179,28 @@ export function AuthForm({ mode }: { mode: Mode }) {
         </div>
       )}
 
-      <div>
-        <FieldLabel htmlFor="email">Email</FieldLabel>
-        <Input
-          id="email"
-          type="email"
-          autoComplete="email"
-          value={values.email}
-          onChange={set('email')}
-          aria-invalid={errors.email ? true : undefined}
-        />
-        <FieldError>{errors.email}</FieldError>
-      </div>
+      {mode !== 'reset' && (
+        <div>
+          <FieldLabel htmlFor="email">Email</FieldLabel>
+          <Input
+            id="email"
+            type="email"
+            autoComplete="email"
+            value={values.email}
+            onChange={set('email')}
+            aria-invalid={errors.email ? true : undefined}
+          />
+          <FieldError>{errors.email}</FieldError>
+        </div>
+      )}
 
       {mode !== 'forgot' && (
         <div>
-          <FieldLabel htmlFor="password">Password</FieldLabel>
+          <FieldLabel htmlFor="password">{mode === 'reset' ? 'New password' : 'Password'}</FieldLabel>
           <Input
             id="password"
             type="password"
-            autoComplete={mode === 'register' ? 'new-password' : 'current-password'}
+            autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
             value={values.password}
             onChange={set('password')}
             aria-invalid={errors.password ? true : undefined}
@@ -156,6 +227,19 @@ export function AuthForm({ mode }: { mode: Mode }) {
         </div>
       )}
 
+      {formError && (
+        <p role="alert" className="text-sm leading-relaxed text-burgundy">
+          {formError}
+        </p>
+      )}
+
+      {mode === 'forgot' && sent && (
+        <p role="status" className="text-sm leading-relaxed text-mocha">
+          If an account exists for that address, a reset link is on its way. The link
+          expires after a short while, so use it soon.
+        </p>
+      )}
+
       <Button type="submit" size="lg" className="mt-3 h-13" disabled={submitting}>
         {submitting
           ? 'Please wait…'
@@ -163,7 +247,11 @@ export function AuthForm({ mode }: { mode: Mode }) {
             ? 'Sign In'
             : mode === 'register'
               ? 'Create Account'
-              : 'Send Reset Link'}
+              : mode === 'reset'
+                ? 'Set New Password'
+                : sent
+                  ? 'Send Again'
+                  : 'Send Reset Link'}
       </Button>
 
       <p className="mt-2 text-center text-sm text-mocha">
@@ -176,7 +264,7 @@ export function AuthForm({ mode }: { mode: Mode }) {
           </>
         ) : (
           <>
-            Already have an account?{' '}
+            {mode === 'register' ? 'Already have an account?' : 'Remembered it?'}{' '}
             <Link href="/login" className="link-underline text-charcoal">
               Sign in
             </Link>

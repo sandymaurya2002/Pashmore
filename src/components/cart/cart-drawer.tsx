@@ -13,23 +13,53 @@ import {
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { useCart } from '@/context/cart-context'
-import { FREE_SHIPPING_THRESHOLD } from '@/lib/site'
+import { bff } from '@/lib/api/browser'
 import { formatPrice } from '@/lib/utils'
 import type { CartItem, Product } from '@/types'
 
-/**
- * `recommendations` are resolved on the server in the root layout and passed
- * down, so the drawer never has to reach for the catalogue from the client.
- */
-export function CartDrawer({ recommendations = [] }: { recommendations?: Product[] }) {
-  const { isOpen, closeCart, items, totals, coupon, removeCoupon, updateQuantity, removeItem } =
-    useCart()
+/** Fetched the first time the drawer opens; a failure simply hides the rail. */
+function useRecommendations(enabled: boolean): Product[] {
+  const [products, setProducts] = React.useState<Product[]>([])
+  const requested = React.useRef(false)
 
+  React.useEffect(() => {
+    if (!enabled || requested.current) return
+    requested.current = true
+    bff<{ products: Product[] }>('/api/recommendations')
+      .then(({ data }) => setProducts(data.products))
+      .catch(() => {
+        requested.current = false
+      })
+  }, [enabled])
+
+  return products
+}
+
+export function CartDrawer() {
+  const {
+    isOpen,
+    closeCart,
+    items,
+    totals,
+    coupon,
+    removeCoupon,
+    updateQuantity,
+    removeItem,
+    freeShippingThreshold,
+    remainingForFreeShipping,
+    hydrated,
+    error,
+    pendingKey,
+    reload,
+  } = useCart()
+
+  const recommendations = useRecommendations(isOpen)
   const suggestions = recommendations
+    .filter((product) => product.images.length > 0)
     .filter((product) => !items.some((item) => item.productSlug === product.slug))
     .slice(0, 3)
 
-  const remainingForFreeShipping = Math.max(0, FREE_SHIPPING_THRESHOLD - totals.subtotal)
+  const hasUnavailable = items.some((item) => !item.inStock)
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && closeCart()}>
@@ -46,11 +76,24 @@ export function CartDrawer({ recommendations = [] }: { recommendations?: Product
           </DialogDescription>
         </div>
 
-        {items.length === 0 ? (
+        {!hydrated ? (
+          <div className="flex flex-1 items-center justify-center px-8">
+            <p className="text-sm text-taupe" aria-live="polite">
+              Loading your bag…
+            </p>
+          </div>
+        ) : error && items.length === 0 ? (
+          <div className="flex flex-1 flex-col items-center justify-center px-8 text-center">
+            <p className="text-sm leading-relaxed text-mocha">{error}</p>
+            <Button variant="outline" className="mt-6" onClick={() => void reload()}>
+              Try again
+            </Button>
+          </div>
+        ) : items.length === 0 ? (
           <EmptyBag onContinue={closeCart} />
         ) : (
           <>
-            {remainingForFreeShipping > 0 && (
+            {remainingForFreeShipping > 0 && freeShippingThreshold > 0 && (
               <div className="border-b border-line bg-cream/50 px-6 py-3.5">
                 <p className="text-xs text-mocha">
                   Add{' '}
@@ -63,7 +106,7 @@ export function CartDrawer({ recommendations = [] }: { recommendations?: Product
                   <div
                     className="h-px bg-gold transition-[width] duration-700 ease-[var(--ease-luxe)]"
                     style={{
-                      width: `${Math.min(100, (totals.subtotal / FREE_SHIPPING_THRESHOLD) * 100)}%`,
+                      width: `${Math.min(100, (totals.subtotal / freeShippingThreshold) * 100)}%`,
                     }}
                   />
                 </div>
@@ -75,11 +118,18 @@ export function CartDrawer({ recommendations = [] }: { recommendations?: Product
                 <CartLine
                   key={item.key}
                   item={item}
+                  pending={pendingKey === item.key || pendingKey === 'cart'}
                   onQuantityChange={updateQuantity}
                   onRemove={removeItem}
                 />
               ))}
             </ul>
+
+            {hasUnavailable && (
+              <p className="border-t border-line bg-cream/50 px-6 py-3 text-xs text-burgundy">
+                Some pieces in your bag are no longer available. Remove them to continue.
+              </p>
+            )}
 
             {suggestions.length > 0 && (
               <section className="border-t border-line px-6 py-5" aria-labelledby="cart-suggestions">
@@ -127,7 +177,8 @@ export function CartDrawer({ recommendations = [] }: { recommendations?: Product
                         {coupon && (
                           <button
                             type="button"
-                            onClick={removeCoupon}
+                            onClick={() => void removeCoupon()}
+                            disabled={pendingKey === 'coupon'}
                             className="text-[0.625rem] uppercase tracking-[0.12em] text-taupe underline underline-offset-2 hover:text-charcoal"
                           >
                             {coupon.code} — remove
@@ -194,15 +245,17 @@ function Row({
 
 function CartLine({
   item,
+  pending,
   onQuantityChange,
   onRemove,
 }: {
   item: CartItem
-  onQuantityChange: (key: string, quantity: number) => void
-  onRemove: (key: string) => void
+  pending: boolean
+  onQuantityChange: (key: string, quantity: number) => Promise<void>
+  onRemove: (key: string) => Promise<void>
 }) {
   return (
-    <li className="flex gap-4 py-5">
+    <li className="flex gap-4 py-5" aria-busy={pending}>
       <Link
         href={`/products/${item.productSlug}`}
         className="relative aspect-4/5 w-20 shrink-0 overflow-hidden bg-ivory-deep"
@@ -225,9 +278,10 @@ function CartLine({
           </h3>
           <button
             type="button"
-            onClick={() => onRemove(item.key)}
+            onClick={() => void onRemove(item.key)}
+            disabled={pending}
             aria-label={`Remove ${item.name} from bag`}
-            className="-mr-1 p-1 text-taupe transition-colors hover:text-burgundy"
+            className="-mr-1 p-1 text-taupe transition-colors hover:text-burgundy disabled:opacity-40"
           >
             <Trash2 className="h-3.5 w-3.5" strokeWidth={1.25} />
           </button>
@@ -239,12 +293,17 @@ function CartLine({
           </p>
         )}
 
+        {!item.inStock && (
+          <p className="mt-1 text-xs text-burgundy">No longer available</p>
+        )}
+
         <div className="mt-auto flex items-center justify-between gap-3 pt-3">
           <div className="inline-flex items-center border border-line-strong">
             <button
               type="button"
-              onClick={() => onQuantityChange(item.key, item.quantity - 1)}
-              className="flex h-8 w-8 items-center justify-center text-charcoal transition-colors hover:text-gold"
+              onClick={() => void onQuantityChange(item.key, item.quantity - 1)}
+              disabled={pending}
+              className="flex h-8 w-8 items-center justify-center text-charcoal transition-colors hover:text-gold disabled:opacity-30"
               aria-label={`Decrease quantity of ${item.name}`}
             >
               <Minus className="h-3 w-3" strokeWidth={1.5} />
@@ -252,8 +311,8 @@ function CartLine({
             <span className="w-7 text-center text-xs tabular-nums">{item.quantity}</span>
             <button
               type="button"
-              onClick={() => onQuantityChange(item.key, item.quantity + 1)}
-              disabled={item.quantity >= item.maxQuantity}
+              onClick={() => void onQuantityChange(item.key, item.quantity + 1)}
+              disabled={pending || !item.inStock || item.quantity >= item.maxQuantity}
               className="flex h-8 w-8 items-center justify-center text-charcoal transition-colors hover:text-gold disabled:opacity-30"
               aria-label={`Increase quantity of ${item.name}`}
             >

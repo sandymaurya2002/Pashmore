@@ -58,7 +58,7 @@ export function NewsletterForm() {
             role="status"
             className="mt-9 border border-gold/40 bg-gold/5 px-6 py-4 text-sm text-charcoal"
           >
-            Thank you — please check your inbox to confirm your subscription.
+            Thank you — you are on the list. A welcome note is on its way to your inbox.
           </p>
         ) : (
           <form

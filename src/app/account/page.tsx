@@ -1,24 +1,25 @@
 import Link from 'next/link'
 import { ArrowRight } from 'lucide-react'
 
-import { demoCustomer } from '@/data/account'
-import { getOrders } from '@/services/orders'
+import { getCustomer, getOrders } from '@/server/account'
 import { formatDate, formatPrice } from '@/lib/utils'
 import { OrderStatusChip } from '@/components/account/order-status-chip'
 
 export default async function AccountOverviewPage() {
-  const orders = await getOrders()
+  const [customer, { orders }] = await Promise.all([getCustomer(), getOrders(1, '/account')])
   const [latest] = orders
 
   return (
     <div className="flex flex-col gap-12">
       <section aria-labelledby="account-greeting">
         <h2 id="account-greeting" className="font-serif text-2xl text-charcoal">
-          Welcome back, {demoCustomer.firstName}
+          Welcome back{customer.firstName ? `, ${customer.firstName}` : ''}
         </h2>
         <p className="mt-3 text-sm leading-relaxed text-mocha">
-          You have been with Pashmore since {formatDate(demoCustomer.createdAt)}. This is a demo
-          account — connect an authentication provider to see real customer data here.
+          {customer.createdAt
+            ? `You have been with Pashmore since ${formatDate(customer.createdAt)}. `
+            : ''}
+          Signed in as {customer.email}.
         </p>
       </section>
 
@@ -65,10 +66,10 @@ export default async function AccountOverviewPage() {
         </h2>
         <ul className="grid gap-4 sm:grid-cols-2">
           {[
-            ['All orders', '/account/orders', 'Track, reorder and download invoices.'],
-            ['Saved addresses', '/account/addresses', 'Manage delivery and billing addresses.'],
-            ['Profile', '/account/profile', 'Update your name, email and preferences.'],
-            ['Wishlist', '/account/wishlist', 'Everything you have saved on this device.'],
+            ['All orders', '/account/orders', 'Order history, status and tracking.'],
+            ['Saved addresses', '/account/addresses', 'Manage your delivery addresses.'],
+            ['Profile', '/account/profile', 'Update your name, phone and preferences.'],
+            ['Wishlist', '/account/wishlist', 'Everything you have saved to your account.'],
           ].map(([label, href, detail]) => (
             <li key={href}>
               <Link

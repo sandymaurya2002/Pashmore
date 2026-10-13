@@ -14,8 +14,9 @@ import {
   AccordionTrigger,
 } from '@/components/ui/accordion'
 
-import { landingBySlug, landingPages } from '@/data/landing'
+import { landingBySlug } from '@/data/landing'
 import { queryProducts } from '@/services/catalog'
+import { failSoft } from '@/server/fail-soft'
 import { buildMetadata, metaDescription } from '@/lib/seo'
 import { landingKeywords } from '@/lib/keywords'
 import { breadcrumbSchema, faqSchema, graph, webPageSchema } from '@/lib/jsonld'
@@ -30,12 +31,11 @@ interface PageProps {
  * /wedding-gifts — because that is what people link to and search for. Static
  * routes always win over this dynamic segment, so /collections, /blog and the
  * rest are unaffected; anything not in the landing registry 404s.
+ *
+ * Rendered per request so the product grid reflects live stock without the
+ * build depending on the Worker.
  */
-export const dynamicParams = false
-
-export function generateStaticParams() {
-  return landingPages.map((page) => ({ landing: page.slug }))
-}
+export const dynamic = 'force-dynamic'
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { landing } = await params
@@ -56,10 +56,13 @@ export default async function LandingPageRoute({ params }: PageProps) {
   const page = landingBySlug.get(landing)
   if (!page) notFound()
 
-  const { products } = await queryProducts({
-    collectionSlug: page.collectionSlug,
-    sort: 'featured',
-  })
+  const products = await failSoft(
+    queryProducts({ collectionSlug: page.collectionSlug, sort: 'featured', limit: 8 }).then(
+      (result) => result.products,
+    ),
+    [],
+    `landing:${page.slug}`,
+  )
 
   const crumbs: Breadcrumb[] = [
     { name: 'Home', href: '/' },

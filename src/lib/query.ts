@@ -115,6 +115,9 @@ export function setParamHref(
   const next = new URLSearchParams()
   const filters = parseFilters(searchParams)
 
+  const term = Array.isArray(searchParams.q) ? searchParams.q[0] : searchParams.q
+  if (term?.trim()) next.set('q', term.trim())
+
   for (const filterKey of FILTER_KEYS) {
     if (filters[filterKey].length) {
       next.set(filterKey, filters[filterKey].slice().sort().join(','))

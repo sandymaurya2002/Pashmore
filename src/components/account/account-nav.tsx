@@ -1,8 +1,11 @@
 'use client'
 
+import * as React from 'react'
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { LogOut } from 'lucide-react'
+import { useSession } from '@/context/session-context'
+import { useToast } from '@/context/toast-context'
 import { cn } from '@/lib/utils'
 
 const LINKS = [
@@ -15,6 +18,21 @@ const LINKS = [
 
 export function AccountNav() {
   const pathname = usePathname()
+  const router = useRouter()
+  const { signOut } = useSession()
+  const { toast } = useToast()
+  const [signingOut, setSigningOut] = React.useState(false)
+
+  async function onSignOut() {
+    setSigningOut(true)
+    try {
+      await signOut()
+      toast({ title: 'Signed out', tone: 'info' })
+    } finally {
+      router.replace('/login')
+      router.refresh()
+    }
+  }
 
   return (
     <nav aria-label="Account" className="lg:sticky lg:top-28 lg:self-start">
@@ -41,13 +59,15 @@ export function AccountNav() {
           )
         })}
         <li className="lg:mt-6 lg:border-t lg:border-line lg:pt-6">
-          <Link
-            href="/login"
-            className="flex items-center gap-2 whitespace-nowrap py-1.5 text-[0.75rem] uppercase tracking-[0.14em] text-taupe transition-colors hover:text-charcoal"
+          <button
+            type="button"
+            onClick={onSignOut}
+            disabled={signingOut}
+            className="flex items-center gap-2 whitespace-nowrap py-1.5 text-[0.75rem] uppercase tracking-[0.14em] text-taupe transition-colors hover:text-charcoal disabled:opacity-60"
           >
             <LogOut className="h-3.5 w-3.5" strokeWidth={1.25} aria-hidden />
-            Logout
-          </Link>
+            {signingOut ? 'Signing out…' : 'Logout'}
+          </button>
         </li>
       </ul>
     </nav>

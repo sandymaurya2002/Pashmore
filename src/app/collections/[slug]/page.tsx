@@ -8,14 +8,21 @@ import { FilterSidebar } from '@/components/collection/filter-sidebar'
 import { FilterDrawer } from '@/components/collection/filter-drawer'
 import { SortSelect } from '@/components/collection/sort-select'
 import { ActiveFilters } from '@/components/collection/active-filters'
+import { Pagination } from '@/components/collection/pagination'
 import { ProductGrid } from '@/components/product/product-grid'
 import { EmptyState } from '@/components/ui/empty-state'
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion'
 import { JsonLd } from '@/components/seo/json-ld'
 
 import { getAllCollections, getCollectionBySlug, queryProducts } from '@/services/catalog'
-import { collectionBySlug } from '@/data/collections'
-import { countActiveFilters, parseFilters, parseSort, type SearchParams } from '@/lib/query'
+import { failSoft } from '@/server/fail-soft'
+import {
+  countActiveFilters,
+  parseFilters,
+  parsePage,
+  parseSort,
+  type SearchParams,
+} from '@/lib/query'
 import { buildMetadata, metaDescription, pageTitle } from '@/lib/seo'
 import { collectionKeywords } from '@/lib/keywords'
 import { breadcrumbSchema, collectionPageSchema, faqSchema, graph } from '@/lib/jsonld'
@@ -27,14 +34,11 @@ interface PageProps {
   searchParams: Promise<SearchParams>
 }
 
-export async function generateStaticParams() {
-  const collections = await getAllCollections()
-  return collections.map((collection) => ({ slug: collection.slug }))
-}
+export const dynamic = 'force-dynamic'
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params
-  const collection = collectionBySlug.get(slug)
+  const collection = await failSoft(getCollectionBySlug(slug), null, 'collection:metadata')
   if (!collection) return {}
 
   return buildMetadata({
@@ -55,11 +59,15 @@ export default async function CollectionPage({ params, searchParams }: PageProps
 
   const filters = parseFilters(resolvedSearchParams)
   const sort = parseSort(resolvedSearchParams)
-  const { products, total, facets } = await queryProducts({
-    collectionSlug: slug,
-    filters,
-    sort,
-  })
+  const [{ products, total, facets, page, totalPages }, allCollections] = await Promise.all([
+    queryProducts({
+      collectionSlug: slug,
+      filters,
+      sort,
+      page: parsePage(resolvedSearchParams),
+    }),
+    failSoft(getAllCollections(), [], 'collection:related'),
+  ])
 
   const pathname = `/collections/${slug}`
   const activeCount = countActiveFilters(filters)
@@ -72,7 +80,7 @@ export default async function CollectionPage({ params, searchParams }: PageProps
   ]
 
   const related = collection.relatedSlugs
-    .map((relatedSlug) => collectionBySlug.get(relatedSlug))
+    .map((relatedSlug) => allCollections.find((entry) => entry.slug === relatedSlug))
     .filter((entry): entry is NonNullable<typeof entry> => Boolean(entry))
 
   return (
@@ -159,14 +167,31 @@ export default async function CollectionPage({ params, searchParams }: PageProps
             )}
 
             {products.length > 0 ? (
-              <ProductGrid products={products} className="mt-10" priorityCount={2} />
-            ) : (
+              <>
+                <ProductGrid products={products} className="mt-10" priorityCount={2} />
+                <Pagination
+                  page={page}
+                  totalPages={totalPages}
+                  pathname={pathname}
+                  searchParams={resolvedSearchParams}
+                  className="mt-14"
+                />
+              </>
+            ) : activeCount > 0 ? (
               <EmptyState
                 className="mt-16"
                 title="Nothing matches those filters"
                 description="Try widening your selection, or browse the full collection."
                 actionHref={pathname}
                 actionLabel="Clear filters"
+              />
+            ) : (
+              <EmptyState
+                className="mt-16"
+                title="New pieces are on the loom"
+                description="This collection has no pieces available right now. Explore our other collections in the meantime."
+                actionHref="/collections"
+                actionLabel="All collections"
               />
             )}
           </div>

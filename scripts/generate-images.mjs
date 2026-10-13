@@ -312,41 +312,10 @@ function render(spec) {
  * Catalogue of assets to produce
  * ------------------------------------------------------------------ */
 
-/** slug -> colour story. Must stay in sync with src/data/products.ts. */
-const PRODUCTS = {
-  'ivory-heritage-pashmina-shawl': ['ivory', 'beige', 'gold', true],
-  'kashmiri-sozni-embroidered-pashmina-shawl': ['cream', 'taupe', 'gold', true],
-  'charcoal-fine-wool-shawl': ['slate', 'charcoal', 'mist', false],
-  'antique-gold-jamawar-shawl': ['brass', 'brown', 'gold', true],
-  'burgundy-kani-weave-pashmina-shawl': ['burgundy', 'charcoal', 'gold', true],
-  'sand-cashmere-stole': ['sand', 'mocha', 'cream', false],
-  'midnight-blue-pashmina-stole': ['ink', 'charcoal', 'brass', false],
-  'rose-taupe-wool-scarf': ['rose', 'mocha', 'cream', false],
-  'ivory-silk-pashmina-blend-scarf': ['ivory', 'sand', 'brass', false],
-  'warm-beige-ring-pashmina-shawl': ['beige', 'mocha', 'gold', false],
-  'emerald-tilla-embroidered-dupatta': ['emerald', 'charcoal', 'brass', true],
-  'ivory-chikankari-dupatta': ['ivory', 'beige', 'taupe', true],
-  'saffron-banarasi-silk-dupatta': ['saffron', 'brown', 'gold', true],
-  'classic-charcoal-mens-pashmina-shawl': ['charcoal', 'ink', 'slate', false],
-  'walnut-brown-mens-wool-shawl': ['brown', 'charcoal', 'camel', false],
-  'slate-grey-mens-cashmere-stole': ['slate', 'ink', 'mist', false],
-  'ink-blue-mens-wool-scarf': ['ink', 'charcoal', 'slate', false],
-  'heritage-nehru-jacket-charcoal': ['charcoal', 'ink', 'gold', false],
-  'handwoven-wool-mens-jacket-camel': ['camel', 'brown', 'cream', false],
-  'mens-embroidered-pocket-square-set': ['cream', 'taupe', 'gold', true],
-  'pure-pashmina-wedding-shawl-ivory-gold': ['ivory', 'brass', 'gold', true],
-  'crimson-bridal-kani-shawl': ['crimson', 'burgundy', 'gold', true],
-  'ivory-pashmina-gift-box': ['cream', 'taupe', 'gold', false],
-  'heritage-gift-set-shawl-and-stole': ['sand', 'brown', 'gold', false],
-  'corporate-gifting-pashmina-stole-set': ['mist', 'slate', 'brass', false],
-  'soft-cream-ombre-pashmina-wrap': ['cream', 'beige', 'sand', false],
-  'dusty-rose-cashmere-wrap': ['dusty', 'mocha', 'cream', false],
-  'olive-herringbone-wool-stole': ['olive', 'brown', 'sand', false],
-  'paisley-jamawar-womens-shawl': ['taupe', 'brown', 'gold', true],
-  'handloom-pashmina-solid-shawl-mist': ['mist', 'slate', 'ivory', false],
-}
-
-const IMAGES_PER_PRODUCT = 4
+/**
+ * Product photography lives in Cloudflare R2 and arrives with the catalogue.
+ * This neutral frame is only shown when a product has no usable image.
+ */
 const PRODUCT_W = 800
 const PRODUCT_H = 1000
 
@@ -471,20 +440,15 @@ function make(relPath, spec) {
 
 console.log('Generating Pashmore image assets…')
 
-for (const [slug, [base, deep, accent, motif]] of Object.entries(PRODUCTS)) {
-  for (let i = 1; i <= IMAGES_PER_PRODUCT; i++) {
-    make(`products/${slug}-${i}.png`, {
-      w: PRODUCT_W,
-      h: PRODUCT_H,
-      seed: hash(`${slug}-${i}`),
-      base,
-      deep,
-      accent,
-      motif: motif && i !== 2,
-      style: i === 3 ? 'weave' : 'drape',
-    })
-  }
-}
+make('placeholders/product.png', {
+  w: PRODUCT_W,
+  h: PRODUCT_H,
+  seed: hash('placeholder-product'),
+  base: 'ivory',
+  deep: 'beige',
+  style: 'flat',
+  motif: false,
+})
 
 for (const [name, w, h, base, deep, accent, style] of EDITORIAL) {
   make(`editorial/${name}.png`, {

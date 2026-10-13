@@ -39,11 +39,11 @@ export const site = {
   },
 } as const
 
-/** Free shipping threshold in paise-free rupees. */
+/**
+ * Free shipping threshold in rupees, used for display copy only. Cart totals
+ * (shipping, GST, discounts) always come from the Worker.
+ */
 export const FREE_SHIPPING_THRESHOLD = 4999
-export const STANDARD_SHIPPING_FEE = 149
-/** GST is already included in displayed prices, as is standard for Indian retail. */
-export const GST_RATE = 0.05
 
 /**
  * Kept short deliberately: the announcement bar is a single clipped line, and

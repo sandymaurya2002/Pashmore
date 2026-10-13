@@ -4,9 +4,11 @@ import Link from 'next/link'
 import { ProductGrid } from '@/components/product/product-grid'
 import { EmptyState } from '@/components/ui/empty-state'
 import { SortSelect } from '@/components/collection/sort-select'
+import { Pagination } from '@/components/collection/pagination'
 import { popularSearches } from '@/data/navigation'
 import { queryProducts, searchCatalog } from '@/services/catalog'
-import { parseSort, type SearchParams } from '@/lib/query'
+import { failSoft } from '@/server/fail-soft'
+import { parsePage, parseSort, type SearchParams } from '@/lib/query'
 import { buildMetadata, pageTitle } from '@/lib/seo'
 import { pluralise } from '@/lib/utils'
 
@@ -33,13 +35,17 @@ export async function generateMetadata({ searchParams }: PageProps): Promise<Met
 
 export default async function SearchPage({ searchParams }: PageProps) {
   const params = await searchParams
-  const term = (typeof params.q === 'string' ? params.q : '').trim()
+  const term = (typeof params.q === 'string' ? params.q : '').trim().slice(0, 120)
   const sort = parseSort(params)
 
-  const { products } = term
-    ? await queryProducts({ search: term, sort })
-    : { products: [] }
-  const suggestions = term ? await searchCatalog(term, 0) : null
+  const [results, suggestions] = term
+    ? await Promise.all([
+        queryProducts({ search: term, sort, page: parsePage(params) }),
+        failSoft(searchCatalog(term, 1), null, 'search:collections'),
+      ])
+    : [null, null]
+  const products = results?.products ?? []
+  const total = results?.total ?? 0
 
   return (
     <div className="container-luxe pb-24 pt-12">
@@ -50,7 +56,7 @@ export default async function SearchPage({ searchParams }: PageProps) {
         </h1>
         {term && (
           <p className="mt-4 text-sm text-taupe">
-            {products.length} {pluralise(products.length, 'piece')} found
+            {total} {pluralise(total, 'piece')} found
           </p>
         )}
       </header>
@@ -79,6 +85,15 @@ export default async function SearchPage({ searchParams }: PageProps) {
             <SortSelect value={sort} pathname="/search" searchParams={params} />
           </div>
           <ProductGrid products={products} className="mt-10" priorityCount={2} />
+          {results && (
+            <Pagination
+              page={results.page}
+              totalPages={results.totalPages}
+              pathname="/search"
+              searchParams={params}
+              className="mt-14"
+            />
+          )}
 
           {suggestions && suggestions.collections.length > 0 && (
             <section className="mt-16 border-t border-line pt-10" aria-labelledby="matching-collections">
