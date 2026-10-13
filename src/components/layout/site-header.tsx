@@ -58,8 +58,8 @@ export function SiteHeader() {
       <div aria-hidden className="h-[calc(2.25rem+5.5rem)]" />
       <header
         className={cn(
-          'fixed inset-x-0 top-0 z-40 w-full border-b bg-ivory/92 backdrop-blur-md will-change-transform transition-[transform,border-color] duration-500 ease-[var(--ease-luxe)]',
-          scrolled ? '-translate-y-9 border-line' : 'translate-y-0 border-transparent',
+          'fixed inset-x-0 top-0 z-40 w-full border-b bg-burgundy/95 backdrop-blur-md will-change-transform transition-[transform,border-color] duration-500 ease-[var(--ease-luxe)]',
+          scrolled ? '-translate-y-9 border-ivory/10' : 'translate-y-0 border-transparent',
         )}
         onKeyDown={(event) => {
           if (event.key === 'Escape') setActiveMenu(null)
@@ -82,7 +82,7 @@ export function SiteHeader() {
               <button
                 type="button"
                 onClick={openMobileMenu}
-                className="-ml-2 flex h-10 w-10 items-center justify-center text-charcoal lg:hidden"
+                className="-ml-2 flex h-10 w-10 items-center justify-center text-ivory lg:hidden"
                 aria-label="Open navigation menu"
               >
                 <Menu className="h-5 w-5" strokeWidth={1.25} />
@@ -104,8 +104,8 @@ export function SiteHeader() {
                         aria-expanded={item.columns ? activeMenu === item.label : undefined}
                         aria-haspopup={item.columns ? 'true' : undefined}
                         className={cn(
-                          'relative py-2 text-[0.6875rem] uppercase tracking-[0.2em] text-charcoal/90 transition-colors duration-300 hover:text-charcoal',
-                          activeMenu === item.label && 'text-charcoal',
+                          'relative py-2 text-[0.6875rem] uppercase tracking-[0.2em] text-ivory/85 transition-colors duration-300 hover:text-ivory',
+                          activeMenu === item.label && 'text-ivory',
                         )}
                       >
                         {item.label}
@@ -130,7 +130,7 @@ export function SiteHeader() {
                 scrolled ? 'scale-[0.8]' : 'scale-100',
               )}
             >
-              <Logo priority />
+              <Logo priority tone="light" />
             </div>
 
             {/* Right — utilities */}
@@ -138,7 +138,7 @@ export function SiteHeader() {
               <button
                 type="button"
                 onClick={openSearch}
-                className="flex h-10 w-10 items-center justify-center text-charcoal transition-colors duration-300 hover:text-gold"
+                className="flex h-10 w-10 items-center justify-center text-ivory transition-colors duration-300 hover:text-gold"
                 aria-label="Search (Ctrl+K)"
               >
                 <Search className="h-[1.15rem] w-[1.15rem]" strokeWidth={1.25} />
@@ -146,7 +146,7 @@ export function SiteHeader() {
 
               <Link
                 href="/account"
-                className="hidden h-10 w-10 items-center justify-center text-charcoal transition-colors duration-300 hover:text-gold sm:flex"
+                className="hidden h-10 w-10 items-center justify-center text-ivory transition-colors duration-300 hover:text-gold sm:flex"
                 aria-label="Account"
               >
                 <User className="h-[1.15rem] w-[1.15rem]" strokeWidth={1.25} />
@@ -154,7 +154,7 @@ export function SiteHeader() {
 
               <Link
                 href="/wishlist"
-                className="relative hidden h-10 w-10 items-center justify-center text-charcoal transition-colors duration-300 hover:text-gold sm:flex"
+                className="relative hidden h-10 w-10 items-center justify-center text-ivory transition-colors duration-300 hover:text-gold sm:flex"
                 aria-label={
                   wishlistCount
                     ? `Wishlist, ${wishlistCount} saved`
@@ -168,7 +168,7 @@ export function SiteHeader() {
               <button
                 type="button"
                 onClick={openCart}
-                className="relative flex h-10 w-10 items-center justify-center text-charcoal transition-colors duration-300 hover:text-gold"
+                className="relative flex h-10 w-10 items-center justify-center text-ivory transition-colors duration-300 hover:text-gold"
                 aria-label={cartCount ? `Shopping bag, ${cartCount} items` : 'Shopping bag'}
               >
                 <ShoppingBag className="h-[1.15rem] w-[1.15rem]" strokeWidth={1.25} />

@@ -49,6 +49,7 @@ export function QuickView({ product, open, onOpenChange }: QuickViewProps) {
           isDesktop ? 'max-w-4xl' : 'max-h-[90dvh]',
         )}
         closeLabel="Close quick view"
+        closeClassName="right-3 top-3 h-10 w-10 rounded-full bg-ivory text-charcoal shadow-[0_2px_10px_rgba(18,17,15,0.15)] [&_svg]:h-5 [&_svg]:w-5 [&_svg]:stroke-2"
       >
         <QuickViewBody product={product} onOpenChange={onOpenChange} isDesktop={isDesktop} />
       </DialogContent>
@@ -115,7 +116,12 @@ function QuickViewBody({
         </div>
       )}
 
-      <div className="flex min-h-0 flex-col overflow-y-auto overscroll-contain px-6 py-8 md:px-9 md:py-10">
+      <div
+        className={cn(
+          'flex min-h-0 flex-col overflow-y-auto overscroll-contain px-6 md:px-9',
+          isDesktop ? 'py-8 md:py-10' : 'pb-8 pt-16',
+        )}
+      >
         {!isDesktop && (
           // `shrink-0` is load-bearing: this is a flex child of a scrolling
           // column, and without it the aspect-ratio box collapses to zero

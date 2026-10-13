@@ -43,14 +43,14 @@ export function Logo({
       />
       <span
         className={cn(
-          'block font-serif leading-none transition-all duration-500 ease-[var(--ease-luxe)]',
+          'block font-serif font-semibold leading-none transition-all duration-500 ease-[var(--ease-luxe)]',
           tone === 'light' ? 'text-ivory' : 'text-charcoal',
           // The wordmark sits between the hamburger and the utility icons, so it
           // has to give way first on narrow phones — at full size it pushed the
           // cart button off-screen below ~360px.
           compact
-            ? 'text-[0.875rem] tracking-[0.14em] sm:text-[1.375rem] sm:tracking-[0.3em]'
-            : 'text-[0.9375rem] tracking-[0.16em] sm:text-[1.75rem] sm:tracking-[0.34em]',
+            ? 'text-[1rem] tracking-[0.14em] xs:text-[1.125rem] sm:text-[1.625rem] sm:tracking-[0.3em]'
+            : 'text-[1.0625rem] tracking-[0.16em] xs:text-[1.1875rem] sm:text-[2rem] sm:tracking-[0.34em]',
         )}
       >
         PASHMORE

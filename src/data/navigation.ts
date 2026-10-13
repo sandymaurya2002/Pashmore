@@ -167,7 +167,7 @@ export const primaryNav: NavItem[] = [
     },
   },
   {
-    label: 'New Arrivals',
+    label: 'New',
     href: '/collections/new-arrivals',
   },
 ]
