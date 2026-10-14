@@ -12,7 +12,7 @@ import { useDebouncedValue } from '@/hooks/use-debounced-value'
 import { popularSearches } from '@/data/navigation'
 import { bff } from '@/lib/api/browser'
 import { formatPrice } from '@/lib/utils'
-import type { ProductImage } from '@/types'
+import type { Currency, ProductImage } from '@/types'
 
 interface SearchResponse {
   total: number
@@ -22,6 +22,7 @@ interface SearchResponse {
     material: string
     price: number
     compareAtPrice?: number
+    currency: Currency
     image: ProductImage
   }>
   collections: Array<{ slug: string; name: string }>
@@ -235,7 +236,7 @@ export function SearchOverlay() {
                             {product.name}
                           </span>
                           <span className="mt-1 block text-xs text-mocha">
-                            {formatPrice(product.price)}
+                            {formatPrice(product.price, product.currency)}
                           </span>
                         </Link>
                       </li>

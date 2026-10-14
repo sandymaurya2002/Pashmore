@@ -1,6 +1,8 @@
 import { clsx, type ClassValue } from 'clsx'
 import { twMerge } from 'tailwind-merge'
 
+import type { Currency } from '@/lib/region'
+
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
@@ -11,8 +13,15 @@ const inrFormatter = new Intl.NumberFormat('en-IN', {
   maximumFractionDigits: 0,
 })
 
-/** ₹8,999 — Indian digit grouping, no decimals (catalogue prices are whole rupees). */
-export function formatPrice(value: number): string {
+const usdWhole = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 })
+const usdCents = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 2 })
+
+/**
+ * ₹8,999 — Indian digit grouping, no decimals (catalogue prices are whole rupees).
+ * $249 / $249.50 — US grouping; cents only when there are any.
+ */
+export function formatPrice(value: number, currency: Currency = 'INR'): string {
+  if (currency === 'USD') return (Number.isInteger(value) ? usdWhole : usdCents).format(value)
   return inrFormatter.format(value)
 }
 

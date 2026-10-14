@@ -6,12 +6,13 @@ import { useSession } from '@/context/session-context'
 import { useToast } from '@/context/toast-context'
 import { bff, errorMessage } from '@/lib/api/browser'
 import { FREE_SHIPPING_THRESHOLD } from '@/lib/site'
-import type { Cart, CartItem, CartTotals, Coupon } from '@/types'
+import type { Cart, CartItem, CartTotals, Coupon, Currency } from '@/types'
 
 /** Pre-migration carts lived here; they hold no variant ids and cannot be restored. */
 const LEGACY_STORAGE_KEY = 'pashmore.cart.v1'
 
 const EMPTY_CART: Cart = {
+  currency: 'INR',
   items: [],
   totals: { subtotal: 0, discount: 0, shipping: 0, tax: 0, total: 0, itemCount: 0 },
   coupon: null,
@@ -20,6 +21,8 @@ const EMPTY_CART: Cart = {
 }
 
 interface CartContextValue {
+  /** Every amount in the bag is in this currency (the shopper's region). */
+  currency: Currency
   items: CartItem[]
   totals: CartTotals
   coupon: Coupon | null
@@ -190,6 +193,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
   const value = React.useMemo<CartContextValue>(
     () => ({
+      currency: cart.currency,
       items: cart.items,
       totals: cart.totals,
       coupon: cart.coupon,

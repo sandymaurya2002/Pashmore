@@ -21,7 +21,8 @@ export async function GET(request: Request) {
     const products = await getProductsBySlugs(slugs)
     return ok(
       { products },
-      { headers: { 'Cache-Control': 'public, max-age=60, stale-while-revalidate=300' } },
+      // Private: prices depend on the shopper's region.
+      { headers: { 'Cache-Control': 'private, max-age=60, stale-while-revalidate=300' } },
     )
   } catch (error) {
     return fail(error, 'api/products')

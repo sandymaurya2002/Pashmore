@@ -11,11 +11,12 @@ import { buildMetadata, pageTitle } from '@/lib/seo'
 import { breadcrumbSchema, graph, webPageSchema } from '@/lib/jsonld'
 import { site } from '@/lib/site'
 import type { Breadcrumb } from '@/types'
+import { withSeoOverride } from '@/server/seo'
 
 const DESCRIPTION =
   'Pashmore has woven Pashmina and Kashmiri textiles in Srinagar since 1978. Our story, our workshop and the families who make every piece.'
 
-export const metadata: Metadata = buildMetadata({
+const BASE_METADATA: Metadata = buildMetadata({
   title: pageTitle('Our Story'),
   description: DESCRIPTION,
   path: '/about',
@@ -26,6 +27,10 @@ export const metadata: Metadata = buildMetadata({
     height: 1000,
   },
 })
+
+export function generateMetadata(): Promise<Metadata> {
+  return withSeoOverride('/about', BASE_METADATA)
+}
 
 const crumbs: Breadcrumb[] = [
   { name: 'Home', href: '/' },

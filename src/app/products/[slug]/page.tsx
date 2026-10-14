@@ -20,10 +20,13 @@ import {
 
 import { getAllCollections, getProductBySlug, getRelatedProducts } from '@/services/catalog'
 import { failSoft } from '@/server/fail-soft'
+import { getSiteContent } from '@/server/content'
 import { buildMetadata, metaDescription, pageTitle } from '@/lib/seo'
+import { formatPrice } from '@/lib/utils'
 import { productKeywords } from '@/lib/keywords'
 import { breadcrumbSchema, faqSchema, graph, productSchema } from '@/lib/jsonld'
 import type { Breadcrumb } from '@/types'
+import { withSeoOverride } from '@/server/seo'
 
 interface PageProps {
   params: Promise<{ slug: string }>
@@ -38,13 +41,16 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const product = await failSoft(getProductBySlug(slug), null, 'product:metadata')
   if (!product) return {}
 
-  return buildMetadata({
-    title: pageTitle(product.name),
-    description: metaDescription(`${product.tagline} ${product.description}`),
-    path: `/products/${product.slug}`,
-    image: product.images[0],
-    keywords: productKeywords(product),
-  })
+  return withSeoOverride(
+    `/products/${product.slug}`,
+    buildMetadata({
+      title: pageTitle(product.name),
+      description: metaDescription(`${product.tagline} ${product.description}`),
+      path: `/products/${product.slug}`,
+      image: product.images[0],
+      keywords: productKeywords(product),
+    }),
+  )
 }
 
 export default async function ProductPage({ params }: PageProps) {
@@ -52,9 +58,10 @@ export default async function ProductPage({ params }: PageProps) {
   const product = await getProductBySlug(slug)
   if (!product) notFound()
 
-  const [related, allCollections] = await Promise.all([
+  const [related, allCollections, { commerceByCurrency }] = await Promise.all([
     failSoft(getRelatedProducts(product, 4), [], 'product:related'),
     failSoft(getAllCollections(), [], 'product:collections'),
+    getSiteContent(),
   ])
   const collectionNamed = (entry: string) => allCollections.find((c) => c.slug === entry)
   const categoryName = product.categoryName ?? collectionNamed(product.categorySlug)?.name
@@ -225,7 +232,10 @@ export default async function ProductPage({ params }: PageProps) {
                 <p>
                   Dispatched from Srinagar within 48 hours. Delivery across India in 3–6
                   working days; international delivery in 7–12 working days. Shipping is
-                  complimentary on Indian orders above ₹4,999.
+                  complimentary on Indian orders above{' '}
+                  {formatPrice(commerceByCurrency.INR.freeShippingThreshold, 'INR')} and on
+                  international orders above{' '}
+                  {formatPrice(commerceByCurrency.USD.freeShippingThreshold, 'USD')}.
                 </p>
                 <p className="mt-4">
                   Full detail on our{' '}

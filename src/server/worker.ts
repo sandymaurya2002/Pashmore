@@ -15,6 +15,13 @@ const DEFAULT_TIMEOUT_MS = 10_000
 
 export type QueryValue = string | number | boolean | string[] | undefined | null
 
+export interface ClientContext {
+  ip?: string
+  userAgent?: string
+  /** The shopper's region (ISO country). The Worker prices the request in its currency. */
+  country?: string
+}
+
 export interface WorkerRequest {
   method?: 'GET' | 'POST' | 'PATCH' | 'PUT' | 'DELETE'
   query?: Record<string, QueryValue>
@@ -26,10 +33,12 @@ export interface WorkerRequest {
    * rather than this server. The Worker only trusts the forwarded IP when the
    * request carries its GATEWAY_SECRET.
    */
-  client?: { ip?: string; userAgent?: string }
+  client?: ClientContext
   /** Public catalogue reads are cached in the Next Data Cache; everything else is not. */
   cache?: { revalidate: number; tags?: string[] } | 'no-store'
   timeoutMs?: number
+  /** Lets the Worker recognise a retried order submission and return the original order. */
+  idempotencyKey?: string
 }
 
 export interface WorkerResult<T> {
@@ -68,6 +77,7 @@ function buildHeaders(request: WorkerRequest): Headers {
   const headers = new Headers({ Accept: 'application/json' })
   if (request.body !== undefined) headers.set('Content-Type', 'application/json')
   if (request.accessToken) headers.set('Authorization', `Bearer ${request.accessToken}`)
+  if (request.idempotencyKey) headers.set('Idempotency-Key', request.idempotencyKey)
 
   const gatewaySecret = process.env.CLOUDFLARE_GATEWAY_SECRET
   if (gatewaySecret && request.client?.ip) {
@@ -75,6 +85,8 @@ function buildHeaders(request: WorkerRequest): Headers {
     headers.set('X-Client-IP', request.client.ip)
   }
   if (request.client?.userAgent) headers.set('User-Agent', request.client.userAgent)
+  // Without it the Worker would geolocate this server, not the shopper.
+  if (request.client?.country) headers.set('X-Client-Country', request.client.country)
 
   // Optional Cloudflare Access service token, so only this server can call the Worker.
   if (process.env.CF_ACCESS_CLIENT_ID && process.env.CF_ACCESS_CLIENT_SECRET) {

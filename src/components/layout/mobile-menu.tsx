@@ -9,6 +9,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { Logo } from '@/components/layout/logo'
+import { RegionSelect } from '@/components/layout/region-select'
 import { primaryNav, footerColumns } from '@/data/navigation'
 import { useUI } from '@/context/ui-context'
 import { cn } from '@/lib/utils'
@@ -134,6 +135,8 @@ export function MobileMenu() {
               </li>
             </ul>
           </div>
+
+          <RegionSelect variant="menu" className="border-t border-line px-6 py-6" />
         </nav>
       </DialogContent>
     </Dialog>

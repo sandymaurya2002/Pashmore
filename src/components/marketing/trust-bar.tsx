@@ -1,4 +1,5 @@
 import { Award, Gift, RefreshCcw, ShieldCheck, Truck } from 'lucide-react'
+import { FreeShippingNote } from '@/components/marketing/free-shipping-note'
 import { cn } from '@/lib/utils'
 
 const SIGNALS = [
@@ -6,7 +7,7 @@ const SIGNALS = [
   { icon: RefreshCcw, label: 'Easy Returns', detail: '14 days, free pickup' },
   { icon: Gift, label: 'Premium Packaging', detail: 'Hand-bound gift box' },
   { icon: Award, label: 'Quality Crafted', detail: 'Certified by weaver' },
-  { icon: Truck, label: 'Fast Shipping', detail: 'Free above ₹4,999' },
+  { icon: Truck, label: 'Fast Shipping', detail: <FreeShippingNote /> },
 ]
 
 export function TrustBar({

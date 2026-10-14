@@ -10,6 +10,8 @@ import { useToast } from '@/context/toast-context'
 import { isSessionError } from '@/context/session-context'
 import { ApiError } from '@/lib/api/envelope'
 import { bff, errorMessage } from '@/lib/api/browser'
+import { COUNTRIES, countryCode, countryName, HOME_COUNTRY, isIndia } from '@/lib/region'
+import { useRegion } from '@/context/region-context'
 import type { Address, AddressInput } from '@/types'
 
 const EMPTY: AddressInput = {
@@ -25,17 +27,27 @@ const EMPTY: AddressInput = {
   isDefault: false,
 }
 
+/** Mirrors the Worker's rules: Indian addresses need a PIN and state; others a postcode. */
 function validate(input: AddressInput): Record<string, string> {
   const errors: Record<string, string> = {}
   if (input.fullName.trim().length < 2) errors.fullName = 'Please enter the full name.'
   if (input.line1.trim().length < 4) errors.line1 = 'Please enter the address.'
   if (input.city.trim().length < 2) errors.city = 'Please enter the city.'
-  if (input.state.trim().length < 2) errors.state = 'Please enter the state.'
-  if (!/^[0-9]{6}$/.test(input.postalCode.trim())) {
-    errors.postalCode = 'Please enter a valid 6-digit PIN code.'
-  }
-  if (!/^[0-9+\-\s]{10,15}$/.test(input.phone.trim())) {
-    errors.phone = 'Please enter a valid phone number.'
+  if (isIndia(input.country)) {
+    if (input.state.trim().length < 2) errors.state = 'Please enter the state.'
+    if (!/^[0-9]{6}$/.test(input.postalCode.trim())) {
+      errors.postalCode = 'Please enter a valid 6-digit PIN code.'
+    }
+    if (!/^[0-9+\-\s]{10,15}$/.test(input.phone.trim())) {
+      errors.phone = 'Please enter a valid phone number.'
+    }
+  } else {
+    if (!/^[A-Za-z0-9][A-Za-z0-9 -]{1,11}$/.test(input.postalCode.trim())) {
+      errors.postalCode = 'Please enter a valid postal code.'
+    }
+    if (!/^\+?[0-9][0-9\-\s().]{5,22}$/.test(input.phone.trim())) {
+      errors.phone = 'Please enter a valid phone number, with the country code.'
+    }
   }
   return errors
 }
@@ -43,6 +55,7 @@ function validate(input: AddressInput): Record<string, string> {
 export function AddressBook({ initialAddresses }: { initialAddresses: Address[] }) {
   const { toast } = useToast()
   const router = useRouter()
+  const { region } = useRegion()
   const [addresses, setAddresses] = React.useState(initialAddresses)
   const [editing, setEditing] = React.useState<'new' | string | null>(null)
   const [form, setForm] = React.useState<AddressInput>(EMPTY)
@@ -72,7 +85,11 @@ export function AddressBook({ initialAddresses }: { initialAddresses: Address[] 
       setForm({ ...EMPTY, ...rest, line2: rest.line2 ?? '' })
       setEditing(id)
     } else {
-      setForm({ ...EMPTY, isDefault: addresses.length === 0 })
+      setForm({
+        ...EMPTY,
+        country: countryName(region?.country ?? HOME_COUNTRY),
+        isDefault: addresses.length === 0,
+      })
       setEditing('new')
     }
   }
@@ -166,15 +183,41 @@ export function AddressBook({ initialAddresses }: { initialAddresses: Address[] 
           <div className="grid gap-5 sm:grid-cols-2">
             {field('label', 'Label', { placeholder: 'Home, Office…' })}
             {field('fullName', 'Full name', { autoComplete: 'name' })}
+            <div className="sm:col-span-2">
+              <FieldLabel htmlFor="address-country">Country</FieldLabel>
+              <select
+                id="address-country"
+                value={countryCode(form.country) ?? HOME_COUNTRY}
+                onChange={(event) =>
+                  setForm((current) => ({ ...current, country: countryName(event.target.value) }))
+                }
+                autoComplete="country"
+                className="h-12 w-full border border-line-strong bg-transparent px-4 text-sm text-charcoal focus:border-charcoal focus:outline-none"
+              >
+                {COUNTRIES.map((entry) => (
+                  <option key={entry.code} value={entry.code}>
+                    {entry.name}
+                  </option>
+                ))}
+              </select>
+              <FieldError>{errors.country}</FieldError>
+            </div>
             {field('line1', 'Address', { autoComplete: 'address-line1', className: 'sm:col-span-2' })}
             {field('line2', 'Apartment, landmark (optional)', {
               autoComplete: 'address-line2',
               className: 'sm:col-span-2',
             })}
             {field('city', 'City', { autoComplete: 'address-level2' })}
-            {field('state', 'State', { autoComplete: 'address-level1' })}
-            {field('postalCode', 'PIN code', { autoComplete: 'postal-code', inputMode: 'numeric' })}
-            {field('phone', 'Phone', { autoComplete: 'tel', type: 'tel' })}
+            {field('state', isIndia(form.country) ? 'State' : 'State / province / region', {
+              autoComplete: 'address-level1',
+            })}
+            {isIndia(form.country)
+              ? field('postalCode', 'PIN code', { autoComplete: 'postal-code', inputMode: 'numeric' })
+              : field('postalCode', 'Postal code', { autoComplete: 'postal-code' })}
+            {field('phone', isIndia(form.country) ? 'Phone' : 'Phone (with country code)', {
+              autoComplete: 'tel',
+              type: 'tel',
+            })}
           </div>
 
           <label className="mt-6 flex cursor-pointer items-center gap-3 text-sm text-mocha">

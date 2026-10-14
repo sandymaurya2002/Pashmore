@@ -4,7 +4,9 @@ import { ApiError } from '@/lib/api/envelope'
 import { placeholderImage } from '@/lib/media'
 import { normalizeProducts } from '@/lib/normalize/catalog'
 import { normalizeCart } from '@/lib/normalize/commerce'
+import { currencyForCountry, type Currency } from '@/lib/region'
 import { FREE_SHIPPING_THRESHOLD } from '@/lib/site'
+import { DEFAULT_COMMERCE, getSiteContent } from '@/server/content'
 import { ok } from '@/server/http'
 import { baseCookie, withSession, type CookieReader } from '@/server/session'
 import { workerFetch, type WorkerRequest } from '@/server/worker'
@@ -103,6 +105,8 @@ export function clearGuestCart(response: NextResponse) {
 interface Target {
   product: Product
   available: boolean
+  /** Exists, but has no price in the shopper's currency. */
+  regionUnavailable?: boolean
   price: number
   compareAtPrice?: number
   stock: number
@@ -115,6 +119,7 @@ interface Target {
 function resolveTarget(product: Product | undefined, variantId: string): Target | null {
   if (!product) return null
   const unavailable: Target = { product, available: false, price: product.price, stock: 0 }
+  if (!product.availableInRegion) return { ...unavailable, regionUnavailable: true }
 
   if (!product.variants.length) {
     if (variantId !== product.id) return unavailable
@@ -144,9 +149,22 @@ function resolveTarget(product: Product | undefined, variantId: string): Target 
 const toPaise = (rupees: number) => Math.round(rupees * 100)
 const toRupees = (paise: number) => paise / 100
 
+export interface ShippingRules {
+  currency: Currency
+  freeShippingThreshold: number
+  standardShippingFee: number
+}
+
+const DEFAULT_SHIPPING: ShippingRules = {
+  currency: 'INR',
+  freeShippingThreshold: FREE_SHIPPING_THRESHOLD,
+  standardShippingFee: toRupees(STANDARD_SHIPPING_PAISE),
+}
+
 export function priceGuestCart(
   lines: GuestLine[],
   products: Map<string, Product>,
+  rules: ShippingRules = DEFAULT_SHIPPING,
 ): { cart: Cart; lines: GuestLine[] } {
   const items: CartItem[] = []
   const kept: GuestLine[] = []
@@ -174,6 +192,7 @@ export function priceGuestCart(
       quantity: line.quantity,
       maxQuantity: Math.max(1, Math.min(MAX_LINE_QUANTITY, target.stock)),
       inStock: target.available && target.stock >= line.quantity,
+      ...(target.regionUnavailable ? { regionUnavailable: true } : {}),
     })
     if (target.available) {
       subtotal += toPaise(target.price) * line.quantity
@@ -181,13 +200,14 @@ export function priceGuestCart(
     }
   }
 
-  const threshold = toPaise(FREE_SHIPPING_THRESHOLD)
-  const shipping = subtotal === 0 || subtotal >= threshold ? 0 : STANDARD_SHIPPING_PAISE
+  const threshold = toPaise(rules.freeShippingThreshold)
+  const shipping = subtotal === 0 || subtotal >= threshold ? 0 : toPaise(rules.standardShippingFee)
   const tax = Math.round(subtotal - subtotal / (1 + GST_RATE))
 
   return {
     lines: kept,
     cart: {
+      currency: rules.currency,
       items,
       totals: {
         subtotal: toRupees(subtotal),
@@ -198,7 +218,7 @@ export function priceGuestCart(
         itemCount,
       },
       coupon: null,
-      freeShippingThreshold: FREE_SHIPPING_THRESHOLD,
+      freeShippingThreshold: rules.freeShippingThreshold,
       remainingForFreeShipping: toRupees(Math.max(0, threshold - subtotal)),
     },
   }
@@ -210,7 +230,10 @@ async function loadProducts(
 ): Promise<Map<string, Product>> {
   const unique = Array.from(new Set(slugs))
   if (!unique.length) return new Map()
-  const { data } = await workerFetch<unknown>('/products/batch', { query: { slugs: unique }, client })
+  const { data } = await workerFetch<unknown>('/products/batch', {
+    query: { slugs: unique, currency: currencyForCountry(client?.country) },
+    client,
+  })
   return new Map(normalizeProducts(data).map((product) => [product.slug, product]))
 }
 
@@ -223,7 +246,17 @@ function stockError(stock: number): ApiError {
   )
 }
 
+/** Shipping as configured in the admin dashboard, so the guest bag matches the Worker's pricing. */
+async function priceWithSiteRules(lines: GuestLine[], products: Map<string, Product>, currency: Currency) {
+  // An empty bag costs nothing to ship, so it needs no Worker round trip.
+  if (!lines.length) return priceGuestCart(lines, products, DEFAULT_COMMERCE[currency])
+  const { commerceByCurrency } = await getSiteContent()
+  return priceGuestCart(lines, products, commerceByCurrency[currency])
+}
+
 const productGone = () => new ApiError('This piece is no longer available.', 404, 'NOT_FOUND')
+const regionUnavailable = () =>
+  new ApiError('This piece is not yet available in your shopping region.', 409, 'REGION_UNAVAILABLE')
 const lineGone = () => new ApiError('That item is no longer in your bag.', 404, 'NOT_FOUND')
 
 async function guestCart(
@@ -232,6 +265,7 @@ async function guestCart(
   client: WorkerRequest['client'],
 ): Promise<{ cart: Cart; lines: GuestLine[] }> {
   let lines = current
+  const currency = currencyForCountry(client?.country)
 
   switch (operation.type) {
     case 'add': {
@@ -240,6 +274,7 @@ async function guestCart(
         client,
       )
       const target = resolveTarget(products.get(operation.productSlug), operation.variantId)
+      if (target?.regionUnavailable) throw regionUnavailable()
       if (!target?.available) throw productGone()
       const existing = lines.find((line) => line.variantId === operation.variantId)
       if (!existing && lines.length >= MAX_GUEST_LINES) {
@@ -254,7 +289,7 @@ async function guestCart(
       lines = existing
         ? lines.map((line) => (line === existing ? { ...line, quantity: desired } : line))
         : [...lines, { variantId: operation.variantId, productSlug: target.product.slug, quantity: desired }]
-      return priceGuestCart(lines, products)
+      return priceWithSiteRules(lines, products, currency)
     }
 
     case 'set': {
@@ -270,7 +305,7 @@ async function guestCart(
       const desired = Math.min(MAX_LINE_QUANTITY, operation.quantity)
       if (desired > target.stock) throw stockError(target.stock)
       lines = lines.map((line) => (line === existing ? { ...line, quantity: desired } : line))
-      return priceGuestCart(lines, products)
+      return priceWithSiteRules(lines, products, currency)
     }
 
     case 'remove':
@@ -286,7 +321,7 @@ async function guestCart(
   }
 
   const products = await loadProducts(lines.map((line) => line.productSlug), client)
-  return priceGuestCart(lines, products)
+  return priceWithSiteRules(lines, products, currency)
 }
 
 /* ------------------------------------------------------------------ *

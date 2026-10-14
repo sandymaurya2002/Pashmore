@@ -11,15 +11,20 @@ import { blogCategories, getAllPosts } from '@/data/blog'
 import { buildMetadata, pageTitle } from '@/lib/seo'
 import { breadcrumbSchema, graph, webPageSchema } from '@/lib/jsonld'
 import type { Breadcrumb } from '@/types'
+import { withSeoOverride } from '@/server/seo'
 
 const DESCRIPTION =
   'The Pashmore Journal — guides to Pashmina, Kashmiri craft and Indian textiles, written by the people who make them.'
 
-export const metadata: Metadata = buildMetadata({
+const BASE_METADATA: Metadata = buildMetadata({
   title: pageTitle('Journal — Pashmina Guides & Kashmiri Craft'),
   description: DESCRIPTION,
   path: '/blog',
 })
+
+export function generateMetadata(): Promise<Metadata> {
+  return withSeoOverride('/blog', BASE_METADATA)
+}
 
 export const revalidate = 3600
 

@@ -8,14 +8,19 @@ import { JsonLd } from '@/components/seo/json-ld'
 import { buildMetadata, pageTitle } from '@/lib/seo'
 import { breadcrumbSchema, graph, webPageSchema } from '@/lib/jsonld'
 import type { Breadcrumb } from '@/types'
+import { withSeoOverride } from '@/server/seo'
 
 const DESCRIPTION = 'Track a Pashmore order using your order number and email address.'
 
-export const metadata: Metadata = buildMetadata({
+const BASE_METADATA: Metadata = buildMetadata({
   title: pageTitle('Track Your Order'),
   description: DESCRIPTION,
   path: '/track-order',
 })
+
+export function generateMetadata(): Promise<Metadata> {
+  return withSeoOverride('/track-order', BASE_METADATA)
+}
 
 const crumbs: Breadcrumb[] = [
   { name: 'Home', href: '/' },

@@ -1,4 +1,5 @@
 import { BANNER_PLACEHOLDER, placeholderImage, resolveMediaUrl } from '@/lib/media'
+import { DEFAULT_CURRENCY, isCurrency } from '@/lib/region'
 import {
   asArray,
   asBoolean,
@@ -169,7 +170,8 @@ export function normalizeProduct(input: unknown): Product | null {
     craft: asString(raw.craft),
     price,
     compareAtPrice: compareAtPrice && compareAtPrice > price ? compareAtPrice : undefined,
-    currency: 'INR',
+    currency: isCurrency(raw.currency) ? raw.currency : DEFAULT_CURRENCY,
+    availableInRegion: raw.availableInRegion === undefined ? true : asBoolean(raw.availableInRegion),
     images: normalizeImages(raw, name),
     colors: normalizeColors(raw.colors),
     sizes: normalizeSizes(raw.sizes),
@@ -259,6 +261,7 @@ export const EMPTY_FACETS: FilterFacets = {
   collection: [],
   availability: [],
   priceRange: { min: 0, max: 0 },
+  currency: DEFAULT_CURRENCY,
 }
 
 export function normalizeFacets(input: unknown): FilterFacets {
@@ -273,6 +276,7 @@ export function normalizeFacets(input: unknown): FilterFacets {
     collection: normalizeOptions(input.collection),
     availability: normalizeOptions(input.availability),
     priceRange: { min: asNumber(priceRange.min), max: asNumber(priceRange.max) },
+    currency: isCurrency(input.currency) ? input.currency : DEFAULT_CURRENCY,
   }
 }
 

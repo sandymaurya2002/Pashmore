@@ -153,6 +153,9 @@ export function productSchema(product: Product): Json {
     },
   }
 
+  // No offer where the product has no price in the shopper's currency.
+  if (!product.availableInRegion) delete schema.offers
+
   // Only claim ratings when the data source actually supplied them.
   if (product.rating && product.rating.count > 0) {
     schema.aggregateRating = {

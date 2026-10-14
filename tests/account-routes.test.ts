@@ -104,17 +104,61 @@ describe('POST /api/orders/track', () => {
   })
 })
 
-describe('features the Worker does not offer yet', () => {
-  it('never reports a contact message or newsletter sign-up as successful', async () => {
-    const { fetchMock } = mockWorker({})
-    const sent = await contact()
-    const subscribed = await subscribe()
+describe('contact and newsletter forms', () => {
+  it('forwards an enquiry to the Worker, keeping only known fields', async () => {
+    const { calls } = mockWorker({
+      'POST /contact': { status: 201, body: { success: true, data: { received: true } } },
+    })
+    const sent = await contact(
+      request('/api/contact', {
+        method: 'POST',
+        body: {
+          name: 'Asha Rao',
+          email: 'asha@example.com',
+          subject: 'Order enquiry',
+          message: 'Could you tell me when my shawl will be dispatched, please?',
+          isAdmin: true,
+        },
+      }),
+    )
+    expect(sent.status).toBe(201)
+    const forwarded = calls[0]?.body as Record<string, unknown>
+    expect(forwarded).toMatchObject({ name: 'Asha Rao', subject: 'Order enquiry' })
+    expect(forwarded).not.toHaveProperty('isAdmin')
+  })
 
-    expect(sent.status).toBe(501)
-    expect((await sent.json()).error.message).toContain('care@pashmore.com')
-    expect(subscribed.status).toBe(501)
-    expect((await subscribed.json()).success).toBe(false)
-    expect(fetchMock).not.toHaveBeenCalled()
+  it('passes Worker validation errors through to the contact form', async () => {
+    mockWorker({
+      'POST /contact': {
+        status: 400,
+        body: {
+          success: false,
+          error: {
+            code: 'VALIDATION_ERROR',
+            message: 'Please check the form.',
+            details: { message: 'Please give us a little more detail.' },
+          },
+        },
+      },
+    })
+    const sent = await contact(
+      request('/api/contact', { method: 'POST', body: { name: 'A', email: 'x', subject: 'Hi', message: 'short' } }),
+    )
+    expect(sent.status).toBe(400)
+    expect((await sent.json()).error.details.message).toContain('more detail')
+  })
+
+  it('subscribes to the newsletter through the Worker', async () => {
+    const { calls } = mockWorker({ 'POST /newsletter': success({ subscribed: true }) })
+    const subscribed = await subscribe(
+      request('/api/newsletter', { method: 'POST', body: { email: 'asha@example.com', source: 'footer' } }),
+    )
+    expect(subscribed.status).toBe(200)
+    expect((await subscribed.json()).data).toEqual({ subscribed: true })
+    expect(calls[0]?.body).toEqual({
+      email: 'asha@example.com',
+      source: 'footer',
+    })
   })
 
   it("passes the Worker's password-reset 501 through to the form", async () => {

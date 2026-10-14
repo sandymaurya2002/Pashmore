@@ -1,13 +1,15 @@
 import { ShieldCheck } from 'lucide-react'
 import { formatPrice } from '@/lib/utils'
-import type { CartTotals, Coupon } from '@/types'
+import type { CartTotals, Coupon, Currency } from '@/types'
 
 export function OrderSummary({
   totals,
+  currency,
   coupon,
   title = 'Order Summary',
 }: {
   totals: CartTotals
+  currency: Currency
   coupon?: Coupon | null
   title?: string
 }) {
@@ -18,28 +20,28 @@ export function OrderSummary({
       </h2>
 
       <dl className="mt-6 flex flex-col gap-3 text-sm">
-        <Row label={`Subtotal (${totals.itemCount} items)`} value={formatPrice(totals.subtotal)} />
+        <Row label={`Subtotal (${totals.itemCount} items)`} value={formatPrice(totals.subtotal, currency)} />
 
         {totals.discount > 0 && (
           <Row
             label={coupon ? `Discount (${coupon.code})` : 'Discount'}
-            value={`− ${formatPrice(totals.discount)}`}
+            value={`− ${formatPrice(totals.discount, currency)}`}
             tone="discount"
           />
         )}
 
         <Row
           label="Shipping"
-          value={totals.shipping === 0 ? 'Complimentary' : formatPrice(totals.shipping)}
+          value={totals.shipping === 0 ? 'Complimentary' : formatPrice(totals.shipping, currency)}
         />
 
-        <Row label="GST (included)" value={formatPrice(totals.tax)} muted />
+        <Row label="GST (included)" value={formatPrice(totals.tax, currency)} muted />
 
         <div className="mt-3 flex items-baseline justify-between border-t border-line pt-4">
           <dt className="text-[0.8125rem] uppercase tracking-[0.14em] text-charcoal">
             Total
           </dt>
-          <dd className="font-serif text-2xl text-charcoal">{formatPrice(totals.total)}</dd>
+          <dd className="font-serif text-2xl text-charcoal">{formatPrice(totals.total, currency)}</dd>
         </div>
       </dl>
 

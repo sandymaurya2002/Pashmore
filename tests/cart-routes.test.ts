@@ -51,7 +51,7 @@ describe('guest bag (HttpOnly pm_cart cookie, priced from the Worker)', () => {
     const body = await response.json()
 
     expect(response.status).toBe(200)
-    expect(calls).toHaveLength(1)
+    expect(calls.filter((call) => call.url.pathname.endsWith('/products/batch'))).toHaveLength(1)
     expect(calls[0].url.searchParams.get('slugs')).toBe(SLUG)
     expect(calls[0].headers.get('authorization')).toBeNull()
 
@@ -93,6 +93,87 @@ describe('guest bag (HttpOnly pm_cart cookie, priced from the Worker)', () => {
     const { cart } = (await response.json()).data
     expect(cart.totals).toMatchObject({ subtotal: 1200, shipping: 149, total: 1349 })
     expect(cart.remainingForFreeShipping).toBe(3799)
+  })
+
+  it('uses the shipping fee and threshold set in the admin dashboard', async () => {
+    mockWorker({
+      'GET /products/batch': batch([
+        { ...workerProduct, price: 1200, compareAtPrice: undefined },
+      ]),
+      'GET /content/site': success({
+        commerce: { freeShippingThreshold: 2000, standardShippingFee: 99 },
+      }),
+    })
+    const response = await getCart(
+      request('/api/cart', { cookies: { pm_cart: guestCartCookie([['var_1', SLUG, 1]]) } }),
+    )
+    const { cart } = (await response.json()).data
+    expect(cart.totals).toMatchObject({ subtotal: 1200, shipping: 99, total: 1299 })
+    expect(cart.freeShippingThreshold).toBe(2000)
+    expect(cart.remainingForFreeShipping).toBe(800)
+  })
+
+  it('prices the bag in dollars, with international shipping rules, outside India', async () => {
+    const { calls } = mockWorker({
+      'GET /products/batch': (call) =>
+        success([
+          {
+            ...workerProduct,
+            price: call.url.searchParams.get('currency') === 'USD' ? 120 : 24500,
+            compareAtPrice: null,
+            currency: call.url.searchParams.get('currency'),
+            availableInRegion: true,
+          },
+        ]),
+      'GET /content/site': success({
+        commerce: { freeShippingThreshold: 2000, standardShippingFee: 99 },
+        commerceByCurrency: {
+          INR: { freeShippingThreshold: 2000, standardShippingFee: 99 },
+          USD: { freeShippingThreshold: 250, standardShippingFee: 25 },
+        },
+      }),
+    })
+    const response = await getCart(
+      request('/api/cart', {
+        cookies: { pm_cart: guestCartCookie([['var_1', SLUG, 1]]) },
+        headers: { 'x-vercel-ip-country': 'US' },
+      }),
+    )
+    const { cart } = (await response.json()).data
+    const batchCall = calls.find((call) => call.url.pathname.endsWith('/products/batch'))
+    expect(batchCall?.url.searchParams.get('currency')).toBe('USD')
+    expect(batchCall?.headers.get('x-client-country')).toBe('US')
+    expect(cart.currency).toBe('USD')
+    expect(cart.totals).toMatchObject({ subtotal: 120, shipping: 25, total: 145 })
+    expect(cart.freeShippingThreshold).toBe(250)
+  })
+
+  it('follows the chosen country over geolocation', async () => {
+    const { calls } = mockWorker({ 'GET /products/batch': batch(), 'GET /content/site': success({}) })
+    await getCart(
+      request('/api/cart', {
+        cookies: { pm_cart: guestCartCookie([['var_1', SLUG, 1]]), pm_country: 'IN' },
+        headers: { 'cf-ipcountry': 'US' },
+      }),
+    )
+    expect(calls[0].url.searchParams.get('currency')).toBe('INR')
+  })
+
+  it('will not add a piece that has no price in the shopper region', async () => {
+    mockWorker({
+      'GET /products/batch': batch([
+        { ...workerProduct, price: null, compareAtPrice: null, currency: 'USD', availableInRegion: false },
+      ]),
+    })
+    const response = await addItem(
+      request('/api/cart/items', {
+        method: 'POST',
+        body: { variantId: 'var_1', productSlug: SLUG, quantity: 1 },
+        headers: { 'x-vercel-ip-country': 'DE' },
+      }),
+    )
+    expect(response.status).toBe(409)
+    expect((await response.json()).error.code).toBe('REGION_UNAVAILABLE')
   })
 
   it('refuses more than the Worker has in stock, with the Worker wording', async () => {

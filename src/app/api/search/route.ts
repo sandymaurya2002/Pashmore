@@ -24,11 +24,13 @@ export async function GET(request: Request) {
           material: product.material,
           price: product.price,
           compareAtPrice: product.compareAtPrice,
+          currency: product.currency,
           image: product.images[0],
         })),
         collections: result.collections,
       },
-      { headers: { 'Cache-Control': 'public, max-age=30, stale-while-revalidate=300' } },
+      // Private: prices depend on the shopper's region, so shared caches must not reuse them.
+      { headers: { 'Cache-Control': 'private, max-age=30, stale-while-revalidate=300' } },
     )
   } catch (error) {
     return fail(error, 'api/search')

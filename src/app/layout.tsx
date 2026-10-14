@@ -4,6 +4,7 @@ import './globals.css'
 
 import { Providers } from '@/components/providers'
 import { SiteHeader } from '@/components/layout/site-header'
+import { getSiteContent } from '@/server/content'
 import { SiteFooter } from '@/components/layout/site-footer'
 import { SiteChrome } from '@/components/layout/site-chrome'
 import { CartDrawer } from '@/components/cart/cart-drawer'
@@ -75,7 +76,13 @@ export const viewport: Viewport = {
   maximumScale: 5,
 }
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+// Pages that render statically still pick up admin edits (announcements,
+// policies, SEO) within five minutes, even if the CMS was unreachable at build.
+export const revalidate = 300
+
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const { announcement } = await getSiteContent()
+
   return (
     <html lang="en-IN" className={`${serif.variable} ${sans.variable}`}>
       <body className="min-h-dvh bg-ivory antialiased">
@@ -90,7 +97,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
         <Providers>
           <SiteChrome
-            header={<SiteHeader />}
+            header={
+              <SiteHeader announcements={announcement.enabled ? announcement.messages : []} />
+            }
             footer={<SiteFooter />}
             overlays={
               <>

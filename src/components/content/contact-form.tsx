@@ -13,6 +13,7 @@ const schema = z.object({
   email: z.string().email('Please enter a valid email address.'),
   subject: z.string().min(3, 'Please give your message a subject.'),
   message: z.string().min(20, 'Please give us a little more detail — at least 20 characters.'),
+  website: z.string(),
 })
 
 const SUBJECTS = [
@@ -31,6 +32,7 @@ export function ContactForm() {
     email: '',
     subject: SUBJECTS[0],
     message: '',
+    website: '',
   })
   const [errors, setErrors] = React.useState<Record<string, string>>({})
   const [status, setStatus] = React.useState<'idle' | 'pending' | 'sent'>('idle')
@@ -129,6 +131,18 @@ export function ContactForm() {
           aria-invalid={errors.message ? true : undefined}
         />
         <FieldError>{errors.message}</FieldError>
+      </div>
+
+      {/* Left empty by people; bots that fill every field are quietly discarded. */}
+      <div aria-hidden className="absolute -left-[9999px] h-px w-px overflow-hidden">
+        <label htmlFor="contact-website">Website</label>
+        <input
+          id="contact-website"
+          tabIndex={-1}
+          autoComplete="off"
+          value={values.website}
+          onChange={(event) => setValues((v) => ({ ...v, website: event.target.value }))}
+        />
       </div>
 
       {formError && (

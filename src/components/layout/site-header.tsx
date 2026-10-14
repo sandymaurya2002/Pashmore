@@ -9,6 +9,7 @@ import { Heart, Menu, Search, ShoppingBag, User } from 'lucide-react'
 import { AnnouncementBar } from '@/components/layout/announcement-bar'
 import { MegaMenuPanel } from '@/components/layout/mega-menu'
 import { MobileMenu } from '@/components/layout/mobile-menu'
+import { RegionSelect } from '@/components/layout/region-select'
 import { Logo } from '@/components/layout/logo'
 import { primaryNav } from '@/data/navigation'
 import { useCart } from '@/context/cart-context'
@@ -17,7 +18,7 @@ import { useUI } from '@/context/ui-context'
 import { useScrollState } from '@/hooks/use-scroll-direction'
 import { cn } from '@/lib/utils'
 
-export function SiteHeader() {
+export function SiteHeader({ announcements }: { announcements: string[] }) {
   const pathname = usePathname()
   const { scrolled } = useScrollState(80)
   const { totals, hydrated: cartHydrated, openCart } = useCart()
@@ -65,7 +66,7 @@ export function SiteHeader() {
           if (event.key === 'Escape') setActiveMenu(null)
         }}
       >
-        <AnnouncementBar condensed={scrolled} />
+        <AnnouncementBar messages={announcements} condensed={scrolled} />
 
         <div
           className="container-luxe transition-[height] duration-500 ease-[var(--ease-luxe)]"
@@ -135,6 +136,8 @@ export function SiteHeader() {
 
             {/* Right — utilities */}
             <div className="flex items-center justify-end gap-1 sm:gap-2">
+              <RegionSelect className="hidden md:flex" />
+
               <button
                 type="button"
                 onClick={openSearch}

@@ -15,7 +15,7 @@ import { Button } from '@/components/ui/button'
 import { useCart } from '@/context/cart-context'
 import { bff } from '@/lib/api/browser'
 import { formatPrice } from '@/lib/utils'
-import type { CartItem, Product } from '@/types'
+import type { CartItem, Currency, Product } from '@/types'
 
 /** Fetched the first time the drawer opens; a failure simply hides the rail. */
 function useRecommendations(enabled: boolean): Product[] {
@@ -39,6 +39,7 @@ export function CartDrawer() {
   const {
     isOpen,
     closeCart,
+    currency,
     items,
     totals,
     coupon,
@@ -55,7 +56,7 @@ export function CartDrawer() {
 
   const recommendations = useRecommendations(isOpen)
   const suggestions = recommendations
-    .filter((product) => product.images.length > 0)
+    .filter((product) => product.images.length > 0 && product.availableInRegion)
     .filter((product) => !items.some((item) => item.productSlug === product.slug))
     .slice(0, 3)
 
@@ -98,7 +99,7 @@ export function CartDrawer() {
                 <p className="text-xs text-mocha">
                   Add{' '}
                   <span className="text-charcoal">
-                    {formatPrice(remainingForFreeShipping)}
+                    {formatPrice(remainingForFreeShipping, currency)}
                   </span>{' '}
                   more for complimentary shipping.
                 </p>
@@ -118,6 +119,7 @@ export function CartDrawer() {
                 <CartLine
                   key={item.key}
                   item={item}
+                  currency={currency}
                   pending={pendingKey === item.key || pendingKey === 'cart'}
                   onQuantityChange={updateQuantity}
                   onRemove={removeItem}
@@ -157,7 +159,7 @@ export function CartDrawer() {
                           {product.name}
                         </span>
                         <span className="block text-xs text-taupe">
-                          {formatPrice(product.price)}
+                          {formatPrice(product.price, product.currency)}
                         </span>
                       </Link>
                     </li>
@@ -168,7 +170,7 @@ export function CartDrawer() {
 
             <div className="border-t border-line px-6 py-5">
               <dl className="flex flex-col gap-2 text-sm">
-                <Row label="Subtotal" value={formatPrice(totals.subtotal)} />
+                <Row label="Subtotal" value={formatPrice(totals.subtotal, currency)} />
                 {totals.discount > 0 && (
                   <Row
                     label={
@@ -186,24 +188,24 @@ export function CartDrawer() {
                         )}
                       </span>
                     }
-                    value={`− ${formatPrice(totals.discount)}`}
+                    value={`− ${formatPrice(totals.discount, currency)}`}
                     tone="discount"
                   />
                 )}
                 <Row
                   label="Estimated shipping"
-                  value={totals.shipping === 0 ? 'Complimentary' : formatPrice(totals.shipping)}
+                  value={totals.shipping === 0 ? 'Complimentary' : formatPrice(totals.shipping, currency)}
                 />
                 <div className="mt-2 flex items-baseline justify-between border-t border-line pt-3">
                   <dt className="text-[0.8125rem] uppercase tracking-[0.14em] text-charcoal">
                     Total
                   </dt>
                   <dd className="font-serif text-xl text-charcoal">
-                    {formatPrice(totals.total)}
+                    {formatPrice(totals.total, currency)}
                   </dd>
                 </div>
                 <p className="text-[0.6875rem] text-taupe">
-                  Includes {formatPrice(totals.tax)} GST. Duties calculated at checkout for
+                  Includes {formatPrice(totals.tax, currency)} GST. Duties calculated at checkout for
                   international orders.
                 </p>
               </dl>
@@ -245,11 +247,13 @@ function Row({
 
 function CartLine({
   item,
+  currency,
   pending,
   onQuantityChange,
   onRemove,
 }: {
   item: CartItem
+  currency: Currency
   pending: boolean
   onQuantityChange: (key: string, quantity: number) => Promise<void>
   onRemove: (key: string) => Promise<void>
@@ -294,7 +298,9 @@ function CartLine({
         )}
 
         {!item.inStock && (
-          <p className="mt-1 text-xs text-burgundy">No longer available</p>
+          <p className="mt-1 text-xs text-burgundy">
+            {item.regionUnavailable ? 'Not available in your region' : 'No longer available'}
+          </p>
         )}
 
         <div className="mt-auto flex items-center justify-between gap-3 pt-3">
@@ -321,7 +327,7 @@ function CartLine({
           </div>
 
           <p className="text-sm text-charcoal">
-            {formatPrice(item.unitPrice * item.quantity)}
+            {item.regionUnavailable ? '—' : formatPrice(item.unitPrice * item.quantity, currency)}
           </p>
         </div>
       </div>

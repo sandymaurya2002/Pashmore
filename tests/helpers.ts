@@ -65,9 +65,9 @@ export function jwt(secondsFromNow: number, sub = 'cus_1'): string {
 
 export function request(
   path: string,
-  init: { method?: string; body?: unknown; cookies?: Record<string, string> } = {},
+  init: { method?: string; body?: unknown; cookies?: Record<string, string>; headers?: Record<string, string> } = {},
 ): NextRequest {
-  const headers = new Headers({ 'user-agent': 'vitest', 'x-forwarded-for': '203.0.113.7' })
+  const headers = new Headers({ 'user-agent': 'vitest', 'x-forwarded-for': '203.0.113.7', ...init.headers })
   if (init.cookies) {
     headers.set(
       'cookie',

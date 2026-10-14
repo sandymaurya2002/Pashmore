@@ -7,7 +7,8 @@ export async function GET() {
     const products = await getBestSellers(4)
     return ok(
       { products },
-      { headers: { 'Cache-Control': 'public, max-age=60, stale-while-revalidate=600' } },
+      // Private: prices depend on the shopper's region.
+      { headers: { 'Cache-Control': 'private, max-age=60, stale-while-revalidate=600' } },
     )
   } catch (error) {
     return fail(error, 'api/recommendations')

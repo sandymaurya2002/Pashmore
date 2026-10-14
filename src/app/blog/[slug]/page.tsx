@@ -24,6 +24,7 @@ import { blogKeywords } from '@/lib/keywords'
 import { blogPostingSchema, breadcrumbSchema, faqSchema, graph } from '@/lib/jsonld'
 import { formatDate } from '@/lib/utils'
 import type { Breadcrumb } from '@/types'
+import { withSeoOverride } from '@/server/seo'
 
 interface PageProps {
   params: Promise<{ slug: string }>
@@ -38,17 +39,20 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const post = getPostBySlug(slug)
   if (!post) return {}
 
-  return buildMetadata({
-    title: pageTitle(post.title),
-    description: metaDescription(post.excerpt),
-    path: `/blog/${post.slug}`,
-    image: post.cover,
-    type: 'article',
-    publishedTime: post.publishedAt,
-    modifiedTime: post.updatedAt ?? post.publishedAt,
-    authors: [post.author],
-    keywords: blogKeywords(post),
-  })
+  return withSeoOverride(
+    `/blog/${post.slug}`,
+    buildMetadata({
+      title: pageTitle(post.title),
+      description: metaDescription(post.excerpt),
+      path: `/blog/${post.slug}`,
+      image: post.cover,
+      type: 'article',
+      publishedTime: post.publishedAt,
+      modifiedTime: post.updatedAt ?? post.publishedAt,
+      authors: [post.author],
+      keywords: blogKeywords(post),
+    }),
+  )
 }
 
 export default async function BlogPostPage({ params }: PageProps) {

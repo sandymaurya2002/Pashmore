@@ -143,8 +143,19 @@ function QuickViewBody({
         </DialogTitle>
 
         <div className="mt-4">
-          <Price price={product.price} compareAtPrice={product.compareAtPrice} size="lg" />
-          <p className="mt-1.5 text-xs text-taupe">Inclusive of all taxes</p>
+          {selection.regionUnavailable ? (
+            <p className="text-lg text-charcoal">Not available in your region</p>
+          ) : (
+            <>
+              <Price
+                price={product.price}
+                compareAtPrice={product.compareAtPrice}
+                currency={product.currency}
+                size="lg"
+              />
+              <p className="mt-1.5 text-xs text-taupe">Inclusive of all taxes</p>
+            </>
+          )}
         </div>
 
         <DialogDescription className="mt-5 text-sm leading-relaxed text-mocha">
@@ -179,7 +190,13 @@ function QuickViewBody({
               className="h-13 flex-1"
               size="lg"
             >
-              {!selection.available ? 'Out of Stock' : selection.adding ? 'Adding…' : 'Add to Bag'}
+              {!selection.available
+                ? selection.regionUnavailable
+                  ? 'Not Sold in Your Region'
+                  : 'Out of Stock'
+                : selection.adding
+                  ? 'Adding…'
+                  : 'Add to Bag'}
             </Button>
             <WishlistButton
               slug={product.slug}

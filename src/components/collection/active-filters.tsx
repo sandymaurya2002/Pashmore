@@ -41,7 +41,7 @@ export function ActiveFilters({
     chips.push({
       key: 'price' as (typeof FILTER_KEYS)[number],
       value: 'price',
-      label: `${formatPrice(min)} – ${formatPrice(max)}`,
+      label: `${formatPrice(min, facets.currency)} – ${formatPrice(max, facets.currency)}`,
       href: stripParam(withoutMin, 'maxPrice'),
     })
   }

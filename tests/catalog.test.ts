@@ -2,6 +2,15 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 vi.mock('next/cache', () => ({ revalidateTag: vi.fn() }))
 
+/** What `cookies()` / `headers()` see: the incoming page request. */
+const incoming = vi.hoisted(() => ({ cookies: new Map<string, string>(), headers: new Headers() }))
+vi.mock('next/headers', () => ({
+  cookies: async () => ({
+    get: (name: string) => (incoming.cookies.has(name) ? { name, value: incoming.cookies.get(name) } : undefined),
+  }),
+  headers: async () => incoming.headers,
+}))
+
 import { revalidateTag } from 'next/cache'
 import { GET as productsRoute } from '@/app/api/products/route'
 import { POST as revalidate } from '@/app/api/revalidate/route'
@@ -15,6 +24,8 @@ import {
 import { WORKER_ORIGIN, failure, mockWorker, request, success, workerProduct } from './helpers'
 
 beforeEach(() => {
+  incoming.cookies.clear()
+  incoming.headers = new Headers()
   vi.stubEnv('CLOUDFLARE_API_URL', WORKER_ORIGIN)
   vi.spyOn(console, 'error').mockImplementation(() => {})
   vi.spyOn(console, 'warn').mockImplementation(() => {})
@@ -106,6 +117,59 @@ describe('catalogue service', () => {
     const { fetchMock } = mockWorker({})
     await expect(searchCatalog('   ')).resolves.toEqual({ products: [], collections: [], total: 0 })
     expect(fetchMock).not.toHaveBeenCalled()
+  })
+})
+
+describe('regional pricing', () => {
+  const productRoute = () => ({
+    'GET /products/ivory-heritage-pashmina-shawl': (call: { url: URL }) =>
+      success({
+        ...workerProduct,
+        price: call.url.searchParams.get('currency') === 'USD' ? 299 : 24500,
+        compareAtPrice: null,
+        currency: call.url.searchParams.get('currency'),
+        availableInRegion: true,
+      }),
+  })
+
+  it('prices visitors in India, or of unknown location, in rupees', async () => {
+    const { calls } = mockWorker(productRoute())
+    const product = await getProductBySlug(workerProduct.slug)
+    expect(calls[0].url.searchParams.get('currency')).toBe('INR')
+    expect(product).toMatchObject({ price: 24500, currency: 'INR' })
+  })
+
+  it('prices visitors outside India in dollars from the geolocation header', async () => {
+    incoming.headers = new Headers({ 'x-vercel-ip-country': 'US' })
+    const { calls } = mockWorker(productRoute())
+    const product = await getProductBySlug(workerProduct.slug)
+    expect(calls[0].url.searchParams.get('currency')).toBe('USD')
+    expect(product).toMatchObject({ price: 299, currency: 'USD', availableInRegion: true })
+    // The currency, not the country, keys the request so the Data Cache holds one copy per currency.
+    expect(calls[0].headers.get('x-client-country')).toBeNull()
+  })
+
+  it('lets a chosen country override geolocation', async () => {
+    incoming.headers = new Headers({ 'cf-ipcountry': 'IN' })
+    incoming.cookies.set('pm_country', 'GB')
+    const { calls } = mockWorker(productRoute())
+    await getProductBySlug(workerProduct.slug)
+    expect(calls[0].url.searchParams.get('currency')).toBe('USD')
+  })
+
+  it('marks a product without a price in the region as unavailable', async () => {
+    incoming.headers = new Headers({ 'x-vercel-ip-country': 'FR' })
+    mockWorker({
+      'GET /products/ivory-heritage-pashmina-shawl': success({
+        ...workerProduct,
+        price: null,
+        compareAtPrice: null,
+        currency: 'USD',
+        availableInRegion: false,
+      }),
+    })
+    const product = await getProductBySlug(workerProduct.slug)
+    expect(product).toMatchObject({ currency: 'USD', availableInRegion: false })
   })
 })
 

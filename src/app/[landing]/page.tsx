@@ -21,6 +21,7 @@ import { buildMetadata, metaDescription } from '@/lib/seo'
 import { landingKeywords } from '@/lib/keywords'
 import { breadcrumbSchema, faqSchema, graph, webPageSchema } from '@/lib/jsonld'
 import type { Breadcrumb } from '@/types'
+import { withSeoOverride } from '@/server/seo'
 
 interface PageProps {
   params: Promise<{ landing: string }>
@@ -42,13 +43,16 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const page = landingBySlug.get(landing)
   if (!page) return {}
 
-  return buildMetadata({
-    title: page.metaTitle,
-    description: metaDescription(page.metaDescription),
-    path: `/${page.slug}`,
-    image: page.banner,
-    keywords: landingKeywords(page.slug),
-  })
+  return withSeoOverride(
+    `/${page.slug}`,
+    buildMetadata({
+      title: page.metaTitle,
+      description: metaDescription(page.metaDescription),
+      path: `/${page.slug}`,
+      image: page.banner,
+      keywords: landingKeywords(page.slug),
+    }),
+  )
 }
 
 export default async function LandingPageRoute({ params }: PageProps) {

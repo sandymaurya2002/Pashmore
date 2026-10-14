@@ -1,5 +1,6 @@
 import { FREE_SHIPPING_THRESHOLD } from '@/lib/site'
 import { normalizeImage } from '@/lib/normalize/catalog'
+import { DEFAULT_CURRENCY, isCurrency, type Currency } from '@/lib/region'
 import { placeholderImage } from '@/lib/media'
 import {
   asArray,
@@ -22,18 +23,29 @@ import type {
   Order,
   OrderItem,
   OrderStatus,
+  PaymentSession,
 } from '@/types'
 
 const ORDER_STATUSES: OrderStatus[] = [
   'pending',
   'placed',
   'confirmed',
+  'payment_pending',
+  'payment_failed',
+  'paid',
   'processing',
+  'packed',
   'shipped',
+  'out_for_delivery',
   'delivered',
   'cancelled',
+  'return_requested',
   'returned',
+  'refund_pending',
+  'refunded',
 ]
+
+const currencyOf = (value: unknown): Currency => (isCurrency(value) ? value : DEFAULT_CURRENCY)
 
 export function normalizeOrderStatus(value: unknown): OrderStatus {
   const status = asString(value).toLowerCase() as OrderStatus
@@ -41,6 +53,7 @@ export function normalizeOrderStatus(value: unknown): OrderStatus {
 }
 
 const PAYMENT_LABELS: Record<string, string> = {
+  RAZORPAY: 'Paid online (Razorpay)',
   UPI: 'UPI',
   CARD: 'Credit / Debit Card',
   NETBANKING: 'Net Banking',
@@ -98,6 +111,7 @@ function normalizeCartItem(input: unknown): CartItem | null {
     quantity: Math.max(1, Math.floor(asNumber(raw.quantity, 1))),
     maxQuantity,
     inStock: raw.inStock === undefined ? true : asBoolean(raw.inStock),
+    ...(raw.issue === 'REGION_UNAVAILABLE' ? { regionUnavailable: true } : {}),
   }
 }
 
@@ -111,6 +125,7 @@ export function normalizeCart(input: unknown): Cart {
   const threshold = asOptionalNumber(raw.freeShippingThreshold) ?? FREE_SHIPPING_THRESHOLD
 
   return {
+    currency: currencyOf(raw.currency),
     items,
     totals,
     coupon: normalizeCoupon(raw.coupon),
@@ -205,6 +220,7 @@ export function normalizeOrder(input: unknown): Order | null {
     number: asString(raw.orderNumber) || asString(raw.number) || id,
     placedAt: asIsoDate(raw.placedAt) ?? asIsoDate(raw.createdAt) ?? '',
     status: normalizeOrderStatus(raw.status),
+    currency: currencyOf(raw.currency),
     items,
     totals: normalizeTotals(isRecord(raw.totals) ? raw.totals : raw, itemCount),
     shippingAddress: {
@@ -219,9 +235,70 @@ export function normalizeOrder(input: unknown): Order | null {
     },
     shippingMethod: asOptionalString(raw.shippingMethod),
     paymentMethod: paymentMethodOf(raw),
+    paymentMethodCode: asOptionalString(raw.paymentMethod)?.toUpperCase(),
+    paymentStatus: asOptionalString(raw.paymentStatus),
+    couponCode: asOptionalString(raw.couponCode),
+    refunded: asOptionalNumber(asRecord(raw.totals).refunded),
     trackingNumber: asOptionalString(raw.trackingNumber),
+    trackingUrl: safeHttpUrl(raw.trackingUrl),
     carrier: asOptionalString(raw.carrier),
     estimatedDelivery: asIsoDate(raw.estimatedDelivery),
+    paidAt: asIsoDate(raw.paidAt),
+    shippedAt: asIsoDate(raw.shippedAt),
+    deliveredAt: asIsoDate(raw.deliveredAt),
+    cancelledAt: asIsoDate(raw.cancelledAt),
+    returnReason: asOptionalString(raw.returnReason),
+    canCancel: asBoolean(raw.canCancel),
+    canReturn: asBoolean(raw.canReturn),
+    awaitingPayment: asBoolean(raw.awaitingPayment),
+    paymentExpiresAt: asIsoDate(raw.paymentExpiresAt),
+    history: Array.isArray(raw.history)
+      ? asArray(raw.history).map((entry) => {
+          const item = asRecord(entry)
+          return {
+            status: normalizeOrderStatus(item.to ?? item.status),
+            note: asOptionalString(item.note),
+            createdAt: asIsoDate(item.createdAt) ?? '',
+          }
+        })
+      : undefined,
+  }
+}
+
+/** Only http(s) links are rendered, so an admin-entered URL cannot inject script. */
+function safeHttpUrl(value: unknown): string | undefined {
+  const url = asOptionalString(value)
+  if (!url) return undefined
+  try {
+    const parsed = new URL(url)
+    return parsed.protocol === 'https:' || parsed.protocol === 'http:' ? parsed.toString() : undefined
+  } catch {
+    return undefined
+  }
+}
+
+export function normalizePaymentSession(input: unknown): PaymentSession | null {
+  const raw = asRecord(input)
+  const keyId = asString(raw.keyId)
+  const razorpayOrderId = asString(raw.razorpayOrderId)
+  if (!keyId || !razorpayOrderId) return null
+  const prefill = asRecord(raw.prefill)
+  return {
+    provider: 'razorpay',
+    keyId,
+    razorpayOrderId,
+    amount: asNumber(raw.amount),
+    currency: currencyOf(raw.currency),
+    name: asString(raw.name, 'Pashmore') || 'Pashmore',
+    description: asString(raw.description),
+    orderId: asString(raw.orderId),
+    orderNumber: asString(raw.orderNumber),
+    prefill: {
+      name: asString(prefill.name),
+      email: asString(prefill.email),
+      contact: asString(prefill.contact),
+    },
+    expiresAt: asIsoDate(raw.expiresAt) ?? null,
   }
 }
 

@@ -49,11 +49,16 @@ export default async function OrdersPage({ searchParams }: PageProps) {
                   <p className="mt-1 text-xs text-taupe">
                     {order.placedAt ? `Placed ${formatDate(order.placedAt)} · ` : ''}
                     {order.totals.itemCount} {pluralise(order.totals.itemCount, 'item')} ·{' '}
-                    {formatPrice(order.totals.total)}
+                    {formatPrice(order.totals.total, order.currency)}
                   </p>
                 </div>
                 <OrderStatusChip status={order.status} />
               </div>
+              {order.awaitingPayment && (
+                <p className="mt-3 text-xs text-burgundy">
+                  Payment not completed — open the order to pay.
+                </p>
+              )}
 
               {order.items.length > 0 && (
                 <ul className="mt-5 flex flex-wrap gap-2">

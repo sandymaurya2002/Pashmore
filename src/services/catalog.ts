@@ -11,6 +11,8 @@ import {
   normalizeSearch,
 } from '@/lib/normalize/catalog'
 import { asNumber } from '@/lib/normalize/primitives'
+import { DEFAULT_CURRENCY, type Currency } from '@/lib/region'
+import { getRegion } from '@/server/region'
 import { workerFetch, type QueryValue } from '@/server/worker'
 import type {
   Availability,
@@ -42,6 +44,15 @@ function cached(...tags: string[]) {
   return { revalidate: CATALOG_REVALIDATE, tags: [CATALOG_TAG, ...tags] }
 }
 
+/**
+ * Prices come back in the shopper's currency. It is sent as `?currency=`
+ * rather than the country header so the Data Cache keeps one entry per
+ * currency, not one per country.
+ */
+async function currency(): Promise<Currency> {
+  return (await getRegion()).currency
+}
+
 export function getAvailability(product: Product): Availability {
   if (product.inventory <= 0) return 'out-of-stock'
   if (product.inventory <= 6) return 'low-stock'
@@ -55,6 +66,7 @@ export function getAvailability(product: Product): Availability {
 export async function getProductBySlug(slug: string): Promise<Product | null> {
   try {
     const { data } = await workerFetch<unknown>(`/products/${encodeURIComponent(slug)}`, {
+      query: { currency: await currency() },
       cache: cached('products', `product:${slug}`),
     })
     return normalizeProduct(data)
@@ -66,12 +78,23 @@ export async function getProductBySlug(slug: string): Promise<Product | null> {
   }
 }
 
-/** Every published product, page by page. Used by the sitemap and keyword tools. */
+/**
+ * Every published product, page by page. Used by the sitemap and keyword tools.
+ * Listed in rupees: every product has an India price, while international
+ * listings leave out products without a USD price.
+ */
 export async function getAllProducts(): Promise<Product[]> {
   const all: Product[] = []
   for (let page = 1; page <= 50; page += 1) {
     const { data, meta } = await workerFetch<unknown>('/products', {
-      query: { page, limit: MAX_PAGE_SIZE, sort: 'newest', facets: false, availability: 'out-of-stock' },
+      query: {
+        page,
+        limit: MAX_PAGE_SIZE,
+        sort: 'newest',
+        facets: false,
+        availability: 'out-of-stock',
+        currency: DEFAULT_CURRENCY,
+      },
       cache: cached('products'),
     })
     all.push(...normalizeProducts(data))
@@ -88,10 +111,11 @@ export async function getProductsBySlugs(slugs: string[]): Promise<Product[]> {
   for (let index = 0; index < unique.length; index += MAX_BATCH) {
     chunks.push(unique.slice(index, index + MAX_BATCH))
   }
+  const shopperCurrency = await currency()
   const pages = await Promise.all(
     chunks.map((chunk) =>
       workerFetch<unknown>('/products/batch', {
-        query: { slugs: chunk },
+        query: { slugs: chunk, currency: shopperCurrency },
         cache: cached('products'),
       }),
     ),
@@ -105,7 +129,7 @@ export async function getProductsBySlugs(slugs: string[]): Promise<Product[]> {
 
 async function listRail(sort: SortKey, limit: number): Promise<Product[]> {
   const { data } = await workerFetch<unknown>('/products', {
-    query: { sort, limit: Math.min(limit, MAX_PAGE_SIZE), facets: false },
+    query: { sort, limit: Math.min(limit, MAX_PAGE_SIZE), facets: false, currency: await currency() },
     cache: cached('products'),
   })
   return normalizeProducts(data).slice(0, limit)
@@ -119,10 +143,19 @@ export function getBestSellers(limit = 8): Promise<Product[]> {
   return listRail('best-selling', limit)
 }
 
+/** Products flagged "featured" or "trending" in the admin Merchandising screen, in its order. */
+export async function getMerchandisedRail(rail: 'featured' | 'trending', limit = 8): Promise<Product[]> {
+  const { data } = await workerFetch<unknown>(`/products/${rail}`, {
+    query: { limit: Math.min(limit, 48), currency: await currency() },
+    cache: cached('products'),
+  })
+  return normalizeProducts(data).slice(0, limit)
+}
+
 export async function getRelatedProducts(product: Product, limit = 4): Promise<Product[]> {
   const { data } = await workerFetch<unknown>(
     `/products/${encodeURIComponent(product.slug)}/related`,
-    { query: { limit }, cache: cached('products', `product:${product.slug}`) },
+    { query: { limit, currency: await currency() }, cache: cached('products', `product:${product.slug}`) },
   )
   return normalizeProducts(data)
     .filter((entry) => entry.slug !== product.slug)
@@ -134,13 +167,17 @@ export async function getRelatedProducts(product: Product, limit = 4): Promise<P
  * ------------------------------------------------------------------ */
 
 export async function getAllCollections(): Promise<Collection[]> {
-  const { data } = await workerFetch<unknown>('/collections', { cache: cached('collections') })
+  const { data } = await workerFetch<unknown>('/collections', {
+    query: { currency: await currency() },
+    cache: cached('collections'),
+  })
   return normalizeCollections(data)
 }
 
 export async function getCollectionBySlug(slug: string): Promise<Collection | null> {
   try {
     const { data } = await workerFetch<unknown>(`/collections/${encodeURIComponent(slug)}`, {
+      query: { currency: await currency() },
       cache: cached('collections', `collection:${slug}`),
     })
     return normalizeCollection(data)
@@ -197,6 +234,7 @@ export async function queryProducts(options: QueryOptions = {}): Promise<Product
         q: search?.trim() || undefined,
         page,
         limit: Math.min(limit, MAX_PAGE_SIZE),
+        currency: await currency(),
       },
       cache: cached('products', ...(collectionSlug ? [`collection:${collectionSlug}`] : [])),
     })
@@ -226,7 +264,7 @@ export async function searchCatalog(term: string, limit = 8): Promise<SearchResu
   const q = term.trim().slice(0, 80)
   if (!q) return { products: [], collections: [], total: 0 }
   const { data } = await workerFetch<unknown>('/search', {
-    query: { q, limit: Math.min(Math.max(limit, 1), 24) },
+    query: { q, limit: Math.min(Math.max(limit, 1), 24), currency: await currency() },
     cache: cached('products', 'collections'),
   })
   return normalizeSearch(data)

@@ -28,6 +28,7 @@ import { collectionKeywords } from '@/lib/keywords'
 import { breadcrumbSchema, collectionPageSchema, faqSchema, graph } from '@/lib/jsonld'
 import { pluralise } from '@/lib/utils'
 import type { Breadcrumb } from '@/types'
+import { withSeoOverride } from '@/server/seo'
 
 interface PageProps {
   params: Promise<{ slug: string }>
@@ -41,13 +42,16 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const collection = await failSoft(getCollectionBySlug(slug), null, 'collection:metadata')
   if (!collection) return {}
 
-  return buildMetadata({
-    title: pageTitle(collection.heading ?? collection.name),
-    description: metaDescription(collection.description),
-    path: `/collections/${collection.slug}`,
-    image: collection.bannerImage,
-    keywords: collectionKeywords(collection.slug),
-  })
+  return withSeoOverride(
+    `/collections/${collection.slug}`,
+    buildMetadata({
+      title: pageTitle(collection.heading ?? collection.name),
+      description: metaDescription(collection.description),
+      path: `/collections/${collection.slug}`,
+      image: collection.bannerImage,
+      keywords: collectionKeywords(collection.slug),
+    }),
+  )
 }
 
 export default async function CollectionPage({ params, searchParams }: PageProps) {

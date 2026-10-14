@@ -105,7 +105,16 @@ export function ProductCard({
               {product.name}
             </Link>
           </h3>
-          <Price price={product.price} compareAtPrice={product.compareAtPrice} size="sm" />
+          {product.availableInRegion ? (
+            <Price
+              price={product.price}
+              compareAtPrice={product.compareAtPrice}
+              currency={product.currency}
+              size="sm"
+            />
+          ) : (
+            <p className="text-[0.8125rem] text-taupe">Not available in your region</p>
+          )}
         </div>
 
         {/* Touch devices get a persistent quick-view affordance instead of hover. */}

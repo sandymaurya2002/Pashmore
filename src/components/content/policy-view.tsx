@@ -9,18 +9,57 @@ import {
   AccordionTrigger,
 } from '@/components/ui/accordion'
 
-import { policyBySlug } from '@/data/policies'
+import { policyBySlug, type PolicyPage } from '@/data/policies'
 import { breadcrumbSchema, faqSchema, graph, webPageSchema } from '@/lib/jsonld'
+import { buildMetadata, metaDescription } from '@/lib/seo'
+import { getCmsPage } from '@/server/content'
+import { withSeoOverride } from '@/server/seo'
 import type { Breadcrumb } from '@/types'
 
 /**
- * Shipping, returns, privacy and terms share this template and one data source
- * in `data/policies`. They stay as separate routes rather than one dynamic
- * segment because the root already has a dynamic segment for landing pages —
- * Next allows only one slug name per path position.
+ * The policy as edited in the admin dashboard (Pages), falling back field by
+ * field to the copy bundled in `data/policies` — so the page is never empty
+ * if the CMS is unreachable or a field was left blank.
  */
-export function PolicyView({ slug }: { slug: string }) {
-  const policy = policyBySlug.get(slug)
+export async function loadPolicy(slug: string): Promise<PolicyPage | null> {
+  const fallback = policyBySlug.get(slug) ?? null
+  const cms = await getCmsPage(slug)
+  if (!cms) return fallback
+  return {
+    slug,
+    title: cms.title,
+    metaTitle: cms.metaTitle ?? fallback?.metaTitle ?? `${cms.title} | Pashmore`,
+    metaDescription: cms.metaDescription ?? fallback?.metaDescription ?? cms.intro ?? cms.title,
+    eyebrow: cms.eyebrow ?? fallback?.eyebrow ?? '',
+    intro: cms.intro ?? fallback?.intro ?? '',
+    updated: cms.updatedLabel ?? fallback?.updated ?? '',
+    sections: cms.sections.length ? cms.sections : (fallback?.sections ?? []),
+    faqs: cms.faqs.length ? cms.faqs : fallback?.faqs,
+  }
+}
+
+export async function policyMetadata(slug: string) {
+  const policy = await loadPolicy(slug)
+  if (!policy) return {}
+  const path = `/${slug}`
+  return withSeoOverride(
+    path,
+    buildMetadata({
+      title: policy.metaTitle,
+      description: metaDescription(policy.metaDescription),
+      path,
+    }),
+  )
+}
+
+/**
+ * Shipping, returns, privacy and terms share this template. They stay as
+ * separate routes rather than one dynamic segment because the root already has
+ * a dynamic segment for landing pages — Next allows only one slug name per
+ * path position.
+ */
+export async function PolicyView({ slug }: { slug: string }) {
+  const policy = await loadPolicy(slug)
   if (!policy) notFound()
 
   const crumbs: Breadcrumb[] = [
@@ -52,18 +91,20 @@ export function PolicyView({ slug }: { slug: string }) {
             {policy.title}
           </h1>
           <p className="mt-6 text-[0.9375rem] leading-relaxed text-mocha">{policy.intro}</p>
-          <p className="mt-4 text-xs text-taupe">Last updated {policy.updated}</p>
+          {policy.updated && (
+            <p className="mt-4 text-xs text-taupe">Last updated {policy.updated}</p>
+          )}
         </header>
 
         <div className="max-w-3xl">
-          {policy.sections.map((section) => (
-            <section key={section.heading} className="mt-12 first:mt-0">
+          {policy.sections.map((section, index) => (
+            <section key={`${index}-${section.heading}`} className="mt-12 first:mt-0">
               <h2 className="font-serif text-[1.5rem] leading-tight text-charcoal md:text-[1.875rem]">
                 {section.heading}
               </h2>
-              {section.body.map((paragraph) => (
+              {section.body.map((paragraph, paragraphIndex) => (
                 <p
-                  key={paragraph.slice(0, 32)}
+                  key={`${paragraphIndex}-${paragraph.slice(0, 32)}`}
                   className="mt-4 text-[0.9375rem] leading-relaxed text-mocha"
                 >
                   {paragraph}
@@ -71,9 +112,9 @@ export function PolicyView({ slug }: { slug: string }) {
               ))}
               {section.list && (
                 <ul className="mt-5 flex flex-col gap-2.5">
-                  {section.list.map((item) => (
+                  {section.list.map((item, itemIndex) => (
                     <li
-                      key={item}
+                      key={`${itemIndex}-${item.slice(0, 32)}`}
                       className="flex items-start gap-3 text-[0.9375rem] leading-relaxed text-mocha"
                     >
                       <span aria-hidden className="mt-2.5 h-px w-3 shrink-0 bg-gold" />

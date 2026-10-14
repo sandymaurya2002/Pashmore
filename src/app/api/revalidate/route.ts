@@ -9,10 +9,12 @@ import { fail, ok, readJson } from '@/server/http'
  * Cache purge hook for the Worker/admin: POST with
  * `Authorization: Bearer <REVALIDATE_SECRET>` and an optional body
  * `{ "tags": ["product:some-slug"] }`. Without tags the whole catalogue is
- * purged. Disabled unless REVALIDATE_SECRET is set.
+ * purged; `content` refreshes CMS banners, sections, pages, settings and SEO.
+ * Disabled unless REVALIDATE_SECRET is set.
  */
 
-const ALLOWED_TAG = /^(catalog|products|collections|(product|collection):[a-z0-9-]{1,160})$/i
+const ALLOWED_TAG =
+  /^(catalog|products|collections|content|(product|collection):[a-z0-9-]{1,160})$/i
 
 function authorised(request: Request): boolean {
   const secret = process.env.REVALIDATE_SECRET

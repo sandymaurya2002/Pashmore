@@ -19,6 +19,7 @@ import type { Product } from '@/types'
 
 export function CartPageContent({ recommendations }: { recommendations: Product[] }) {
   const {
+    currency,
     items,
     totals,
     hydrated,
@@ -138,7 +139,9 @@ export function CartPageContent({ recommendations }: { recommendations: Product[
                         </p>
                       )}
                       {!item.inStock && (
-                        <p className="mt-1.5 text-xs text-burgundy">No longer available</p>
+                        <p className="mt-1.5 text-xs text-burgundy">
+                          {item.regionUnavailable ? 'Not available in your region' : 'No longer available'}
+                        </p>
                       )}
                     </div>
                     <button
@@ -178,7 +181,7 @@ export function CartPageContent({ recommendations }: { recommendations: Product[
                     </div>
 
                     <p className="text-[0.9375rem] text-charcoal">
-                      {formatPrice(item.unitPrice * item.quantity)}
+                      {item.regionUnavailable ? '—' : formatPrice(item.unitPrice * item.quantity, currency)}
                     </p>
                   </div>
                 </div>
@@ -229,7 +232,7 @@ export function CartPageContent({ recommendations }: { recommendations: Product[
         </section>
 
         <aside className="lg:sticky lg:top-28 lg:self-start">
-          <OrderSummary totals={totals} coupon={coupon} />
+          <OrderSummary totals={totals} currency={currency} coupon={coupon} />
           <Button asChild size="lg" className="mt-6 h-13 w-full">
             <Link href="/checkout">Proceed to Checkout</Link>
           </Button>

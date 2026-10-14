@@ -6,7 +6,8 @@
  * these shapes only. Worker responses are mapped onto them by `src/lib/normalize`.
  */
 
-export type Currency = 'INR'
+export type { Currency } from '@/lib/region'
+import type { Currency } from '@/lib/region'
 
 export type Gender = 'women' | 'men' | 'unisex'
 
@@ -87,7 +88,10 @@ export interface Product {
   craft: string
   price: number
   compareAtPrice?: number
+  /** The currency `price` is in: the shopper's region (INR for India, USD elsewhere). */
   currency: Currency
+  /** False when the product has no price for the shopper's region and cannot be bought there. */
+  availableInRegion: boolean
   images: ProductImage[]
   colors: ProductColor[]
   sizes: ProductSize[]
@@ -183,9 +187,12 @@ export interface CartItem {
   quantity: number
   maxQuantity: number
   inStock: boolean
+  /** Not sold in the shopper's region (no price in its currency). */
+  regionUnavailable?: boolean
 }
 
 export interface Cart {
+  currency: Currency
   items: CartItem[]
   totals: CartTotals
   coupon: Coupon | null
@@ -244,11 +251,25 @@ export type OrderStatus =
   | 'pending'
   | 'placed'
   | 'confirmed'
+  | 'payment_pending'
+  | 'payment_failed'
+  | 'paid'
   | 'processing'
+  | 'packed'
   | 'shipped'
+  | 'out_for_delivery'
   | 'delivered'
   | 'cancelled'
+  | 'return_requested'
   | 'returned'
+  | 'refund_pending'
+  | 'refunded'
+
+export interface OrderHistoryEntry {
+  status: OrderStatus
+  note?: string
+  createdAt: string
+}
 
 export interface OrderItem {
   productSlug: string
@@ -265,14 +286,50 @@ export interface Order {
   number: string
   placedAt: string
   status: OrderStatus
+  /** Fixed when the order is placed; every amount on the order is in it. */
+  currency: Currency
   items: OrderItem[]
   totals: CartTotals
   shippingAddress: Omit<Address, 'id' | 'label'>
   shippingMethod?: string
+  /** Human label, e.g. "Cash on Delivery". */
   paymentMethod?: string
+  /** Raw method code from the API: `RAZORPAY` or `COD`. */
+  paymentMethodCode?: string
+  paymentStatus?: string
+  couponCode?: string
+  refunded?: number
   trackingNumber?: string
+  trackingUrl?: string
   carrier?: string
   estimatedDelivery?: string
+  paidAt?: string
+  shippedAt?: string
+  deliveredAt?: string
+  cancelledAt?: string
+  returnReason?: string
+  canCancel?: boolean
+  canReturn?: boolean
+  /** An online payment is still owed and can be (re)tried until `paymentExpiresAt`. */
+  awaitingPayment?: boolean
+  paymentExpiresAt?: string
+  history?: OrderHistoryEntry[]
+}
+
+/** What the Worker hands back to open Razorpay Checkout for an order. */
+export interface PaymentSession {
+  provider: 'razorpay'
+  keyId: string
+  razorpayOrderId: string
+  /** In the currency's minor unit (paise, cents). */
+  amount: number
+  currency: Currency
+  name: string
+  description: string
+  orderId: string
+  orderNumber: string
+  prefill: { name: string; email: string; contact: string }
+  expiresAt: string | null
 }
 
 export interface WishlistEntry {
@@ -398,6 +455,7 @@ export interface FilterFacets {
   collection: FilterOption[]
   availability: FilterOption[]
   priceRange: { min: number; max: number }
+  currency: Currency
 }
 
 export interface ProductQueryResult {

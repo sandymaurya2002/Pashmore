@@ -5,6 +5,7 @@ import { CartProvider } from '@/context/cart-context'
 import { SessionProvider } from '@/context/session-context'
 import { WishlistProvider } from '@/context/wishlist-context'
 import { RecentlyViewedProvider } from '@/context/recently-viewed-context'
+import { RegionProvider } from '@/context/region-context'
 import { ToastProvider } from '@/context/toast-context'
 import { UIProvider } from '@/context/ui-context'
 
@@ -20,11 +21,13 @@ export function Providers({ children }: { children: ReactNode }) {
     <ToastProvider>
       <SessionProvider>
         <UIProvider>
-          <WishlistProvider>
-            <RecentlyViewedProvider>
-              <CartProvider>{children}</CartProvider>
-            </RecentlyViewedProvider>
-          </WishlistProvider>
+          <RegionProvider>
+            <WishlistProvider>
+              <RecentlyViewedProvider>
+                <CartProvider>{children}</CartProvider>
+              </RecentlyViewedProvider>
+            </WishlistProvider>
+          </RegionProvider>
         </UIProvider>
       </SessionProvider>
     </ToastProvider>

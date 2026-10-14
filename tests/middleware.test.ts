@@ -4,9 +4,40 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { middleware } from '@/middleware'
 import { WORKER_ORIGIN, failure, jwt, mockWorker, opaqueToken, request, responseCookies, success } from './helpers'
 
+const { findRedirect } = vi.hoisted(() => ({ findRedirect: vi.fn() }))
+vi.mock('@/server/redirects', () => ({ findRedirect }))
+
 beforeEach(() => {
   vi.stubEnv('CLOUDFLARE_API_URL', WORKER_ORIGIN)
   vi.spyOn(console, 'error').mockImplementation(() => {})
+  findRedirect.mockReset().mockResolvedValue(null)
+})
+
+describe('middleware redirects', () => {
+  it('applies an admin redirect with its status code and keeps the query string', async () => {
+    findRedirect.mockResolvedValue({ toPath: '/collections/shawls', statusCode: 301 })
+    const response = await middleware(request('/old-shawls?utm_source=mail'))
+    expect(findRedirect).toHaveBeenCalledWith('/old-shawls')
+    expect(response.status).toBe(301)
+    const location = new URL(response.headers.get('location')!)
+    expect(location.pathname).toBe('/collections/shawls')
+    expect(location.search).toBe('?utm_source=mail')
+  })
+
+  it('sends external redirects to the exact URL configured', async () => {
+    findRedirect.mockResolvedValue({ toPath: 'https://blog.example.com/story', statusCode: 302 })
+    const response = await middleware(request('/journal'))
+    expect(response.status).toBe(302)
+    expect(response.headers.get('location')).toBe('https://blog.example.com/story')
+  })
+
+  it('leaves public pages alone without touching the session', async () => {
+    const { fetchMock } = mockWorker({})
+    const response = await middleware(request('/about', { cookies: { pm_refresh: 'refresh-1' } }))
+    expect(response.headers.get('location')).toBeNull()
+    expect(response.headers.getSetCookie()).toHaveLength(0)
+    expect(fetchMock).not.toHaveBeenCalled()
+  })
 })
 
 describe('middleware', () => {

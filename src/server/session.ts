@@ -3,7 +3,7 @@ import type { NextRequest, NextResponse } from 'next/server'
 import { ApiError } from '@/lib/api/envelope'
 import { asNumber, asRecord, asString } from '@/lib/normalize/primitives'
 import { fail, clientContext } from '@/server/http'
-import { workerFetch } from '@/server/worker'
+import { workerFetch, type ClientContext } from '@/server/worker'
 
 /**
  * Customer session, held entirely in HttpOnly cookies set by the storefront's
@@ -94,7 +94,7 @@ export function readTokens(raw: unknown): AuthTokens {
 
 export async function refreshSession(
   refreshToken: string,
-  client?: { ip?: string; userAgent?: string },
+  client?: ClientContext,
 ): Promise<AuthTokens> {
   const { data } = await workerFetch<unknown>('/auth/refresh', {
     method: 'POST',
@@ -157,7 +157,7 @@ export function accessTokenExpiresAt(tokens: AuthTokens): string {
 
 export interface SessionContext {
   accessToken?: string
-  client: { ip?: string; userAgent?: string }
+  client: ClientContext
 }
 
 export interface SessionOptions {

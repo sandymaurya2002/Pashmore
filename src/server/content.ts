@@ -1,0 +1,333 @@
+import { cache } from 'react'
+
+import { ApiError } from '@/lib/api/envelope'
+import {
+  asArray,
+  asBoolean,
+  asNumber,
+  asOptionalString,
+  asRecord,
+  asString,
+} from '@/lib/normalize/primitives'
+import { resolveMediaUrl } from '@/lib/media'
+import type { Currency } from '@/lib/region'
+import { announcements as staticAnnouncements, FREE_SHIPPING_THRESHOLD } from '@/lib/site'
+import { failSoft } from '@/server/fail-soft'
+import { workerFetch } from '@/server/worker'
+
+/**
+ * Website content managed from the admin dashboard (settings, homepage
+ * banners and sections, CMS pages, SEO overrides, redirects).
+ *
+ * Reads are cached in the Next Data Cache under the `content` tag; the Worker
+ * calls /api/revalidate with that tag after every admin change, so edits show
+ * up within seconds. Every reader falls back to the site's built-in content if
+ * the Worker is unreachable, so the storefront never breaks on a CMS outage.
+ */
+
+const CONTENT_CACHE = { revalidate: 300, tags: ['content'] }
+
+export interface CommerceRules {
+  /** The currency every amount below is in. */
+  currency: Currency
+  freeShippingThreshold: number
+  standardShippingFee: number
+  expressShippingFee: number
+  /** Zero where cash on delivery is not offered (outside India). */
+  codLimit: number
+  returnWindowDays: number
+}
+
+export interface SiteContent {
+  announcement: { enabled: boolean; messages: string[] }
+  /** India (INR) rules. */
+  commerce: CommerceRules
+  /** Shipping and payment rules for each shopping region's currency. */
+  commerceByCurrency: Record<Currency, CommerceRules>
+  payments: { online: boolean; cod: boolean }
+  settings: Record<string, unknown>
+}
+
+const DEFAULT_INR_RULES: CommerceRules = {
+  currency: 'INR',
+  freeShippingThreshold: FREE_SHIPPING_THRESHOLD,
+  standardShippingFee: 149,
+  expressShippingFee: 499,
+  codLimit: 20000,
+  returnWindowDays: 14,
+}
+
+/** Mirrors the Worker's defaults for international orders. */
+const DEFAULT_USD_RULES: CommerceRules = {
+  currency: 'USD',
+  freeShippingThreshold: 250,
+  standardShippingFee: 25,
+  expressShippingFee: 45,
+  codLimit: 0,
+  returnWindowDays: 14,
+}
+
+/** Used until the admin's settings have loaded. */
+export const DEFAULT_COMMERCE: Record<Currency, CommerceRules> = { INR: DEFAULT_INR_RULES, USD: DEFAULT_USD_RULES }
+
+const DEFAULT_SITE: SiteContent = {
+  announcement: { enabled: true, messages: [...staticAnnouncements] },
+  commerce: DEFAULT_INR_RULES,
+  commerceByCurrency: DEFAULT_COMMERCE,
+  payments: { online: false, cod: false },
+  settings: {},
+}
+
+function normalizeRules(input: unknown, fallback: CommerceRules): CommerceRules {
+  const raw = asRecord(input)
+  return {
+    currency: fallback.currency,
+    freeShippingThreshold: asNumber(raw.freeShippingThreshold, fallback.freeShippingThreshold),
+    standardShippingFee: asNumber(raw.standardShippingFee, fallback.standardShippingFee),
+    expressShippingFee: asNumber(raw.expressShippingFee, fallback.expressShippingFee),
+    codLimit: asNumber(raw.codLimit, fallback.codLimit),
+    returnWindowDays: asNumber(raw.returnWindowDays, fallback.returnWindowDays),
+  }
+}
+
+async function loadSite(): Promise<SiteContent> {
+  const { data } = await workerFetch<unknown>('/content/site', {
+    cache: CONTENT_CACHE,
+  })
+  const raw = asRecord(data)
+  const announcement = asRecord(raw.announcement)
+  const byCurrency = asRecord(raw.commerceByCurrency)
+  const payments = asRecord(raw.payments)
+  const messages = asArray(announcement.messages)
+    .map((message) => asString(message).trim())
+    .filter(Boolean)
+  const inr = normalizeRules(byCurrency.INR ?? raw.commerce, DEFAULT_INR_RULES)
+  return {
+    announcement: {
+      enabled: announcement.enabled === undefined ? true : asBoolean(announcement.enabled),
+      messages: messages.length ? messages : DEFAULT_SITE.announcement.messages,
+    },
+    commerce: inr,
+    commerceByCurrency: { INR: inr, USD: normalizeRules(byCurrency.USD, DEFAULT_USD_RULES) },
+    payments: {
+      online: asBoolean(payments.razorpay),
+      cod: asBoolean(payments.cod),
+    },
+    settings: asRecord(raw.settings),
+  }
+}
+
+export const getSiteContent = cache(() => failSoft(loadSite(), DEFAULT_SITE, 'content/site'))
+
+/* ------------------------------------------------------------------ *
+ * Homepage
+ * ------------------------------------------------------------------ */
+
+export interface Banner {
+  id: string
+  placement: string
+  heading: string
+  subheading?: string
+  eyebrow?: string
+  ctaLabel?: string
+  href?: string
+  secondaryCtaLabel?: string
+  secondaryHref?: string
+  mediaType: 'IMAGE' | 'VIDEO'
+  imageUrl?: string
+  mobileImageUrl?: string
+  videoUrl?: string
+  imageAlt: string
+}
+
+export interface HomeSection {
+  key: string
+  type: string
+  heading?: string
+  subheading?: string
+  href?: string
+  linkLabel?: string
+  isActive: boolean
+}
+
+export interface HomeContent {
+  sections: HomeSection[]
+  banners: Record<string, Banner[]>
+}
+
+/** Only same-site paths and http(s) URLs are allowed as banner links and media. */
+export function safeUrl(value: unknown): string | undefined {
+  const url = asOptionalString(value)?.trim()
+  if (!url) return undefined
+  if (url.startsWith('/') && !url.startsWith('//')) return url
+  try {
+    const parsed = new URL(url)
+    return parsed.protocol === 'https:' || parsed.protocol === 'http:'
+      ? parsed.toString()
+      : undefined
+  } catch {
+    return undefined
+  }
+}
+
+function normalizeBanner(input: unknown): Banner | null {
+  const raw = asRecord(input)
+  const id = asString(raw.id)
+  if (!id) return null
+  const videoUrl = resolveMediaUrl(asOptionalString(raw.videoUrl)) ?? undefined
+  const imageUrl = resolveMediaUrl(asOptionalString(raw.imageUrl)) ?? undefined
+  if (!imageUrl && !videoUrl) return null
+  const heading = asString(raw.heading)
+  return {
+    id,
+    placement: asString(raw.placement),
+    heading,
+    subheading: asOptionalString(raw.subheading),
+    eyebrow: asOptionalString(raw.eyebrow),
+    ctaLabel: asOptionalString(raw.ctaLabel),
+    href: safeUrl(raw.href),
+    secondaryCtaLabel: asOptionalString(raw.secondaryCtaLabel),
+    secondaryHref: safeUrl(raw.secondaryHref),
+    mediaType: asString(raw.mediaType).toUpperCase() === 'VIDEO' && videoUrl ? 'VIDEO' : 'IMAGE',
+    imageUrl,
+    mobileImageUrl: resolveMediaUrl(asOptionalString(raw.mobileImageUrl)) ?? undefined,
+    videoUrl,
+    imageAlt: asString(raw.imageAlt) || heading,
+  }
+}
+
+async function loadHome(): Promise<HomeContent> {
+  const { data } = await workerFetch<unknown>('/content/home', {
+    cache: CONTENT_CACHE,
+  })
+  const raw = asRecord(data)
+  const banners: Record<string, Banner[]> = {}
+  for (const [placement, list] of Object.entries(asRecord(raw.banners))) {
+    banners[placement] = asArray(list)
+      .map(normalizeBanner)
+      .filter((banner): banner is Banner => Boolean(banner))
+  }
+  const sections = asArray(raw.sections).map((entry) => {
+    const section = asRecord(entry)
+    return {
+      key: asString(section.key),
+      type: asString(section.type),
+      heading: asOptionalString(section.heading),
+      subheading: asOptionalString(section.subheading),
+      href: safeUrl(section.href),
+      linkLabel: asOptionalString(section.linkLabel),
+      isActive: section.isActive === undefined ? true : asBoolean(section.isActive),
+    }
+  })
+  return { sections, banners }
+}
+
+export const getHomeContent = cache(() =>
+  failSoft<HomeContent | null>(loadHome(), null, 'content/home'),
+)
+
+/* ------------------------------------------------------------------ *
+ * CMS pages
+ * ------------------------------------------------------------------ */
+
+export interface CmsPage {
+  slug: string
+  title: string
+  eyebrow?: string
+  intro?: string
+  updatedLabel?: string
+  sections: Array<{ heading: string; body: string[]; list?: string[] }>
+  faqs: Array<{ question: string; answer: string }>
+  metaTitle?: string
+  metaDescription?: string
+}
+
+function normalizePage(input: unknown): CmsPage | null {
+  const raw = asRecord(input)
+  const slug = asString(raw.slug)
+  const title = asString(raw.title)
+  if (!slug || !title) return null
+  const sections = asArray(raw.sections).map((entry) => {
+    const section = asRecord(entry)
+    const list = asArray(section.list)
+      .map((item) => asString(item))
+      .filter(Boolean)
+    return {
+      heading: asString(section.heading),
+      body: asArray(section.body)
+        .map((paragraph) => asString(paragraph))
+        .filter(Boolean),
+      ...(list.length ? { list } : {}),
+    }
+  })
+  const faqs = asArray(raw.faqs)
+    .map((entry) => {
+      const faq = asRecord(entry)
+      return { question: asString(faq.question), answer: asString(faq.answer) }
+    })
+    .filter((faq) => faq.question && faq.answer)
+  return {
+    slug,
+    title,
+    eyebrow: asOptionalString(raw.eyebrow),
+    intro: asOptionalString(raw.intro),
+    updatedLabel: asOptionalString(raw.updatedLabel),
+    sections,
+    faqs,
+    metaTitle: asOptionalString(raw.metaTitle),
+    metaDescription: asOptionalString(raw.metaDescription),
+  }
+}
+
+/** A published CMS page, or null when the page is not managed in the CMS (or the CMS is down). */
+export const getCmsPage = cache(async (slug: string): Promise<CmsPage | null> => {
+  try {
+    const { data } = await workerFetch<unknown>(`/content/pages/${encodeURIComponent(slug)}`, {
+      cache: CONTENT_CACHE,
+    })
+    return normalizePage(data)
+  } catch (error) {
+    if (!(error instanceof ApiError && error.isNotFound)) {
+      console.error('[content/page]', slug, (error as Error)?.message)
+    }
+    return null
+  }
+})
+
+/* ------------------------------------------------------------------ *
+ * SEO overrides and redirects
+ * ------------------------------------------------------------------ */
+
+export interface SeoOverride {
+  title?: string
+  description?: string
+  keywords: string[]
+  canonicalUrl?: string
+  ogImageUrl?: string
+  robotsIndex: boolean
+  robotsFollow: boolean
+}
+
+export const getSeoOverride = cache(async (path: string): Promise<SeoOverride | null> => {
+  const result = await failSoft(
+    workerFetch<unknown>('/content/seo', {
+      query: { path },
+      cache: CONTENT_CACHE,
+    }),
+    null,
+    'content/seo',
+  )
+  if (!result?.data) return null
+  const raw = asRecord(result.data)
+  return {
+    title: asOptionalString(raw.title),
+    description: asOptionalString(raw.description),
+    keywords: asArray(raw.keywords)
+      .map((keyword) => asString(keyword))
+      .filter(Boolean),
+    canonicalUrl: safeUrl(raw.canonicalUrl),
+    ogImageUrl: resolveMediaUrl(asOptionalString(raw.ogImageUrl)) ?? undefined,
+    robotsIndex: raw.robotsIndex === undefined ? true : asBoolean(raw.robotsIndex),
+    robotsFollow: raw.robotsFollow === undefined ? true : asBoolean(raw.robotsFollow),
+  }
+})

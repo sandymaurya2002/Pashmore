@@ -10,7 +10,7 @@ import {
   type SearchParams,
 } from '@/lib/query'
 import { formatPrice, cn } from '@/lib/utils'
-import type { FilterFacets, FilterOption, ProductFilters } from '@/types'
+import type { Currency, FilterFacets, FilterOption, ProductFilters } from '@/types'
 
 const GROUP_LABELS: Record<FilterKey, string> = {
   category: 'Category',
@@ -45,7 +45,7 @@ export function FilterSidebar({
   searchParams,
   pathname,
 }: FilterSidebarProps) {
-  const priceBands = buildPriceBands(facets.priceRange)
+  const priceBands = buildPriceBands(facets.priceRange, facets.currency)
 
   return (
     <div className="flex flex-col">
@@ -210,22 +210,26 @@ interface PriceBand {
   max: number
 }
 
-/** Four bands spanning the collection's actual range, rounded to ₹1,000. */
-function buildPriceBands(range: { min: number; max: number }): PriceBand[] {
+/** Four bands spanning the collection's actual range, rounded to ₹1,000 or $50. */
+function buildPriceBands(range: { min: number; max: number }, currency: Currency): PriceBand[] {
   if (range.max <= range.min) return []
-  const step = Math.max(1000, Math.ceil((range.max - range.min) / 4 / 1000) * 1000)
+  const unit = BAND_UNIT[currency]
+  const step = Math.max(unit, Math.ceil((range.max - range.min) / 4 / unit) * unit)
   const bands: PriceBand[] = []
 
-  for (let start = Math.floor(range.min / 1000) * 1000; start < range.max; start += step) {
-    const end = Math.min(start + step, Math.ceil(range.max / 1000) * 1000)
+  for (let start = Math.floor(range.min / unit) * unit; start < range.max; start += step) {
+    const end = Math.min(start + step, Math.ceil(range.max / unit) * unit)
     bands.push({
       min: start,
       max: end,
-      label: `${formatPrice(start)} – ${formatPrice(end)}`,
+      label: `${formatPrice(start, currency)} – ${formatPrice(end, currency)}`,
     })
   }
   return bands
 }
+
+/** Band edges are rounded to this many units of the currency. */
+const BAND_UNIT: Record<Currency, number> = { INR: 1000, USD: 50 }
 
 /** Re-reads a generated href back into a SearchParams object. */
 function parseHrefParams(href: string, fallback: SearchParams): SearchParams {

@@ -9,15 +9,20 @@ import { buildMetadata, pageTitle } from '@/lib/seo'
 import { breadcrumbSchema, graph, webPageSchema } from '@/lib/jsonld'
 import { site } from '@/lib/site'
 import type { Breadcrumb } from '@/types'
+import { withSeoOverride } from '@/server/seo'
 
 const DESCRIPTION =
   'Contact Pashmore — customer care, corporate gifting, commissions and workshop visits in Srinagar, Kashmir.'
 
-export const metadata: Metadata = buildMetadata({
+const BASE_METADATA: Metadata = buildMetadata({
   title: pageTitle('Contact'),
   description: DESCRIPTION,
   path: '/contact',
 })
+
+export function generateMetadata(): Promise<Metadata> {
+  return withSeoOverride('/contact', BASE_METADATA)
+}
 
 const crumbs: Breadcrumb[] = [
   { name: 'Home', href: '/' },

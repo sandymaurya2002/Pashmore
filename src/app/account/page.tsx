@@ -43,7 +43,7 @@ export default async function AccountOverviewPage() {
             </div>
             <div>
               <dt className="eyebrow text-taupe">Total</dt>
-              <dd className="mt-1 text-sm text-charcoal">{formatPrice(latest.totals.total)}</dd>
+              <dd className="mt-1 text-sm text-charcoal">{formatPrice(latest.totals.total, latest.currency)}</dd>
             </div>
           </dl>
 

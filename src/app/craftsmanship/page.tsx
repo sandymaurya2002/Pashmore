@@ -19,11 +19,12 @@ import { failSoft } from '@/server/fail-soft'
 import { buildMetadata, pageTitle } from '@/lib/seo'
 import { breadcrumbSchema, faqSchema, graph, webPageSchema } from '@/lib/jsonld'
 import type { Breadcrumb, ProductFaq } from '@/types'
+import { withSeoOverride } from '@/server/seo'
 
 const DESCRIPTION =
   'How a Pashmore piece is made: hand-combing pashm in Ladakh, charkha spinning, handloom weaving, sozni and kani work, natural dyeing and certification.'
 
-export const metadata: Metadata = buildMetadata({
+const BASE_METADATA: Metadata = buildMetadata({
   title: pageTitle('Craftsmanship'),
   description: DESCRIPTION,
   path: '/craftsmanship',
@@ -34,6 +35,10 @@ export const metadata: Metadata = buildMetadata({
     height: 1000,
   },
 })
+
+export function generateMetadata(): Promise<Metadata> {
+  return withSeoOverride('/craftsmanship', BASE_METADATA)
+}
 
 const crumbs: Breadcrumb[] = [
   { name: 'Home', href: '/' },

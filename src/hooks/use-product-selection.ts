@@ -43,7 +43,9 @@ export function useProductSelection(product: Product) {
     )
   }, [product, colorSlug, sizeSlug])
 
-  const available = (variant?.inventory ?? 0) > 0
+  /** No price in the shopper's currency: it cannot be bought from this region. */
+  const regionUnavailable = !product.availableInRegion
+  const available = !regionUnavailable && (variant?.inventory ?? 0) > 0
   const maxQuantity = Math.max(1, Math.min(variant?.inventory ?? 1, 10))
 
   React.useEffect(() => {
@@ -74,6 +76,14 @@ export function useProductSelection(product: Product) {
   const sizeName = product.sizes.find((s) => s.slug === sizeSlug)?.name
 
   const addToCart = React.useCallback(async () => {
+    if (regionUnavailable) {
+      toast({
+        title: 'Not available in your region',
+        description: 'This piece is not yet sold outside India.',
+        tone: 'error',
+      })
+      return false
+    }
     if (!variant || !available) {
       toast({
         title: 'Currently unavailable',
@@ -98,7 +108,7 @@ export function useProductSelection(product: Product) {
     } finally {
       setAdding(false)
     }
-  }, [adding, addItem, available, colorName, product.name, product.slug, quantity, toast, variant])
+  }, [adding, addItem, available, colorName, product.name, product.slug, quantity, regionUnavailable, toast, variant])
 
   return {
     colorSlug,
@@ -109,6 +119,7 @@ export function useProductSelection(product: Product) {
     setQuantity,
     variant,
     available,
+    regionUnavailable,
     maxQuantity,
     colorAvailability,
     sizeAvailability,

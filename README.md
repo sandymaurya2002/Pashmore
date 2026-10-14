@@ -40,8 +40,11 @@ This project was developed on a machine running Node 18.20.8, which constrained 
 ```bash
 npm ci
 cp .env.example .env.local   # then set CLOUDFLARE_API_URL (see below)
-npm run dev                  # http://localhost:3000
+npm run dev                  # http://localhost:3000 (or: npx next dev -p 3100)
 ```
+
+Running the Worker and admin dashboard locally, and the end-to-end check, are described in the
+backend's README (`PushminaBackend/README.md`).
 
 ```bash
 npm run build && npm start   # production build
@@ -121,8 +124,9 @@ readable by page scripts or returned in a response body.
   customer's token.
 * **Guest:** the Worker only keeps carts for customers, so `server/cart.ts` keeps the guest
   bag in the HttpOnly `pm_cart` cookie and prices it on every request from
-  `GET /products/batch` (no cache), with the Worker's own rules: GST-inclusive prices,
-  ₹149 standard shipping under ₹4,999, maximum 10 per line, stock checked on every change.
+  `GET /products/batch` (no cache), with the Worker's own rules: GST-inclusive prices, the
+  shipping fee and free-shipping threshold from the admin's settings (default ₹149 under
+  ₹4,999), maximum 10 per line, stock checked on every change.
   The cookie holds no prices, so nothing the browser sends is trusted.
 * **Sign-in / registration** sends the guest lines to `POST /cart/merge`, then clears
   `pm_cart`. If the merge fails, sign-in still succeeds and the guest bag is kept.
@@ -131,10 +135,21 @@ readable by page scripts or returned in a response body.
 
 ### Checkout
 
-Online payment is **not enabled**. `/checkout` reviews the server-priced bag and explains
-that payments are not yet live, with a route to client care. It cannot create an order or
-show a confirmation. Enabling Razorpay means adding a server-side order/payment route
-handler and replacing the notice in `components/checkout/checkout-flow.tsx`.
+`/checkout` is for signed-in customers (the middleware sends guests to `/login?next=/checkout`).
+It shows the server-priced bag, saved or new address, Standard/Express shipping and the payment
+methods the Worker has enabled (`GET /payments/methods`): Razorpay when its keys are set, cash on
+delivery when `ENABLE_COD_ORDERS=true`. With neither, it says online payment is unavailable.
+
+1. `POST /api/checkout` forwards the address, shipping method, payment method and coupon to the
+   Worker's `POST /orders` with an `Idempotency-Key`, so a double click or retry cannot create a
+   second order. Prices, stock and totals are computed by the Worker; nothing from the browser is
+   trusted.
+2. For Razorpay, the browser opens Razorpay Checkout with the options the Worker returned and posts
+   the result to `POST /api/orders/:id/verify`. The Worker checks the signature and fetches the
+   payment from Razorpay before marking the order paid. Signed webhooks confirm it independently.
+3. The customer lands on `/account/orders/:id` (`?placed=1`, `?payment=failed` or
+   `?payment=cancelled`). There they see status, tracking and timeline, and can retry payment,
+   cancel or request a return through `/api/orders/:id/{pay,verify,sync,cancel,return}`.
 
 ---
 
@@ -380,9 +395,22 @@ node scripts/generate-images.mjs --force   # regenerate everything
 
 ## Content
 
-Journal articles, landing pages, navigation and policy pages are editorial content in
-`src/data`. Everything commercial (products, stock, prices, collections, customers,
-carts, wishlists, orders) lives in D1 behind the Worker.
+Journal articles, landing pages and navigation are editorial content in `src/data`.
+Everything commercial (products, stock, prices, collections, customers, carts, wishlists,
+orders) lives in D1 behind the Worker.
+
+These are edited in the admin dashboard and read by `server/content.ts` and `server/seo.ts`:
+
+- the announcement bar and homepage banners (image or video) and sections;
+- the policy pages (shipping, returns, privacy, terms);
+- per-page SEO titles and descriptions;
+- redirects;
+- shipping fees and the free-shipping threshold.
+
+They are cached for 5 minutes under the `content` tag, which the Worker purges on every edit.
+When the Worker is unreachable the site falls back to the built-in copy in `src/data`, so a
+CMS outage never blanks a page. Redirects are applied in `middleware.ts` with a 60-second
+per-instance cache.
 
 ---
 
@@ -407,9 +435,11 @@ None of the server-only variables may be prefixed `NEXT_PUBLIC_`.
 * `GATEWAY_SECRET` — the same value as `CLOUDFLARE_GATEWAY_SECRET` here.
 * `MEDIA_PUBLIC_BASE_URL` — the public R2/media origin the Worker uses for image URLs; that
   host must be covered by `CLOUDFLARE_R2_PUBLIC_URL` or `IMAGE_REMOTE_HOSTS`.
-* `FRONTEND_ORIGIN` — the storefront origin. The storefront calls the Worker
-  server-to-server and does not need CORS, but keep it accurate.
-* `ENABLE_COD_ORDERS` — leave **off**. Checkout is disabled and no orders should be created.
+* `FRONTEND_ORIGIN` and `STOREFRONT_URL` — the storefront origin. The storefront calls the
+  Worker server-to-server and does not need CORS, but `STOREFRONT_URL` is where the Worker sends
+  cache purges and the base of links in emails.
+* `REVALIDATE_SECRET` — the same value as here, so admin edits appear at once.
+* `ENABLE_COD_ORDERS` and the Razorpay keys decide which payment methods checkout offers.
 
 ---
 
@@ -424,10 +454,10 @@ None of the server-only variables may be prefixed `NEXT_PUBLIC_`.
 3. Deploy. `next.config.mjs` reads the image hosts at build time, so **redeploy after
    changing `CLOUDFLARE_R2_PUBLIC_URL`, `CLOUDFLARE_API_URL` or `IMAGE_REMOTE_HOSTS`.**
 4. On the Worker, set `GATEWAY_SECRET` (same value), `FRONTEND_ORIGIN` (the Vercel production
-   domain) and `MEDIA_PUBLIC_BASE_URL`, and keep `ENABLE_COD_ORDERS` off.
-5. Optionally have the Worker/admin call
-   `POST https://<storefront>/api/revalidate` with `Authorization: Bearer $REVALIDATE_SECRET`
-   after publishing products, so changes appear before the 60-second cache window.
+   domain), `STOREFRONT_URL` and `MEDIA_PUBLIC_BASE_URL`.
+5. Set the same `REVALIDATE_SECRET` on the Worker. It then calls
+   `POST https://<storefront>/api/revalidate` after every admin change to products, stock,
+   orders, content, SEO or settings, so changes appear before the cache window ends.
 6. Smoke-test: home page rails, a collection with filters and sorting, a product page, add
    to bag as a guest, register (the guest bag carries over), wishlist, addresses, order
    history, order tracking, sign out.
@@ -436,16 +466,11 @@ None of the server-only variables may be prefixed `NEXT_PUBLIC_`.
 
 ## What is deliberately not built
 
-* **Payments / order placement.** Razorpay and checkout are disabled; see *Checkout* above.
-* **Admin.** Catalogue and order management live in the Worker's admin API, not here.
-
-These forms are wired up but the Worker does not support them yet. Each one shows an
-honest "not available yet" message and never reports success:
-
-* **Password reset.** The Worker answers `501`; the message is shown on the form.
-* **Discount codes.** The Worker answers `501`. Guests are asked to sign in first.
-* **Contact form and newsletter.** There is no Worker endpoint, so `/api/contact` and
-  `/api/newsletter` answer `501` and point customers to care@pashmore.com.
+* **Admin.** Catalogue, orders, payments, refunds, customers, banners, pages, SEO and site
+  settings are managed in the separate admin dashboard (`PushminaBackend/admin`) through the
+  Worker's admin API, not here.
+* **Guest checkout.** Customers sign in to place an order; a guest bag carries over at sign-in.
+  Discount codes likewise need an account.
 
 ---
 

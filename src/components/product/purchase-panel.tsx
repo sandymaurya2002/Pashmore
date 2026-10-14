@@ -14,6 +14,7 @@ import {
 } from '@/components/product/variant-selector'
 import { useProductSelection } from '@/hooks/use-product-selection'
 import { useRecentlyViewed } from '@/context/recently-viewed-context'
+import { useRegion } from '@/context/region-context'
 import { formatPrice } from '@/lib/utils'
 import { FREE_SHIPPING_THRESHOLD } from '@/lib/site'
 import type { Product } from '@/types'
@@ -22,6 +23,7 @@ export function PurchasePanel({ product }: { product: Product }) {
   const router = useRouter()
   const selection = useProductSelection(product)
   const { record } = useRecentlyViewed()
+  const { region } = useRegion()
 
   const ctaRef = React.useRef<HTMLDivElement>(null)
   const [ctaVisible, setCtaVisible] = React.useState(true)
@@ -49,29 +51,50 @@ export function PurchasePanel({ product }: { product: Product }) {
 
   const inventory = selection.variant?.inventory ?? 0
   const lowStock = inventory > 0 && inventory <= 3
+  const freeShippingAbove =
+    region?.commerce.currency === product.currency
+      ? region.commerce.freeShippingThreshold
+      : product.currency === 'INR'
+        ? FREE_SHIPPING_THRESHOLD
+        : null
+  const unavailableLabel = selection.regionUnavailable ? 'Not Sold in Your Region' : 'Out of Stock'
 
   return (
     <>
       <div className="flex flex-col gap-7">
-        <div>
-          <Price
-            price={selection.variant?.price ?? product.price}
-            compareAtPrice={selection.variant?.compareAtPrice ?? product.compareAtPrice}
-            size="lg"
-          />
-          <p className="mt-2 text-xs text-taupe">
-            Inclusive of all taxes ·{' '}
-            {product.price >= FREE_SHIPPING_THRESHOLD
-              ? 'Complimentary shipping'
-              : `Free shipping above ${formatPrice(FREE_SHIPPING_THRESHOLD)}`}
-          </p>
-        </div>
+        {selection.regionUnavailable ? (
+          <div>
+            <p className="text-lg text-charcoal">Not available in your region</p>
+            <p className="mt-2 text-xs leading-relaxed text-taupe">
+              This piece is currently sold in India only. Shopping from India? Change your region in
+              the menu to see its price.
+            </p>
+          </div>
+        ) : (
+          <div>
+            <Price
+              price={selection.variant?.price ?? product.price}
+              compareAtPrice={selection.variant?.compareAtPrice ?? product.compareAtPrice}
+              currency={product.currency}
+              size="lg"
+            />
+            <p className="mt-2 text-xs text-taupe">
+              Inclusive of all taxes
+              {freeShippingAbove !== null &&
+                ` · ${
+                  product.price >= freeShippingAbove
+                    ? 'Complimentary shipping'
+                    : `Free shipping above ${formatPrice(freeShippingAbove, product.currency)}`
+                }`}
+            </p>
+          </div>
+        )}
 
         <p
           className="flex items-center gap-2 text-[0.8125rem]"
           aria-live="polite"
         >
-          {selection.available ? (
+          {selection.regionUnavailable ? null : selection.available ? (
             <>
               <span
                 aria-hidden
@@ -125,7 +148,7 @@ export function PurchasePanel({ product }: { product: Product }) {
               onClick={() => selection.addToCart()}
               disabled={!selection.available || selection.adding}
             >
-              {!selection.available ? 'Out of Stock' : selection.adding ? 'Adding…' : 'Add to Bag'}
+              {!selection.available ? unavailableLabel : selection.adding ? 'Adding…' : 'Add to Bag'}
             </Button>
             <WishlistButton
               slug={product.slug}
@@ -184,12 +207,15 @@ export function PurchasePanel({ product }: { product: Product }) {
         <div className="flex items-center gap-3">
           <div className="min-w-0 flex-1">
             <p className="truncate text-xs text-taupe">{product.name}</p>
-            <Price
-              price={selection.variant?.price ?? product.price}
-              compareAtPrice={selection.variant?.compareAtPrice ?? product.compareAtPrice}
-              size="sm"
-              showDiscount={false}
-            />
+            {!selection.regionUnavailable && (
+              <Price
+                price={selection.variant?.price ?? product.price}
+                compareAtPrice={selection.variant?.compareAtPrice ?? product.compareAtPrice}
+                currency={product.currency}
+                size="sm"
+                showDiscount={false}
+              />
+            )}
           </div>
           <Button
             onClick={() => selection.addToCart()}
@@ -197,7 +223,7 @@ export function PurchasePanel({ product }: { product: Product }) {
             tabIndex={ctaVisible ? -1 : 0}
             className="h-11 px-6"
           >
-            {selection.available ? 'Add to Bag' : 'Sold Out'}
+            {selection.available ? 'Add to Bag' : selection.regionUnavailable ? 'Unavailable' : 'Sold Out'}
           </Button>
         </div>
       </div>

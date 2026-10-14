@@ -8,9 +8,13 @@ import {
   refreshSession,
   setSessionCookies,
 } from '@/server/session'
+import { findRedirect } from '@/server/redirects'
+
+const SESSION_PATHS = /^\/(account(\/|$)|checkout$)/
 
 /**
- * Keeps the customer session alive for server-rendered account pages.
+ * Applies the redirects managed in the admin dashboard, then keeps the
+ * customer session alive for server-rendered account pages.
  *
  * Server Components cannot set cookies, so an expiring access token is rotated
  * here: the new tokens are written to the response *and* to the forwarded
@@ -18,8 +22,21 @@ import {
  * Visitors with no session are sent to /login and returned afterwards.
  */
 export async function middleware(request: NextRequest) {
+  const { pathname } = request.nextUrl
+
+  if (request.method === 'GET' || request.method === 'HEAD') {
+    const redirect = await findRedirect(pathname)
+    if (redirect) {
+      const target = new URL(redirect.toPath, request.url)
+      if (redirect.toPath.startsWith('/') && !target.search) target.search = request.nextUrl.search
+      return NextResponse.redirect(target, redirect.statusCode)
+    }
+  }
+
+  if (!SESSION_PATHS.test(pathname)) return NextResponse.next()
+
   const stored = readSessionCookies(request.cookies)
-  const protectedPath = request.nextUrl.pathname.startsWith('/account')
+  const protectedPath = pathname.startsWith('/account')
 
   if (isAccessTokenFresh(stored.accessToken)) return NextResponse.next()
 
@@ -62,5 +79,6 @@ function isPrefetch(request: NextRequest): boolean {
 }
 
 export const config = {
-  matcher: ['/account/:path*', '/checkout'],
+  // Every page, but not Next internals, API routes or files with an extension.
+  matcher: ['/((?!_next/|api/|.*\\.[A-Za-z0-9]+$).*)'],
 }

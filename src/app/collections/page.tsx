@@ -11,16 +11,21 @@ import { getAllCollections } from '@/services/catalog'
 import { buildMetadata, pageTitle } from '@/lib/seo'
 import { breadcrumbSchema, graph, webPageSchema } from '@/lib/jsonld'
 import type { Breadcrumb, Collection, CollectionGroup } from '@/types'
+import { withSeoOverride } from '@/server/seo'
 
 const TITLE = 'All Collections'
 const DESCRIPTION =
   'Browse every Pashmore collection — pure Pashmina, Kashmiri craft, fine wool, wedding pieces and gifting, for women and men.'
 
-export const metadata: Metadata = buildMetadata({
+const BASE_METADATA: Metadata = buildMetadata({
   title: pageTitle('Collections — Pashmina, Shawls, Stoles & Gifting'),
   description: DESCRIPTION,
   path: '/collections',
 })
+
+export function generateMetadata(): Promise<Metadata> {
+  return withSeoOverride('/collections', BASE_METADATA)
+}
 
 export const dynamic = 'force-dynamic'
 

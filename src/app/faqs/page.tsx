@@ -14,15 +14,20 @@ import { generalFaqs } from '@/data/policies'
 import { buildMetadata, pageTitle } from '@/lib/seo'
 import { breadcrumbSchema, faqSchema, graph, webPageSchema } from '@/lib/jsonld'
 import type { Breadcrumb } from '@/types'
+import { withSeoOverride } from '@/server/seo'
 
 const DESCRIPTION =
   'Answers to the questions we are asked most — authenticity, delivery, returns, care and gifting.'
 
-export const metadata: Metadata = buildMetadata({
+const BASE_METADATA: Metadata = buildMetadata({
   title: pageTitle('Frequently Asked Questions'),
   description: DESCRIPTION,
   path: '/faqs',
 })
+
+export function generateMetadata(): Promise<Metadata> {
+  return withSeoOverride('/faqs', BASE_METADATA)
+}
 
 const crumbs: Breadcrumb[] = [
   { name: 'Home', href: '/' },

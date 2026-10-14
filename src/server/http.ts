@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server'
 
 import { ApiError, type ApiMeta } from '@/lib/api/envelope'
+import { regionFromRequest } from '@/server/region'
+import type { ClientContext } from '@/server/worker'
 
 /**
  * Responses from the storefront's own route handlers use the same envelope as
@@ -43,10 +45,11 @@ export async function readJson(request: Request): Promise<Record<string, unknown
   throw new ApiError('Request body must be a JSON object.', 400, 'VALIDATION_ERROR')
 }
 
-export function clientContext(request: Request): { ip?: string; userAgent?: string } {
+export function clientContext(request: Request): ClientContext {
   const forwarded = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
   return {
     ip: forwarded || request.headers.get('x-real-ip') || undefined,
     userAgent: request.headers.get('user-agent') ?? undefined,
+    country: regionFromRequest(request).country,
   }
 }
