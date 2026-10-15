@@ -10,9 +10,18 @@ import type { Banner } from '@/server/content'
  * A banner managed from the admin dashboard (Homepage & Banners). Images and
  * looping, muted videos are both supported; a separate mobile image is used
  * below the md breakpoint when one is set. `hero` is the full-width opener
- * and carries the page's h1; `feature` is the full-bleed editorial band.
+ * and carries the page's h1; `page` is a shorter opener above a page's own
+ * content (which keeps its h1); `feature` is the full-bleed editorial band.
  */
-export function CmsBanner({ banner, variant, priority = false }: { banner: Banner; variant: 'hero' | 'feature'; priority?: boolean }) {
+export function CmsBanner({
+  banner,
+  variant,
+  priority = false,
+}: {
+  banner: Banner
+  variant: 'hero' | 'page' | 'feature'
+  priority?: boolean
+}) {
   const headingId = `banner-${banner.id}`
   const Heading = variant === 'hero' ? 'h1' : 'h2'
 
@@ -59,24 +68,34 @@ export function CmsBanner({ banner, variant, priority = false }: { banner: Banne
         aria-hidden
         className={cn(
           'absolute inset-0',
-          variant === 'hero'
-            ? 'bg-gradient-to-t from-ink/70 via-ink/20 to-transparent'
-            : 'bg-gradient-to-r from-ink/70 via-ink/30 to-transparent',
+          variant === 'feature'
+            ? 'bg-gradient-to-r from-ink/70 via-ink/30 to-transparent'
+            : 'bg-gradient-to-t from-ink/70 via-ink/20 to-transparent',
         )}
       />
     </>
   )
 
-  if (variant === 'hero') {
+  if (variant === 'hero' || variant === 'page') {
     return (
       <section className="relative w-full bg-charcoal" aria-labelledby={headingId}>
-        <div className="relative h-[78dvh] min-h-[28rem] w-full overflow-hidden md:h-auto md:aspect-video">
+        <div
+          className={cn(
+            'relative w-full overflow-hidden',
+            variant === 'hero'
+              ? 'h-[78dvh] min-h-[28rem] md:h-auto md:aspect-video'
+              : 'h-[46dvh] min-h-[18rem] md:h-[52dvh] md:max-h-[36rem]',
+          )}
+        >
           {media}
           <div className="container-luxe absolute inset-x-0 bottom-0 flex flex-col items-center pb-10 text-center md:pb-14">
             {banner.eyebrow && <p className="eyebrow text-gold-soft">{banner.eyebrow}</p>}
             <Heading
               id={headingId}
-              className="mt-4 max-w-3xl font-serif text-[2.25rem] leading-[1.05] text-ivory md:text-[3.5rem]"
+              className={cn(
+                'mt-4 max-w-3xl font-serif leading-[1.05] text-ivory',
+                variant === 'hero' ? 'text-[2.25rem] md:text-[3.5rem]' : 'text-[2rem] md:text-[3rem]',
+              )}
             >
               {banner.heading}
             </Heading>

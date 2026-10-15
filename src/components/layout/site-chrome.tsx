@@ -13,11 +13,14 @@ import { usePathname } from 'next/navigation'
  */
 export function SiteChrome({
   header,
+  banner,
   footer,
   overlays,
   children,
 }: {
   header: ReactNode
+  /** Admin-managed page banner, shown above the page content. */
+  banner?: ReactNode
   footer: ReactNode
   overlays: ReactNode
   children: ReactNode
@@ -29,6 +32,7 @@ export function SiteChrome({
     <>
       {!minimal && header}
       <main id="main" className="pb-16 md:pb-0">
+        {!minimal && banner}
         {children}
       </main>
       {!minimal && footer}

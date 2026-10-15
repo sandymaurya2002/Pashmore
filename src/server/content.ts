@@ -138,6 +138,8 @@ export interface Banner {
   mobileImageUrl?: string
   videoUrl?: string
   imageAlt: string
+  /** PAGE_BANNER only: "*", an exact path, or a section wildcard such as "/collections/*". */
+  pagePath?: string
 }
 
 export interface HomeSection {
@@ -193,6 +195,7 @@ function normalizeBanner(input: unknown): Banner | null {
     mobileImageUrl: resolveMediaUrl(asOptionalString(raw.mobileImageUrl)) ?? undefined,
     videoUrl,
     imageAlt: asString(raw.imageAlt) || heading,
+    pagePath: asOptionalString(raw.pagePath),
   }
 }
 
@@ -225,6 +228,19 @@ async function loadHome(): Promise<HomeContent> {
 export const getHomeContent = cache(() =>
   failSoft<HomeContent | null>(loadHome(), null, 'content/home'),
 )
+
+async function loadPageBanners(): Promise<Banner[]> {
+  const { data } = await workerFetch<unknown>('/content/banners', {
+    query: { placement: 'PAGE_BANNER' },
+    cache: CONTENT_CACHE,
+  })
+  return asArray(data)
+    .map(normalizeBanner)
+    .filter((banner): banner is Banner => Boolean(banner?.pagePath))
+}
+
+/** Every live page banner; the layout picks the one for the current path. */
+export const getPageBanners = cache(() => failSoft(loadPageBanners(), [], 'content/page-banners'))
 
 /* ------------------------------------------------------------------ *
  * CMS pages

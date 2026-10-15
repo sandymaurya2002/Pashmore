@@ -4,9 +4,10 @@ import './globals.css'
 
 import { Providers } from '@/components/providers'
 import { SiteHeader } from '@/components/layout/site-header'
-import { getSiteContent } from '@/server/content'
+import { getPageBanners, getSiteContent } from '@/server/content'
 import { SiteFooter } from '@/components/layout/site-footer'
 import { SiteChrome } from '@/components/layout/site-chrome'
+import { PageBanner } from '@/components/layout/page-banner'
 import { CartDrawer } from '@/components/cart/cart-drawer'
 import { SearchOverlay } from '@/components/search/search-overlay'
 import { MobileBottomNav } from '@/components/layout/mobile-bottom-nav'
@@ -81,7 +82,7 @@ export const viewport: Viewport = {
 export const revalidate = 300
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  const { announcement } = await getSiteContent()
+  const [{ announcement }, pageBanners] = await Promise.all([getSiteContent(), getPageBanners()])
 
   return (
     <html lang="en-IN" className={`${serif.variable} ${sans.variable}`}>
@@ -100,6 +101,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             header={
               <SiteHeader announcements={announcement.enabled ? announcement.messages : []} />
             }
+            banner={pageBanners.length ? <PageBanner banners={pageBanners} /> : null}
             footer={<SiteFooter />}
             overlays={
               <>
