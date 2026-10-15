@@ -86,6 +86,20 @@ export default async function RootLayout({ children }: { children: React.ReactNo
 
   return (
     <html lang="en-IN" className={`${serif.variable} ${sans.variable}`}>
+      <head>
+        {/* Google's install snippet, once, in <head>. next/script would rewrite
+            this and load it after hydration, so the raw async tag stays. */}
+        {/* eslint-disable-next-line @next/next/next-script-for-ga */}
+        <script async src="https://www.googletagmanager.com/gtag/js?id=G-EQFP2ZRX7P" />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+gtag('js', new Date());
+gtag('config', 'G-EQFP2ZRX7P');`,
+          }}
+        />
+      </head>
       <body className="min-h-dvh bg-ivory antialiased">
         <JsonLd id="site-graph" data={graph([organisationSchema(), websiteSchema()])} />
 
