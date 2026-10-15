@@ -22,11 +22,25 @@ export interface RazorpaySuccess {
 
 export type CheckoutResult =
   | { type: 'success'; response: RazorpaySuccess }
+  /** The order was confirmed paid (webhook or sync) while Checkout was still open. */
+  | { type: 'paid' }
   | { type: 'dismissed' }
   | { type: 'failed'; message: string }
 
+export interface CheckoutOptions {
+  /**
+   * Polled while Checkout is open. UPI QR / intent payments can complete on the
+   * phone without Checkout ever calling `handler`, which leaves the modal
+   * stuck on "Scan the QR"; when this reports the order paid, Checkout is
+   * closed and the result is `paid`.
+   */
+  isPaid?: (attempt: number) => Promise<boolean>
+  pollIntervalMs?: number
+}
+
 interface RazorpayInstance {
   open(): void
+  close(): void
   on(event: 'payment.failed', handler: (response: { error?: { description?: string; reason?: string } }) => void): void
 }
 
@@ -60,14 +74,19 @@ export function loadRazorpay(): Promise<RazorpayConstructor> {
 }
 
 /** Opens Checkout and resolves once the customer pays, gives up, or closes it. */
-export async function openRazorpayCheckout(session: PaymentSession): Promise<CheckoutResult> {
+export async function openRazorpayCheckout(
+  session: PaymentSession,
+  options: CheckoutOptions = {},
+): Promise<CheckoutResult> {
   const Razorpay = await loadRazorpay()
   return new Promise<CheckoutResult>((resolve) => {
     let settled = false
     let lastFailure: string | null = null
+    let poll: ReturnType<typeof setTimeout> | null = null
     const settle = (result: CheckoutResult) => {
       if (settled) return
       settled = true
+      if (poll) clearTimeout(poll)
       resolve(result)
     }
 
@@ -111,5 +130,26 @@ export async function openRazorpayCheckout(session: PaymentSession): Promise<Che
         response.error?.description || response.error?.reason || 'The payment did not go through.'
     })
     instance.open()
+
+    const { isPaid, pollIntervalMs = 4000 } = options
+    if (!isPaid) return
+    let attempt = 0
+    const check = async () => {
+      if (settled) return
+      attempt += 1
+      const paid = await isPaid(attempt).catch(() => false)
+      if (settled) return
+      if (paid) {
+        settle({ type: 'paid' })
+        try {
+          instance.close()
+        } catch {
+          // Checkout may already be tearing itself down.
+        }
+        return
+      }
+      poll = setTimeout(check, pollIntervalMs)
+    }
+    poll = setTimeout(check, pollIntervalMs)
   })
 }

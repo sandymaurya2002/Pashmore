@@ -14,6 +14,23 @@ interface RouteContext {
 }
 
 /**
+ *   status   the order as stored (no gateway call), cheap enough to poll
+ */
+export async function GET(request: NextRequest, context: RouteContext) {
+  const { id, action } = await context.params
+
+  return withSession(request, { auth: 'required' }, async ({ accessToken, client }) => {
+    if (!ID.test(id) || action !== 'status') throw new ApiError('Not found.', 404, 'NOT_FOUND')
+    const { data } = await workerFetch<unknown>(`/orders/${encodeURIComponent(id)}`, {
+      accessToken,
+      client,
+      timeoutMs: 10_000,
+    })
+    return ok({ order: normalizeOrder(data) })
+  })
+}
+
+/**
  * Customer actions on their own order:
  *
  *   pay      start or retry online payment → Razorpay Checkout options

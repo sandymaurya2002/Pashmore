@@ -11,6 +11,9 @@ export type PaymentRunResult =
   | { status: 'failed'; message: string }
   | { status: 'dismissed' }
 
+/** Every Nth poll while Checkout is open asks the Worker to re-check with Razorpay. */
+const SYNC_EVERY = 10
+
 /**
  * Opens Razorpay Checkout for an order and reports the verified outcome.
  *
@@ -30,12 +33,28 @@ export async function runOrderPayment(orderId: string, session?: PaymentSession 
   }
   if (!payment) return { status: 'failed', message: 'Online payment is not available right now.' }
 
+  const orderPath = `/api/orders/${encodeURIComponent(orderId)}`
+  let confirmedOrder: Order | null = null
+  // Cheap stored-status reads catch the webhook; an occasional sync covers a
+  // missing webhook while staying well inside the Worker's sync rate limit.
+  const isPaid = async (attempt: number) => {
+    const { data } =
+      attempt % SYNC_EVERY === 0
+        ? await bff<{ order: Order | null }>(`${orderPath}/sync`, { method: 'POST', body: {} })
+        : await bff<{ order: Order | null }>(`${orderPath}/status`)
+    if (data.order?.paymentStatus !== 'PAID') return false
+    confirmedOrder = data.order
+    return true
+  }
+
   let result
   try {
-    result = await openRazorpayCheckout(payment)
+    result = await openRazorpayCheckout(payment, { isPaid })
   } catch (error) {
     return { status: 'failed', message: errorMessage(error, (error as Error)?.message || 'Payment could not start.') }
   }
+
+  if (result.type === 'paid') return { status: 'paid', order: confirmedOrder }
 
   if (result.type === 'success') {
     try {
