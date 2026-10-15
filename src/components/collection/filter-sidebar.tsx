@@ -1,5 +1,6 @@
 import Link from 'next/link'
-import { Check } from 'lucide-react'
+import { CheckMark } from '@/components/ui/checkbox'
+import { DisclosureIcon } from '@/components/ui/disclosure-icon'
 
 import {
   FILTER_KEYS,
@@ -59,20 +60,14 @@ export function FilterSidebar({
             open={DEFAULT_OPEN.includes(key) || filters[key].length > 0}
             className="group border-b border-line py-5"
           >
-            <summary className="flex cursor-pointer list-none items-center justify-between text-[0.75rem] uppercase tracking-[0.14em] text-charcoal marker:hidden">
+            <summary className="flex cursor-pointer list-none items-center justify-between text-[0.75rem] uppercase tracking-[0.14em] text-charcoal marker:hidden [&::-webkit-details-marker]:hidden">
               <span>
                 {GROUP_LABELS[key]}
                 {filters[key].length > 0 && (
                   <span className="ml-2 text-gold">({filters[key].length})</span>
                 )}
               </span>
-              <span
-                aria-hidden
-                className="relative h-3 w-3 text-taupe transition-transform duration-300 group-open:rotate-45"
-              >
-                <span className="absolute left-1/2 top-0 h-3 w-px -translate-x-1/2 bg-current" />
-                <span className="absolute left-0 top-1/2 h-px w-3 -translate-y-1/2 bg-current" />
-              </span>
+              <DisclosureIcon />
             </summary>
 
             <ul className="mt-5 flex flex-col gap-3">
@@ -93,15 +88,9 @@ export function FilterSidebar({
 
       {priceBands.length > 1 && (
         <details open={Boolean(filters.minPrice || filters.maxPrice)} className="group border-b border-line py-5">
-          <summary className="flex cursor-pointer list-none items-center justify-between text-[0.75rem] uppercase tracking-[0.14em] text-charcoal marker:hidden">
+          <summary className="flex cursor-pointer list-none items-center justify-between text-[0.75rem] uppercase tracking-[0.14em] text-charcoal marker:hidden [&::-webkit-details-marker]:hidden">
             <span>Price</span>
-            <span
-              aria-hidden
-              className="relative h-3 w-3 text-taupe transition-transform duration-300 group-open:rotate-45"
-            >
-              <span className="absolute left-1/2 top-0 h-3 w-px -translate-x-1/2 bg-current" />
-              <span className="absolute left-0 top-1/2 h-px w-3 -translate-y-1/2 bg-current" />
-            </span>
+            <DisclosureIcon />
           </summary>
 
           <ul className="mt-5 flex flex-col gap-3">
@@ -139,7 +128,7 @@ export function FilterSidebar({
                         active ? 'border-charcoal bg-charcoal text-ivory' : 'border-line-strong',
                       )}
                     >
-                      {active && <Check className="h-2.5 w-2.5" strokeWidth={3} />}
+                      {active && <CheckMark className="h-2.5 w-2.5" />}
                     </span>
                     {band.label}
                   </Link>
@@ -187,7 +176,7 @@ function FilterLink({
           active ? 'border-charcoal bg-charcoal text-ivory' : 'border-line-strong',
         )}
       >
-        {active && <Check className="h-2.5 w-2.5" strokeWidth={3} />}
+        {active && <CheckMark className="h-2.5 w-2.5" />}
       </span>
 
       {showSwatch && option.hex && (

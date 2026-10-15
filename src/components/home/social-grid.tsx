@@ -1,52 +1,65 @@
 import Image from 'next/image'
 import { Instagram } from 'lucide-react'
 import { Reveal } from '@/components/motion/reveal'
+import { listItems, text } from '@/lib/home-copy'
 import { site } from '@/lib/site'
+import type { HomeSection } from '@/server/content'
+
+interface Post {
+  url: string
+  alt: string
+}
 
 /**
  * Eight optimised local images rather than an embedded Instagram widget: the
  * official embed pulls in several hundred kilobytes of third-party JavaScript
  * and blocks the main thread, which is not a trade worth making for a footer
- * gallery. Swap the array for a cached feed from the Instagram Basic Display
- * API when you want it live.
+ * gallery. The tiles are edited in the admin (Website → Homepage).
  */
-const POSTS = [
-  { image: 1, alt: 'An ivory Pashmina shawl styled over a linen shirt' },
-  { image: 2, alt: 'A charcoal men’s shawl photographed on a dark wooden table' },
-  { image: 3, alt: 'Hand-spun Pashmina yarn wound on a wooden charkha' },
-  { image: 4, alt: 'A burgundy kani shawl detail showing the woven pallav' },
-  { image: 5, alt: 'A cream Pashmina wrap folded beside a muslin sleeve' },
-  { image: 6, alt: 'A mist grey stole draped over a chair in morning light' },
-  { image: 7, alt: 'Antique gold jamawar weave photographed close up' },
-  { image: 8, alt: 'A dusty rose cashmere wrap on a marble surface' },
+const POSTS: Post[] = [
+  { url: '/images/social/instagram-1.png', alt: 'An ivory Pashmina shawl styled over a linen shirt' },
+  { url: '/images/social/instagram-2.png', alt: 'A charcoal men’s shawl photographed on a dark wooden table' },
+  { url: '/images/social/instagram-3.png', alt: 'Hand-spun Pashmina yarn wound on a wooden charkha' },
+  { url: '/images/social/instagram-4.png', alt: 'A burgundy kani shawl detail showing the woven pallav' },
+  { url: '/images/social/instagram-5.png', alt: 'A cream Pashmina wrap folded beside a muslin sleeve' },
+  { url: '/images/social/instagram-6.png', alt: 'A mist grey stole draped over a chair in morning light' },
+  { url: '/images/social/instagram-7.png', alt: 'Antique gold jamawar weave photographed close up' },
+  { url: '/images/social/instagram-8.png', alt: 'A dusty rose cashmere wrap on a marble surface' },
 ]
 
-export function SocialGrid() {
+export function SocialGrid({ section }: { section?: HomeSection }) {
+  const posts = listItems<Post>(section, POSTS, (item, fallback) => {
+    const url = item.imageUrl ?? fallback?.url
+    if (!url) return null
+    return { url, alt: text(item.imageAlt, fallback?.alt ?? 'Pashmore on Instagram') }
+  })
+  const profileUrl = section?.href ?? site.social.instagram
+
   return (
     <section className="py-20 lg:py-28" aria-labelledby="follow-pashmore">
       <div className="container-luxe">
         <Reveal className="text-center">
-          <p className="eyebrow text-gold">@pashmore</p>
+          <p className="eyebrow text-gold">{text(section?.eyebrow, '@pashmore')}</p>
           <h2
             id="follow-pashmore"
             className="mt-5 font-serif text-[2rem] leading-[1.1] text-charcoal md:text-[2.75rem]"
           >
-            Follow the World of Pashmore
+            {text(section?.heading, 'Follow the World of Pashmore')}
           </h2>
         </Reveal>
       </div>
 
       <ul className="mt-12 grid grid-cols-2 gap-1 sm:grid-cols-4 lg:grid-cols-8">
-        {POSTS.map((post) => (
-          <li key={post.image}>
+        {posts.map((post, index) => (
+          <li key={`${index}-${post.url}`}>
             <a
-              href={site.social.instagram}
+              href={profileUrl}
               target="_blank"
               rel="noopener noreferrer"
               className="group relative block aspect-square overflow-hidden bg-ivory-deep"
             >
               <Image
-                src={`/images/social/instagram-${post.image}.png`}
+                src={post.url}
                 alt={post.alt}
                 fill
                 sizes="(min-width: 1024px) 12.5vw, (min-width: 640px) 25vw, 50vw"

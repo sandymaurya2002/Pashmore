@@ -2,8 +2,22 @@
 
 import * as React from 'react'
 import * as CheckboxPrimitive from '@radix-ui/react-checkbox'
-import { Check } from 'lucide-react'
 import { cn } from '@/lib/utils'
+
+export function CheckMark({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 16 16" aria-hidden className={cn('h-3 w-3', className)}>
+      <path
+        d="M3.25 8.25 6.4 11.15 12.75 4.75"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  )
+}
 
 export const Checkbox = React.forwardRef<
   React.ComponentRef<typeof CheckboxPrimitive.Root>,
@@ -21,8 +35,8 @@ export const Checkbox = React.forwardRef<
       )}
       {...props}
     >
-      <CheckboxPrimitive.Indicator>
-        <Check className="h-3 w-3" strokeWidth={2.5} />
+      <CheckboxPrimitive.Indicator className="flex items-center justify-center">
+        <CheckMark />
       </CheckboxPrimitive.Indicator>
     </CheckboxPrimitive.Root>
   )

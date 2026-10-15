@@ -199,7 +199,7 @@ export function PurchasePanel({ product }: { product: Product }) {
 
       {/* Sticky mobile purchase bar */}
       <div
-        className={`fixed inset-x-0 bottom-[calc(3.5rem+env(safe-area-inset-bottom))] z-30 border-t border-line bg-ivory/97 px-4 py-3 backdrop-blur-md transition-transform duration-400 ease-[var(--ease-luxe)] md:hidden ${
+        className={`fixed inset-x-0 bottom-[calc(3.5rem+env(safe-area-inset-bottom))] z-30 border-t border-line bg-ivory/97 px-4 py-3 backdrop-blur-md transition-transform duration-500 ease-[var(--ease-luxe)] md:hidden ${
           ctaVisible ? 'translate-y-[130%]' : 'translate-y-0'
         }`}
         aria-hidden={ctaVisible}

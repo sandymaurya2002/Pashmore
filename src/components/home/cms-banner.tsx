@@ -24,12 +24,18 @@ export function CmsBanner({
 }) {
   const headingId = `banner-${banner.id}`
   const Heading = variant === 'hero' ? 'h1' : 'h2'
+  // Homepage art has the wordmark painted in, and uploads are not a fixed
+  // 16:9 (desktop is a wide banner, mobile is a portrait). Covering them
+  // inside a 16:9 frame clips the title. Show that artwork at its own ratio.
+  const natural = variant === 'hero'
 
   const media = (
     <>
       {banner.mediaType === 'VIDEO' && banner.videoUrl ? (
         <video
-          className="absolute inset-0 h-full w-full object-cover"
+          className={cn(
+            natural ? 'block h-auto w-full' : 'absolute inset-0 h-full w-full object-cover',
+          )}
           src={banner.videoUrl}
           poster={banner.imageUrl}
           autoPlay
@@ -40,34 +46,63 @@ export function CmsBanner({
           aria-label={banner.imageAlt}
         />
       ) : banner.imageUrl ? (
-        <>
-          <Image
-            src={banner.imageUrl}
-            alt={banner.imageAlt}
-            fill
-            sizes="100vw"
-            quality={82}
-            priority={priority}
-            fetchPriority={priority ? 'high' : undefined}
-            className={cn('object-cover', banner.mobileImageUrl && 'hidden md:block')}
-          />
-          {banner.mobileImageUrl && (
+        natural ? (
+          <>
             <Image
-              src={banner.mobileImageUrl}
+              src={banner.imageUrl}
+              alt={banner.imageAlt}
+              width={0}
+              height={0}
+              sizes="100vw"
+              quality={82}
+              priority={priority}
+              fetchPriority={priority ? 'high' : undefined}
+              style={{ width: '100%', height: 'auto', aspectRatio: 'auto' }}
+              className="hidden h-auto w-full md:block"
+            />
+            <Image
+              src={banner.mobileImageUrl ?? banner.imageUrl}
               alt={banner.imageAlt}
               fill
               sizes="100vw"
               quality={82}
               priority={priority}
-              className="object-cover md:hidden"
+              className="object-cover object-center md:hidden"
             />
-          )}
-        </>
+          </>
+        ) : (
+          <>
+            <Image
+              src={banner.imageUrl}
+              alt={banner.imageAlt}
+              fill
+              sizes="100vw"
+              quality={82}
+              priority={priority}
+              fetchPriority={priority ? 'high' : undefined}
+              className={cn('object-cover', banner.mobileImageUrl && 'hidden md:block')}
+            />
+            {banner.mobileImageUrl && (
+              <Image
+                src={banner.mobileImageUrl}
+                alt={banner.imageAlt}
+                fill
+                sizes="100vw"
+                quality={82}
+                priority={priority}
+                className="object-cover md:hidden"
+              />
+            )}
+          </>
+        )
       ) : null}
       <span
         aria-hidden
         className={cn(
           'absolute inset-0',
+          // Desktop hero art is short and already carries its own title, so the
+          // scrim is only needed where the caption sits on top of the photo.
+          variant === 'hero' && 'md:hidden',
           variant === 'feature'
             ? 'bg-gradient-to-r from-ink/70 via-ink/30 to-transparent'
             : 'bg-gradient-to-t from-ink/70 via-ink/20 to-transparent',
@@ -82,35 +117,46 @@ export function CmsBanner({
         <div
           className={cn(
             'relative w-full overflow-hidden',
-            variant === 'hero'
-              ? 'h-[78dvh] min-h-[28rem] md:h-auto md:aspect-video'
-              : 'h-[46dvh] min-h-[18rem] md:h-[52dvh] md:max-h-[36rem]',
+            // Phone: one screen between the fixed header and the bottom nav,
+            // so the portrait artwork, title and buttons are all visible.
+            // Header spacer is 2.25rem + 5.5rem; the nav reserve is 4rem.
+            variant === 'hero' && 'h-[calc(100svh-7.75rem-4rem)] md:h-auto',
+            variant === 'page' && 'h-[46dvh] min-h-[18rem] md:h-[52dvh] md:max-h-[36rem]',
           )}
         >
           {media}
-          <div className="container-luxe absolute inset-x-0 bottom-0 flex flex-col items-center pb-10 text-center md:pb-14">
+          <div
+            className={cn(
+              'container-luxe flex flex-col items-center text-center',
+              variant === 'hero'
+                ? 'absolute inset-x-0 bottom-0 pb-5 md:relative md:py-12 lg:py-14'
+                : 'absolute inset-x-0 bottom-0 pb-10 md:pb-14',
+            )}
+          >
             {banner.eyebrow && <p className="eyebrow text-gold-soft">{banner.eyebrow}</p>}
             <Heading
               id={headingId}
               className={cn(
                 'mt-4 max-w-3xl font-serif leading-[1.05] text-ivory',
-                variant === 'hero' ? 'text-[2.25rem] md:text-[3.5rem]' : 'text-[2rem] md:text-[3rem]',
+                variant === 'hero' ? 'text-[2rem] md:text-[3.5rem]' : 'text-[2rem] md:text-[3rem]',
               )}
             >
               {banner.heading}
             </Heading>
             {banner.subheading && (
-              <p className="mt-5 max-w-xl text-[0.9375rem] leading-relaxed text-ivory/85">{banner.subheading}</p>
+              <p className="mt-3 max-w-xl text-[0.875rem] leading-relaxed text-ivory/85 md:mt-5 md:text-[0.9375rem]">
+                {banner.subheading}
+              </p>
             )}
             {(banner.href || banner.secondaryHref) && (
-              <div className="mt-8 flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:gap-4">
+              <div className="mt-5 flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:gap-4 md:mt-8">
                 {banner.href && (
-                  <Button asChild variant="light" size="lg">
+                  <Button asChild variant="light" size="lg" className="w-full sm:w-auto">
                     <Link href={banner.href}>{banner.ctaLabel ?? 'Explore'}</Link>
                   </Button>
                 )}
                 {banner.secondaryHref && (
-                  <Button asChild variant="outlineLight" size="lg">
+                  <Button asChild variant="outlineLight" size="lg" className="w-full sm:w-auto">
                     <Link href={banner.secondaryHref}>{banner.secondaryCtaLabel ?? 'Discover more'}</Link>
                   </Button>
                 )}

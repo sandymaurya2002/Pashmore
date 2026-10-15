@@ -2,7 +2,7 @@
 
 import * as React from 'react'
 import * as AccordionPrimitive from '@radix-ui/react-accordion'
-import { Plus, Minus } from 'lucide-react'
+import { DisclosureIcon } from '@/components/ui/disclosure-icon'
 import { cn } from '@/lib/utils'
 
 export const Accordion = AccordionPrimitive.Root
@@ -37,16 +37,7 @@ export const AccordionTrigger = React.forwardRef<
         {...props}
       >
         {children}
-        <span aria-hidden className="relative h-4 w-4 shrink-0 text-taupe transition-colors group-hover:text-gold">
-          <Plus
-            className="absolute inset-0 h-4 w-4 transition-all duration-300 ease-[var(--ease-luxe)] group-data-[state=open]:rotate-90 group-data-[state=open]:opacity-0"
-            strokeWidth={1.25}
-          />
-          <Minus
-            className="absolute inset-0 h-4 w-4 rotate-90 opacity-0 transition-all duration-300 ease-[var(--ease-luxe)] group-data-[state=open]:rotate-0 group-data-[state=open]:opacity-100"
-            strokeWidth={1.25}
-          />
-        </span>
+        <DisclosureIcon className="transition-colors group-hover:text-gold" />
       </AccordionPrimitive.Trigger>
     </AccordionPrimitive.Header>
   )

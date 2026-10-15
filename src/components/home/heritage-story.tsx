@@ -1,7 +1,9 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import { Reveal } from '@/components/motion/reveal'
+import { listItems, paragraphs, text } from '@/lib/home-copy'
 import { cn } from '@/lib/utils'
+import type { HomeSection } from '@/server/content'
 
 interface Chapter {
   eyebrow: string
@@ -53,30 +55,47 @@ const CHAPTERS: Chapter[] = [
   },
 ]
 
-export function HeritageStory() {
+/** Copy and chapters are edited in the admin (Website → Homepage). */
+export function HeritageStory({ section }: { section?: HomeSection }) {
+  const chapters = listItems<Chapter>(section, CHAPTERS, (item, fallback) => {
+    const heading = text(item.heading, fallback?.heading ?? '')
+    const url = item.imageUrl ?? fallback?.image.url
+    if (!heading || !url) return null
+    return {
+      eyebrow: text(item.eyebrow, fallback?.eyebrow ?? ''),
+      heading,
+      body: paragraphs(item.body, fallback?.body ?? []),
+      image: { url, alt: text(item.imageAlt, fallback?.image.alt ?? heading) },
+      href: item.href,
+      linkLabel: text(item.linkLabel, fallback?.linkLabel ?? 'Read more'),
+    }
+  })
+
   return (
     <section className="bg-cream/45 py-24 lg:py-36" aria-labelledby="soul-of-pashmore">
       <div className="container-luxe">
         <Reveal className="mx-auto max-w-2xl text-center">
-          <p className="eyebrow text-gold">Heritage</p>
+          <p className="eyebrow text-gold">{text(section?.eyebrow, 'Heritage')}</p>
           <h2
             id="soul-of-pashmore"
             className="mt-5 font-serif text-[2.25rem] leading-[1.08] text-charcoal md:text-[3.25rem]"
           >
-            The Soul of Pashmore
+            {text(section?.heading, 'The Soul of Pashmore')}
           </h2>
           <p className="mt-6 text-[0.9375rem] leading-relaxed text-mocha">
-            Three hundred kilometres, four generations and about six weeks separate a
-            Changthangi goat from a finished shawl. This is what happens in between.
+            {text(
+              section?.subheading,
+              'Three hundred kilometres, four generations and about six weeks separate a Changthangi goat from a finished shawl. This is what happens in between.',
+            )}
           </p>
         </Reveal>
 
         <div className="mt-20 flex flex-col gap-20 lg:gap-32">
-          {CHAPTERS.map((chapter, index) => {
+          {chapters.map((chapter, index) => {
             const imageFirst = index % 2 === 0
             return (
               <article
-                key={chapter.heading}
+                key={`${index}-${chapter.heading}`}
                 className="grid items-center gap-10 lg:grid-cols-2 lg:gap-20"
               >
                 <Reveal

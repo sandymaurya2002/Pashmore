@@ -11,14 +11,21 @@ import { MegaMenuPanel } from '@/components/layout/mega-menu'
 import { MobileMenu } from '@/components/layout/mobile-menu'
 import { RegionSelect } from '@/components/layout/region-select'
 import { Logo } from '@/components/layout/logo'
-import { primaryNav } from '@/data/navigation'
+import { primaryNav as defaultNav, type NavItem } from '@/data/navigation'
 import { useCart } from '@/context/cart-context'
 import { useWishlist } from '@/context/wishlist-context'
 import { useUI } from '@/context/ui-context'
 import { useScrollState } from '@/hooks/use-scroll-direction'
 import { cn } from '@/lib/utils'
 
-export function SiteHeader({ announcements }: { announcements: string[] }) {
+export function SiteHeader({
+  announcements,
+  primaryNav = defaultNav,
+}: {
+  announcements: string[]
+  /** The menu with the admin's feature cards applied. */
+  primaryNav?: NavItem[]
+}) {
   const pathname = usePathname()
   const { scrolled } = useScrollState(80)
   const { totals, hydrated: cartHydrated, openCart } = useCart()

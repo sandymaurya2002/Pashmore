@@ -1,6 +1,8 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import { Reveal } from '@/components/motion/reveal'
+import { listItems, text } from '@/lib/home-copy'
+import type { HomeSection } from '@/server/content'
 
 interface CategoryCard {
   label: string
@@ -48,16 +50,31 @@ const CARDS: CategoryCard[] = [
   },
 ]
 
-export function CategoryCards() {
+/** Cards are edited in the admin (Website → Homepage). */
+export function CategoryCards({ section }: { section?: HomeSection }) {
+  const cards = listItems<CategoryCard>(section, CARDS, (item, fallback) => {
+    const href = item.href ?? fallback?.href
+    const url = item.imageUrl ?? fallback?.image.url
+    const heading = text(item.heading, fallback?.heading ?? '')
+    if (!href || !url || !heading) return null
+    return {
+      label: text(item.eyebrow, fallback?.label ?? ''),
+      heading,
+      href,
+      image: { url, alt: text(item.imageAlt, fallback?.image.alt ?? heading) },
+    }
+  })
+  const linkLabel = text(section?.linkLabel, 'Explore')
+
   return (
     <section className="container-luxe py-8 lg:py-12" aria-labelledby="shop-by-category">
       <h2 id="shop-by-category" className="sr-only">
-        Shop by category
+        {text(section?.heading, 'Shop by category')}
       </h2>
 
       <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 lg:gap-5">
-        {CARDS.map((card, index) => (
-          <Reveal as="li" key={card.href} delay={index * 0.08}>
+        {cards.map((card, index) => (
+          <Reveal as="li" key={`${index}-${card.href}`} delay={index * 0.08}>
             <Link href={card.href} className="group block">
               <article className="relative aspect-4/5 overflow-hidden bg-ivory-deep">
                 <Image
@@ -78,7 +95,7 @@ export function CategoryCards() {
                     {card.heading}
                   </h3>
                   <span className="mt-4 inline-block border-b border-ivory/45 pb-1 text-[0.625rem] uppercase tracking-[0.2em] text-ivory transition-colors duration-500 group-hover:border-ivory">
-                    Explore
+                    {linkLabel}
                   </span>
                 </div>
               </article>

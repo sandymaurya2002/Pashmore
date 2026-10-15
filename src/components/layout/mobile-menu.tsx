@@ -2,7 +2,8 @@
 
 import * as React from 'react'
 import Link from 'next/link'
-import { ChevronDown, Search } from 'lucide-react'
+import { Search } from 'lucide-react'
+import { DisclosureIcon } from '@/components/ui/disclosure-icon'
 import {
   Dialog,
   DialogContent,
@@ -64,19 +65,17 @@ export function MobileMenu() {
                         className="flex w-full items-center justify-between py-4 text-left font-serif text-xl text-charcoal"
                       >
                         {item.label}
-                        <ChevronDown
-                          className={cn(
-                            'h-4 w-4 text-taupe transition-transform duration-300 ease-[var(--ease-luxe)]',
-                            isOpen && 'rotate-180',
-                          )}
-                          strokeWidth={1.25}
-                        />
+                        <DisclosureIcon open={isOpen} />
                       </button>
                       <div
-                        className="grid transition-[grid-template-rows] duration-400 ease-[var(--ease-luxe)]"
+                        className="grid transition-[grid-template-rows] duration-500 ease-[var(--ease-luxe)]"
                         style={{ gridTemplateRows: isOpen ? '1fr' : '0fr' }}
                       >
-                        <div className="overflow-hidden">
+                        <div
+                          className="overflow-hidden"
+                          inert={!isOpen ? true : undefined}
+                          aria-hidden={!isOpen}
+                        >
                           <ul className="flex flex-col gap-3 pb-5 pl-1">
                             {item.columns.flatMap((column) => column.links).map((link) => (
                               <li key={`${item.label}-${link.href}-${link.label}`}>

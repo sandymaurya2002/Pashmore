@@ -142,13 +142,39 @@ export interface Banner {
   pagePath?: string
 }
 
+/** One entry of a repeated list: a heritage chapter, category card, Instagram tile or menu card. */
+export interface HomeSectionItem {
+  /** Fixed slot the entry belongs to, e.g. the menu ("Men") of a menu card. */
+  key?: string
+  eyebrow?: string
+  heading?: string
+  /** Paragraphs separated by a blank line. */
+  body?: string
+  imageUrl?: string
+  imageAlt?: string
+  href?: string
+  linkLabel?: string
+}
+
+/**
+ * A homepage block as edited in the admin (Website → Homepage). Every copy
+ * field is optional; components fall back to their built-in text.
+ */
 export interface HomeSection {
   key: string
   type: string
   heading?: string
   subheading?: string
+  eyebrow?: string
+  /** Extra paragraph(s) below `subheading`. */
+  body?: string
+  imageUrl?: string
+  imageAlt?: string
   href?: string
   linkLabel?: string
+  secondaryHref?: string
+  secondaryLinkLabel?: string
+  items?: HomeSectionItem[]
   isActive: boolean
 }
 
@@ -210,19 +236,56 @@ async function loadHome(): Promise<HomeContent> {
       .map(normalizeBanner)
       .filter((banner): banner is Banner => Boolean(banner))
   }
-  const sections = asArray(raw.sections).map((entry) => {
+  const sections = asArray(raw.sections).map((entry): HomeSection => {
     const section = asRecord(entry)
+    const heading = asOptionalString(section.heading)
+    const subheading = asOptionalString(section.subheading)
     return {
       key: asString(section.key),
       type: asString(section.type),
-      heading: asOptionalString(section.heading),
-      subheading: asOptionalString(section.subheading),
+      heading: heading && SEED_HEADINGS.has(heading) ? undefined : heading,
+      subheading: subheading?.startsWith('Placement:') ? undefined : subheading,
+      eyebrow: asOptionalString(section.eyebrow),
+      body: asOptionalString(section.body),
+      imageUrl: resolveMediaUrl(asOptionalString(section.imageUrl)) ?? undefined,
+      imageAlt: asOptionalString(section.imageAlt),
       href: safeUrl(section.href),
       linkLabel: asOptionalString(section.linkLabel),
+      secondaryHref: safeUrl(section.secondaryHref),
+      secondaryLinkLabel: asOptionalString(section.secondaryLinkLabel),
+      items: asArray(section.items).map(normalizeSectionItem),
       isActive: section.isActive === undefined ? true : asBoolean(section.isActive),
     }
   })
   return { sections, banners }
+}
+
+/** The admin labels the sections were seeded with; never shown to customers. */
+const SEED_HEADINGS = new Set([
+  'Hero',
+  'Editorial introduction',
+  'Shop by category',
+  'Featured banner',
+  'Heritage story',
+  'Gift packaging banner',
+  'Gifting banner',
+  'Trust bar',
+  'Recently viewed',
+  'Social grid',
+])
+
+function normalizeSectionItem(input: unknown): HomeSectionItem {
+  const item = asRecord(input)
+  return {
+    key: asOptionalString(item.key),
+    eyebrow: asOptionalString(item.eyebrow),
+    heading: asOptionalString(item.heading),
+    body: asOptionalString(item.body),
+    imageUrl: resolveMediaUrl(asOptionalString(item.imageUrl)) ?? undefined,
+    imageAlt: asOptionalString(item.imageAlt),
+    href: safeUrl(item.href),
+    linkLabel: asOptionalString(item.linkLabel),
+  }
 }
 
 export const getHomeContent = cache(() =>

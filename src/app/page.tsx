@@ -76,34 +76,34 @@ const DEFAULT_SECTIONS: HomeSection[] = [
 
 const BANNER_SLOTS: Record<
   string,
-  { placement: string; variant: 'hero' | 'feature'; fallback: () => ReactNode }
+  { placement: string; variant: 'hero' | 'feature'; fallback: (section: HomeSection) => ReactNode }
 > = {
   hero: {
     placement: 'HOME_HERO',
     variant: 'hero',
-    fallback: () => <HeroSection />,
+    fallback: (section) => <HeroSection section={section} />,
   },
   'featured-banner': {
     placement: 'HOME_FEATURED',
     variant: 'feature',
-    fallback: () => <FeaturedBanner />,
+    fallback: (section) => <FeaturedBanner section={section} />,
   },
   'gift-packaging': {
     placement: 'HOME_GIFT_PACKAGING',
     variant: 'feature',
-    fallback: () => <GiftPackagingBanner />,
+    fallback: (section) => <GiftPackagingBanner section={section} />,
   },
   'gifting-banner': {
     placement: 'HOME_GIFTING',
     variant: 'feature',
-    fallback: () => <GiftingBanner />,
+    fallback: (section) => <GiftingBanner section={section} />,
   },
 }
 
-const STATIC_SECTIONS: Record<string, () => ReactNode> = {
-  'editorial-intro': () => <EditorialIntro />,
-  'category-cards': () => <CategoryCards />,
-  'heritage-story': () => <HeritageStory />,
+const STATIC_SECTIONS: Record<string, (section: HomeSection) => ReactNode> = {
+  'editorial-intro': (section) => <EditorialIntro section={section} />,
+  'category-cards': (section) => <CategoryCards section={section} />,
+  'heritage-story': (section) => <HeritageStory section={section} />,
   'trust-bar': () => (
     <section className="container-luxe border-y border-line py-12">
       <h2 className="sr-only">Why shop with Pashmore</h2>
@@ -111,7 +111,7 @@ const STATIC_SECTIONS: Record<string, () => ReactNode> = {
     </section>
   ),
   'recently-viewed': () => <RecentlyViewed />,
-  'social-grid': () => <SocialGrid />,
+  'social-grid': (section) => <SocialGrid section={section} />,
 }
 
 export default async function HomePage() {
@@ -144,12 +144,12 @@ export default async function HomePage() {
       return banner ? (
         <CmsBanner banner={banner} variant={slot.variant} priority={slot.variant === 'hero'} />
       ) : (
-        slot.fallback()
+        slot.fallback(section)
       )
     }
 
     const staticSection = STATIC_SECTIONS[section.key]
-    if (staticSection) return staticSection()
+    if (staticSection) return staticSection(section)
 
     const rail = products[section.key]
     if (!rail?.length) return null
@@ -159,7 +159,7 @@ export default async function HomePage() {
         <section className="container-luxe py-20 lg:py-28" aria-labelledby={headingId}>
           <SectionHeading
             id={headingId}
-            eyebrow={section.key === 'best-sellers' ? 'Best Sellers' : undefined}
+            eyebrow={section.eyebrow ?? (section.key === 'best-sellers' ? 'Best Sellers' : undefined)}
             title={section.heading ?? ''}
             description={section.subheading}
             href={section.href}

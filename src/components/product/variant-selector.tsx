@@ -42,15 +42,13 @@ export function ColorSelector({
             >
               <span
                 aria-hidden
-                className="h-6 w-6 rounded-full border border-black/8"
+                className="relative h-6 w-6 overflow-hidden rounded-full border border-black/8"
                 style={{ backgroundColor: color.hex }}
-              />
-              {soldOut && (
-                <span
-                  aria-hidden
-                  className="absolute h-px w-8 rotate-45 bg-charcoal/50"
-                />
-              )}
+              >
+                {soldOut && (
+                  <span className="absolute left-1/2 top-1/2 h-px w-full -translate-x-1/2 -translate-y-1/2 rotate-45 bg-white mix-blend-difference" />
+                )}
+              </span>
             </button>
           )
         })}

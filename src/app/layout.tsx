@@ -4,7 +4,9 @@ import './globals.css'
 
 import { Providers } from '@/components/providers'
 import { SiteHeader } from '@/components/layout/site-header'
-import { getPageBanners, getSiteContent } from '@/server/content'
+import { getHomeContent, getPageBanners, getSiteContent } from '@/server/content'
+import { primaryNav } from '@/data/navigation'
+import { withMenuFeatures } from '@/lib/home-copy'
 import { SiteFooter } from '@/components/layout/site-footer'
 import { SiteChrome } from '@/components/layout/site-chrome'
 import { PageBanner } from '@/components/layout/page-banner'
@@ -82,7 +84,15 @@ export const viewport: Viewport = {
 export const revalidate = 300
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  const [{ announcement }, pageBanners] = await Promise.all([getSiteContent(), getPageBanners()])
+  const [{ announcement }, pageBanners, home] = await Promise.all([
+    getSiteContent(),
+    getPageBanners(),
+    getHomeContent(),
+  ])
+  const nav = withMenuFeatures(
+    primaryNav,
+    home?.sections.find((section) => section.key === 'menu-features'),
+  )
 
   return (
     <html lang="en-IN" className={`${serif.variable} ${sans.variable}`}>
@@ -113,7 +123,10 @@ gtag('config', 'G-EQFP2ZRX7P');`,
         <Providers>
           <SiteChrome
             header={
-              <SiteHeader announcements={announcement.enabled ? announcement.messages : []} />
+              <SiteHeader
+                announcements={announcement.enabled ? announcement.messages : []}
+                primaryNav={nav}
+              />
             }
             banner={pageBanners.length ? <PageBanner banners={pageBanners} /> : null}
             footer={<SiteFooter />}
