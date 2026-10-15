@@ -37,9 +37,10 @@ export async function runOrderPayment(orderId: string, session?: PaymentSession 
   let confirmedOrder: Order | null = null
   // Cheap stored-status reads catch the webhook; an occasional sync covers a
   // missing webhook while staying well inside the Worker's sync rate limit.
+  // Attempt 0 is the customer pressing Continue, which always syncs.
   const isPaid = async (attempt: number) => {
     const { data } =
-      attempt % SYNC_EVERY === 0
+      attempt === 0 || attempt % SYNC_EVERY === 0
         ? await bff<{ order: Order | null }>(`${orderPath}/sync`, { method: 'POST', body: {} })
         : await bff<{ order: Order | null }>(`${orderPath}/status`)
     if (data.order?.paymentStatus !== 'PAID') return false

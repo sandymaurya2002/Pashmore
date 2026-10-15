@@ -13,6 +13,7 @@ import { PageBanner } from '@/components/layout/page-banner'
 import { CartDrawer } from '@/components/cart/cart-drawer'
 import { SearchOverlay } from '@/components/search/search-overlay'
 import { MobileBottomNav } from '@/components/layout/mobile-bottom-nav'
+import { PaymentContinueBar } from '@/components/checkout/payment-continue-bar'
 import { JsonLd } from '@/components/seo/json-ld'
 import { graph, organisationSchema, websiteSchema } from '@/lib/jsonld'
 import { site, siteUrl } from '@/lib/site'
@@ -140,6 +141,7 @@ gtag('config', 'G-EQFP2ZRX7P');`,
           >
             {children}
           </SiteChrome>
+          <PaymentContinueBar />
         </Providers>
       </body>
     </html>

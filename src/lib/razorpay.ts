@@ -32,10 +32,40 @@ export interface CheckoutOptions {
    * Polled while Checkout is open. UPI QR / intent payments can complete on the
    * phone without Checkout ever calling `handler`, which leaves the modal
    * stuck on "Scan the QR"; when this reports the order paid, Checkout is
-   * closed and the result is `paid`.
+   * closed and the result is `paid`. `attempt` is 0 when the customer presses
+   * Continue.
    */
   isPaid?: (attempt: number) => Promise<boolean>
   pollIntervalMs?: number
+}
+
+/**
+ * Desktop Checkout shows UPI as a QR code with no button of its own, so a
+ * customer who has paid on their phone gets a Continue button beside it.
+ */
+export interface ContinuePrompt {
+  checking: boolean
+  notice: string | null
+  confirm: () => void
+}
+
+let continuePrompt: ContinuePrompt | null = null
+const promptListeners = new Set<() => void>()
+
+function setContinuePrompt(next: ContinuePrompt | null) {
+  continuePrompt = next
+  promptListeners.forEach((listener) => listener())
+}
+
+export function subscribeContinuePrompt(listener: () => void) {
+  promptListeners.add(listener)
+  return () => {
+    promptListeners.delete(listener)
+  }
+}
+
+export function getContinuePrompt() {
+  return continuePrompt
 }
 
 interface RazorpayInstance {
@@ -87,6 +117,7 @@ export async function openRazorpayCheckout(
       if (settled) return
       settled = true
       if (poll) clearTimeout(poll)
+      setContinuePrompt(null)
       resolve(result)
     }
 
@@ -133,6 +164,14 @@ export async function openRazorpayCheckout(
 
     const { isPaid, pollIntervalMs = 4000 } = options
     if (!isPaid) return
+    const finishPaid = () => {
+      settle({ type: 'paid' })
+      try {
+        instance.close()
+      } catch {
+        // Checkout may already be tearing itself down.
+      }
+    }
     let attempt = 0
     const check = async () => {
       if (settled) return
@@ -140,16 +179,30 @@ export async function openRazorpayCheckout(
       const paid = await isPaid(attempt).catch(() => false)
       if (settled) return
       if (paid) {
-        settle({ type: 'paid' })
-        try {
-          instance.close()
-        } catch {
-          // Checkout may already be tearing itself down.
-        }
+        finishPaid()
         return
       }
       poll = setTimeout(check, pollIntervalMs)
     }
     poll = setTimeout(check, pollIntervalMs)
+
+    if (session.currency !== 'INR') return
+    const checkNow = async () => {
+      if (settled || continuePrompt?.checking) return
+      setContinuePrompt({ checking: true, notice: null, confirm })
+      const paid = await isPaid(0).catch(() => false)
+      if (settled) return
+      if (paid) {
+        finishPaid()
+        return
+      }
+      setContinuePrompt({
+        checking: false,
+        notice: 'We haven’t received your payment yet. If you’ve just paid, wait a few seconds and try again.',
+        confirm,
+      })
+    }
+    const confirm = () => void checkNow()
+    setContinuePrompt({ checking: false, notice: null, confirm })
   })
 }
