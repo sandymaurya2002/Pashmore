@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 
 import { Breadcrumbs } from '@/components/ui/breadcrumbs'
+import { PageTitleBanner } from '@/components/layout/page-title-banner'
 import { TrackOrderForm } from '@/components/content/track-order-form'
 import { JsonLd } from '@/components/seo/json-ld'
 
@@ -38,10 +39,9 @@ export default function TrackOrderPage() {
         ])}
       />
 
-      <div className="container-luxe pb-24 pt-10">
+      <PageTitleBanner plainClassName="container-luxe pt-10">
         <Breadcrumbs items={crumbs} />
-
-        <div className="mx-auto max-w-lg py-16">
+        <header className="mx-auto max-w-lg py-12">
           <p className="eyebrow text-gold">Customer Care</p>
           <h1 className="mt-5 font-serif text-[2.25rem] leading-[1.05] text-charcoal md:text-[2.75rem]">
             Track your order
@@ -50,9 +50,12 @@ export default function TrackOrderPage() {
             Enter the order number from your confirmation email — it looks like PSH-104287 —
             together with the email address you ordered with.
           </p>
+        </header>
+      </PageTitleBanner>
 
+      <div className="container-luxe pb-24">
+        <div className="mx-auto max-w-lg">
           <TrackOrderForm />
-
           <p className="mt-10 text-sm text-mocha">
             Signed in?{' '}
             <Link href="/account/orders" className="link-underline text-charcoal">

@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 
 import { Breadcrumbs } from '@/components/ui/breadcrumbs'
+import { PageTitleBanner } from '@/components/layout/page-title-banner'
 import { PostCard } from '@/components/blog/post-card'
 import { EmptyState } from '@/components/ui/empty-state'
 import { JsonLd } from '@/components/seo/json-ld'
@@ -61,9 +62,8 @@ export default async function BlogCategoryPage({ params }: PageProps) {
         ])}
       />
 
-      <div className="container-luxe pb-24 pt-10">
+      <PageTitleBanner plainClassName="container-luxe pt-10">
         <Breadcrumbs items={crumbs} />
-
         <header className="max-w-2xl py-12">
           <p className="eyebrow text-gold">Journal</p>
           <h1 className="mt-5 font-serif text-[2.25rem] leading-[1.05] text-charcoal md:text-[3.25rem]">
@@ -73,7 +73,9 @@ export default async function BlogCategoryPage({ params }: PageProps) {
             {category.description}
           </p>
         </header>
+      </PageTitleBanner>
 
+      <div className="container-luxe pb-24">
         <nav aria-label="Journal categories" className="border-y border-line py-5">
           <ul className="flex flex-wrap gap-x-6 gap-y-3">
             <li>

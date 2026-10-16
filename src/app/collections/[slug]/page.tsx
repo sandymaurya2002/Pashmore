@@ -1,9 +1,9 @@
 import type { Metadata } from 'next'
-import Image from 'next/image'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 
 import { Breadcrumbs } from '@/components/ui/breadcrumbs'
+import { PageTitleBanner } from '@/components/layout/page-title-banner'
 import { FilterSidebar } from '@/components/collection/filter-sidebar'
 import { FilterDrawer } from '@/components/collection/filter-drawer'
 import { SortSelect } from '@/components/collection/sort-select'
@@ -99,25 +99,14 @@ export default async function CollectionPage({ params, searchParams }: PageProps
         ])}
       />
 
-      {/* Banner */}
-      <section className="relative h-[38dvh] min-h-[16rem] w-full overflow-hidden bg-charcoal md:h-[46dvh]">
-        <Image
-          src={collection.bannerImage.url}
-          alt={collection.bannerImage.alt}
-          fill
-          priority
-          quality={80}
-          sizes="100vw"
-          className="object-cover"
-        />
-        <span aria-hidden className="absolute inset-0 bg-ink/45" />
-        <div className="container-luxe relative flex h-full flex-col justify-end pb-10">
-          <Breadcrumbs items={crumbs} tone="light" className="mb-5" />
-          <h1 className="font-serif text-[2.25rem] leading-[1.05] text-ivory md:text-[3.5rem]">
-            {heading}
-          </h1>
-        </div>
-      </section>
+      <PageTitleBanner
+        image={{ url: collection.bannerImage.url, alt: collection.bannerImage.alt }}
+      >
+        <Breadcrumbs items={crumbs} tone="light" className="mb-5" />
+        <h1 className="font-serif text-[2.25rem] leading-[1.05] text-ivory md:text-[3.5rem]">
+          {heading}
+        </h1>
+      </PageTitleBanner>
 
       <div className="container-luxe">
         <p className="max-w-3xl py-10 text-[0.9375rem] leading-relaxed text-mocha">

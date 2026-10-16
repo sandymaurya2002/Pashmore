@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { Mail, MapPin, Phone, Clock } from 'lucide-react'
 
 import { Breadcrumbs } from '@/components/ui/breadcrumbs'
+import { PageTitleBanner } from '@/components/layout/page-title-banner'
 import { ContactForm } from '@/components/content/contact-form'
 import { JsonLd } from '@/components/seo/json-ld'
 
@@ -40,9 +41,8 @@ export default function ContactPage() {
         ])}
       />
 
-      <div className="container-luxe pb-24 pt-10">
+      <PageTitleBanner plainClassName="container-luxe pt-10">
         <Breadcrumbs items={crumbs} />
-
         <header className="max-w-2xl py-12">
           <p className="eyebrow text-gold">Get in touch</p>
           <h1 className="mt-5 font-serif text-[2.25rem] leading-[1.05] text-charcoal md:text-[3rem]">
@@ -54,7 +54,9 @@ export default function ContactPage() {
             first thing we need to know.
           </p>
         </header>
+      </PageTitleBanner>
 
+      <div className="container-luxe pb-24">
         <div className="grid gap-14 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)] lg:gap-20">
           <aside>
             <ul className="flex flex-col gap-8">

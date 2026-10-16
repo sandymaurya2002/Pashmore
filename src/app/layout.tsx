@@ -9,7 +9,7 @@ import { primaryNav } from '@/data/navigation'
 import { withMenuFeatures } from '@/lib/home-copy'
 import { SiteFooter } from '@/components/layout/site-footer'
 import { SiteChrome } from '@/components/layout/site-chrome'
-import { PageBanner } from '@/components/layout/page-banner'
+import { PageBannerProvider } from '@/components/layout/page-banner-provider'
 import { CartDrawer } from '@/components/cart/cart-drawer'
 import { SearchOverlay } from '@/components/search/search-overlay'
 import { MobileBottomNav } from '@/components/layout/mobile-bottom-nav'
@@ -121,25 +121,26 @@ gtag('config', 'G-EQFP2ZRX7P');`,
         </a>
 
         <Providers>
-          <SiteChrome
-            header={
-              <SiteHeader
-                announcements={announcement.enabled ? announcement.messages : []}
-                primaryNav={nav}
-              />
-            }
-            banner={pageBanners.length ? <PageBanner banners={pageBanners} /> : null}
-            footer={<SiteFooter />}
-            overlays={
-              <>
-                <CartDrawer />
-                <SearchOverlay />
-                <MobileBottomNav />
-              </>
-            }
-          >
-            {children}
-          </SiteChrome>
+          <PageBannerProvider banners={pageBanners}>
+            <SiteChrome
+              header={
+                <SiteHeader
+                  announcements={announcement.enabled ? announcement.messages : []}
+                  primaryNav={nav}
+                />
+              }
+              footer={<SiteFooter />}
+              overlays={
+                <>
+                  <CartDrawer />
+                  <SearchOverlay />
+                  <MobileBottomNav />
+                </>
+              }
+            >
+              {children}
+            </SiteChrome>
+          </PageBannerProvider>
         </Providers>
       </body>
     </html>

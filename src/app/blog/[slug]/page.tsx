@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 
 import { Breadcrumbs } from '@/components/ui/breadcrumbs'
+import { PageTitleBanner } from '@/components/layout/page-title-banner'
 import { BlockRenderer } from '@/components/blog/block-renderer'
 import { PostCard } from '@/components/blog/post-card'
 import { ProductGrid } from '@/components/product/product-grid'
@@ -93,11 +94,9 @@ export default async function BlogPostPage({ params }: PageProps) {
       />
 
       <article>
-        <div className="container-luxe pt-10">
+        <PageTitleBanner plainClassName="container-luxe pt-10">
           <Breadcrumbs items={crumbs} />
-        </div>
-
-        <header className="container-luxe max-w-3xl py-12 text-center">
+          <header className="mx-auto max-w-3xl py-12 text-center">
           {category && (
             <Link
               href={`/blog/category/${category.slug}`}
@@ -117,7 +116,8 @@ export default async function BlogPostPage({ params }: PageProps) {
             <span aria-hidden>·</span>
             <span>{post.readingMinutes} min read</span>
           </p>
-        </header>
+          </header>
+        </PageTitleBanner>
 
         <div className="container-luxe">
           <div className="relative aspect-3/2 w-full overflow-hidden bg-ivory-deep md:aspect-video">

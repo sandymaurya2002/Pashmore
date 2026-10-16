@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation'
 
 import { Breadcrumbs } from '@/components/ui/breadcrumbs'
+import { PageTitleBanner } from '@/components/layout/page-title-banner'
 import { JsonLd } from '@/components/seo/json-ld'
 import {
   Accordion,
@@ -82,9 +83,8 @@ export async function PolicyView({ slug }: { slug: string }) {
         ])}
       />
 
-      <div className="container-luxe pb-24 pt-10">
+      <PageTitleBanner plainClassName="container-luxe pt-10">
         <Breadcrumbs items={crumbs} />
-
         <header className="max-w-2xl py-12">
           <p className="eyebrow text-gold">{policy.eyebrow}</p>
           <h1 className="mt-5 font-serif text-[2.25rem] leading-[1.05] text-charcoal md:text-[3rem]">
@@ -95,7 +95,9 @@ export async function PolicyView({ slug }: { slug: string }) {
             <p className="mt-4 text-xs text-taupe">Last updated {policy.updated}</p>
           )}
         </header>
+      </PageTitleBanner>
 
+      <div className="container-luxe pb-24">
         <div className="max-w-3xl">
           {policy.sections.map((section, index) => (
             <section key={`${index}-${section.heading}`} className="mt-12 first:mt-0">

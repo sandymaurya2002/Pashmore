@@ -3,6 +3,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 
 import { Breadcrumbs } from '@/components/ui/breadcrumbs'
+import { PageTitleBanner } from '@/components/layout/page-title-banner'
 import { Reveal } from '@/components/motion/reveal'
 import { Button } from '@/components/ui/button'
 import { JsonLd } from '@/components/seo/json-ld'
@@ -76,25 +77,18 @@ export default function AboutPage() {
         ])}
       />
 
-      <section className="relative h-[52dvh] min-h-[20rem] w-full overflow-hidden bg-charcoal">
-        <Image
-          src="/images/editorial/about-hero.png"
-          alt="The Pashmore workshop in Srinagar at first light, looms strung and waiting"
-          fill
-          priority
-          quality={80}
-          sizes="100vw"
-          className="object-cover"
-        />
-        <span aria-hidden className="absolute inset-0 bg-ink/45" />
-        <div className="container-luxe relative flex h-full flex-col justify-end pb-12">
-          <Breadcrumbs items={crumbs} tone="light" className="mb-5" />
-          <p className="eyebrow mb-3 text-gold-soft">Since {site.founded}</p>
-          <h1 className="max-w-3xl font-serif text-[2.25rem] leading-[1.05] text-ivory md:text-[3.5rem]">
-            Timeless Indian craftsmanship, woven for modern luxury
-          </h1>
-        </div>
-      </section>
+      <PageTitleBanner
+        image={{
+          url: '/images/editorial/about-hero.png',
+          alt: 'The Pashmore workshop in Srinagar at first light, looms strung and waiting',
+        }}
+      >
+        <Breadcrumbs items={crumbs} tone="light" className="mb-5" />
+        <p className="eyebrow mb-3 text-gold-soft">Since {site.founded}</p>
+        <h1 className="max-w-3xl font-serif text-[2.25rem] leading-[1.05] text-ivory md:text-[3.5rem]">
+          Timeless Indian craftsmanship, woven for modern luxury
+        </h1>
+      </PageTitleBanner>
 
       <section className="container-luxe py-20 lg:py-28">
         <div className="grid gap-12 lg:grid-cols-2 lg:gap-20">

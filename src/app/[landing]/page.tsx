@@ -1,9 +1,9 @@
 import type { Metadata } from 'next'
-import Image from 'next/image'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 
 import { Breadcrumbs } from '@/components/ui/breadcrumbs'
+import { PageTitleBanner } from '@/components/layout/page-title-banner'
 import { ProductGrid } from '@/components/product/product-grid'
 import { SectionHeading } from '@/components/ui/section-heading'
 import { JsonLd } from '@/components/seo/json-ld'
@@ -88,25 +88,13 @@ export default async function LandingPageRoute({ params }: PageProps) {
         ])}
       />
 
-      <section className="relative h-[38dvh] min-h-[16rem] w-full overflow-hidden bg-charcoal md:h-[44dvh]">
-        <Image
-          src={page.banner.url}
-          alt={page.banner.alt}
-          fill
-          priority
-          quality={80}
-          sizes="100vw"
-          className="object-cover"
-        />
-        <span aria-hidden className="absolute inset-0 bg-ink/48" />
-        <div className="container-luxe relative flex h-full flex-col justify-end pb-10">
-          <Breadcrumbs items={crumbs} tone="light" className="mb-5" />
-          <p className="eyebrow mb-3 text-gold-soft">{page.eyebrow}</p>
-          <h1 className="font-serif text-[2.25rem] leading-[1.05] text-ivory md:text-[3.5rem]">
-            {page.h1}
-          </h1>
-        </div>
-      </section>
+      <PageTitleBanner image={{ url: page.banner.url, alt: page.banner.alt }}>
+        <Breadcrumbs items={crumbs} tone="light" className="mb-5" />
+        <p className="eyebrow mb-3 text-gold-soft">{page.eyebrow}</p>
+        <h1 className="font-serif text-[2.25rem] leading-[1.05] text-ivory md:text-[3.5rem]">
+          {page.h1}
+        </h1>
+      </PageTitleBanner>
 
       <div className="container-luxe">
         <div className="max-w-3xl py-14">

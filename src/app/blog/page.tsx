@@ -3,6 +3,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 
 import { Breadcrumbs } from '@/components/ui/breadcrumbs'
+import { PageTitleBanner } from '@/components/layout/page-title-banner'
 import { Reveal } from '@/components/motion/reveal'
 import { JsonLd } from '@/components/seo/json-ld'
 import { PostCard, PostMeta } from '@/components/blog/post-card'
@@ -47,9 +48,8 @@ export default function BlogIndexPage() {
         ])}
       />
 
-      <div className="container-luxe pb-24 pt-10">
+      <PageTitleBanner plainClassName="container-luxe pt-10">
         <Breadcrumbs items={crumbs} />
-
         <header className="max-w-2xl py-12">
           <p className="eyebrow text-gold">Journal</p>
           <h1 className="mt-5 font-serif text-[2.5rem] leading-[1.05] text-charcoal md:text-[3.5rem]">
@@ -57,7 +57,9 @@ export default function BlogIndexPage() {
           </h1>
           <p className="mt-6 text-[0.9375rem] leading-relaxed text-mocha">{DESCRIPTION}</p>
         </header>
+      </PageTitleBanner>
 
+      <div className="container-luxe pb-24">
         <nav aria-label="Journal categories" className="border-y border-line py-5">
           <ul className="flex flex-wrap gap-x-6 gap-y-3">
             {blogCategories.map((category) => (

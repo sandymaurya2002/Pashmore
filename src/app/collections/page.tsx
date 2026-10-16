@@ -3,6 +3,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 
 import { Breadcrumbs } from '@/components/ui/breadcrumbs'
+import { PageTitleBanner } from '@/components/layout/page-title-banner'
 import { SectionHeading } from '@/components/ui/section-heading'
 import { Reveal } from '@/components/motion/reveal'
 import { JsonLd } from '@/components/seo/json-ld'
@@ -68,9 +69,8 @@ export default async function CollectionsIndexPage() {
         ])}
       />
 
-      <div className="container-luxe pb-24 pt-10">
+      <PageTitleBanner plainClassName="container-luxe pt-10">
         <Breadcrumbs items={crumbs} />
-
         <header className="max-w-2xl py-12">
           <p className="eyebrow text-gold">Collections</p>
           <h1 className="mt-5 font-serif text-[2.5rem] leading-[1.05] text-charcoal md:text-[3.5rem]">
@@ -78,7 +78,9 @@ export default async function CollectionsIndexPage() {
           </h1>
           <p className="mt-6 text-[0.9375rem] leading-relaxed text-mocha">{DESCRIPTION}</p>
         </header>
+      </PageTitleBanner>
 
+      <div className="container-luxe pb-24">
         <div className="flex flex-col gap-20">
           {GROUP_ORDER.map(({ group, label, description }) => {
             const entries = visible.filter((collection) => collection.group === group)

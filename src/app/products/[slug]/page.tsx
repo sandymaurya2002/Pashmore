@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 
-import { Breadcrumbs } from '@/components/ui/breadcrumbs'
+import { ProductColumnHeading, ProductPageBanner } from '@/components/product/product-page-banner'
 import { ProductGallery } from '@/components/product/product-gallery'
 import { PurchasePanel } from '@/components/product/purchase-panel'
 import { RatingStars } from '@/components/product/rating-stars'
@@ -92,9 +92,12 @@ export default async function ProductPage({ params }: PageProps) {
         ])}
       />
 
-      <div className="container-luxe pt-6">
-        <Breadcrumbs items={crumbs} />
-      </div>
+      <ProductPageBanner
+        crumbs={crumbs}
+        name={product.name}
+        eyebrow={categoryName ?? product.material}
+        eyebrowHref={categoryHref}
+      />
 
       <div className="container-luxe grid gap-12 pb-20 pt-8 lg:grid-cols-2 lg:gap-16 lg:pb-28">
         <div className="min-w-0 lg:sticky lg:top-28 lg:self-start">
@@ -102,21 +105,15 @@ export default async function ProductPage({ params }: PageProps) {
         </div>
 
         <div>
-          <div className="flex flex-wrap items-center gap-2">
-            <Link
-              href={categoryHref}
-              className="eyebrow text-taupe transition-colors hover:text-charcoal"
-            >
-              {categoryName ?? product.material}
-            </Link>
+          <ProductColumnHeading
+            name={product.name}
+            eyebrow={categoryName ?? product.material}
+            eyebrowHref={categoryHref}
+          >
             {product.badges.map((badge) => (
               <ProductBadgeChip key={badge} badge={badge} />
             ))}
-          </div>
-
-          <h1 className="mt-4 font-serif text-[2rem] leading-[1.1] text-charcoal md:text-[2.75rem]">
-            {product.name}
-          </h1>
+          </ProductColumnHeading>
 
           <p className="mt-3 text-[0.9375rem] leading-relaxed text-mocha">
             {product.tagline}

@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 
 import { Breadcrumbs } from '@/components/ui/breadcrumbs'
+import { PageTitleBanner } from '@/components/layout/page-title-banner'
 import { JsonLd } from '@/components/seo/json-ld'
 import {
   Accordion,
@@ -48,9 +49,8 @@ export default function FaqsPage() {
         ])}
       />
 
-      <div className="container-luxe pb-24 pt-10">
+      <PageTitleBanner plainClassName="container-luxe pt-10">
         <Breadcrumbs items={crumbs} />
-
         <header className="max-w-2xl py-12">
           <p className="eyebrow text-gold">Customer Care</p>
           <h1 className="mt-5 font-serif text-[2.25rem] leading-[1.05] text-charcoal md:text-[3rem]">
@@ -58,7 +58,9 @@ export default function FaqsPage() {
           </h1>
           <p className="mt-6 text-[0.9375rem] leading-relaxed text-mocha">{DESCRIPTION}</p>
         </header>
+      </PageTitleBanner>
 
+      <div className="container-luxe pb-24">
         <div className="max-w-3xl">
           {generalFaqs.map((group) => (
             <section key={group.heading} className="mt-14 first:mt-0">

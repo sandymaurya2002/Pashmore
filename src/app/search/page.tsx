@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 
+import { PageTitleBanner } from '@/components/layout/page-title-banner'
 import { ProductGrid } from '@/components/product/product-grid'
 import { EmptyState } from '@/components/ui/empty-state'
 import { SortSelect } from '@/components/collection/sort-select'
@@ -48,8 +49,9 @@ export default async function SearchPage({ searchParams }: PageProps) {
   const total = results?.total ?? 0
 
   return (
-    <div className="container-luxe pb-24 pt-12">
-      <header className="max-w-2xl">
+    <>
+    <PageTitleBanner plainClassName="container-luxe pt-12">
+      <header className="max-w-2xl pb-12">
         <p className="eyebrow text-gold">Search</p>
         <h1 className="mt-5 font-serif text-[2.25rem] leading-[1.05] text-charcoal md:text-[3rem]">
           {term ? <>Results for “{term}”</> : 'Search Pashmore'}
@@ -60,6 +62,8 @@ export default async function SearchPage({ searchParams }: PageProps) {
           </p>
         )}
       </header>
+    </PageTitleBanner>
+    <div className="container-luxe pb-24">
 
       {!term ? (
         <section className="mt-12" aria-labelledby="popular">
@@ -127,5 +131,6 @@ export default async function SearchPage({ searchParams }: PageProps) {
         />
       )}
     </div>
+    </>
   )
 }

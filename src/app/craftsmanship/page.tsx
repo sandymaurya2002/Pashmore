@@ -3,6 +3,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 
 import { Breadcrumbs } from '@/components/ui/breadcrumbs'
+import { PageTitleBanner } from '@/components/layout/page-title-banner'
 import { Reveal } from '@/components/motion/reveal'
 import { ProductGrid } from '@/components/product/product-grid'
 import { SectionHeading } from '@/components/ui/section-heading'
@@ -137,21 +138,20 @@ export default async function CraftsmanshipPage() {
         ])}
       />
 
-      <div className="container-luxe pt-10">
+      <PageTitleBanner plainClassName="container-luxe pt-10">
         <Breadcrumbs items={crumbs} />
-      </div>
-
-      <header className="container-luxe max-w-3xl py-14">
-        <p className="eyebrow text-gold">Craftsmanship</p>
-        <h1 className="mt-5 font-serif text-[2.25rem] leading-[1.05] text-charcoal md:text-[3.25rem]">
-          Four stages, three hundred kilometres, one shawl
-        </h1>
-        <p className="mt-7 text-[1.0625rem] leading-relaxed text-mocha">
-          Between a Changthangi goat on the Ladakh plateau and a finished shawl in a box lie
-          four distinct crafts, practised by four different sets of hands. None of them can be
-          hurried, and every shortcut shows in the surface of the cloth.
-        </p>
-      </header>
+        <header className="max-w-3xl py-14">
+          <p className="eyebrow text-gold">Craftsmanship</p>
+          <h1 className="mt-5 font-serif text-[2.25rem] leading-[1.05] text-charcoal md:text-[3.25rem]">
+            Four stages, three hundred kilometres, one shawl
+          </h1>
+          <p className="mt-7 text-[1.0625rem] leading-relaxed text-mocha">
+            Between a Changthangi goat on the Ladakh plateau and a finished shawl in a box lie
+            four distinct crafts, practised by four different sets of hands. None of them can be
+            hurried, and every shortcut shows in the surface of the cloth.
+          </p>
+        </header>
+      </PageTitleBanner>
 
       <div className="flex flex-col gap-20 pb-24 lg:gap-32">
         {STAGES.map((stage, index) => (
