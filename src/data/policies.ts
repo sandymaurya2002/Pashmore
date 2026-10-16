@@ -63,7 +63,7 @@ export const policies: PolicyPage[] = [
       {
         heading: 'If something goes wrong',
         body: [
-          'If a parcel is delayed beyond the estimate, or arrives damaged, contact care@pashmore.com with your order number and photographs within 48 hours of delivery and we will resolve it.',
+          'If a parcel is delayed beyond the estimate, or arrives damaged, contact hello@pashmore.com with your order number and photographs within 48 hours of delivery and we will resolve it.',
         ],
       },
     ],
@@ -76,7 +76,7 @@ export const policies: PolicyPage[] = [
       {
         question: 'Can I change my delivery address after ordering?',
         answer:
-          'Before dispatch, yes — email care@pashmore.com with your order number. Once a parcel has been handed to the courier we cannot redirect it.',
+          'Before dispatch, yes — email hello@pashmore.com with your order number. Once a parcel has been handed to the courier we cannot redirect it.',
       },
       {
         question: 'Do you deliver on Sundays?',
@@ -106,7 +106,7 @@ export const policies: PolicyPage[] = [
         heading: 'How to return',
         body: ['Three steps, and we arrange the courier.'],
         list: [
-          'Email care@pashmore.com with your order number and reason within 14 days.',
+          'Email hello@pashmore.com with your order number and reason within 14 days.',
           'We schedule a free pickup across India, usually within 48 hours.',
           'Repack the piece in its original box with the muslin sleeve and certificate.',
         ],
@@ -130,7 +130,7 @@ export const policies: PolicyPage[] = [
       {
         heading: 'Faults and repairs',
         body: [
-          'Handwoven textiles carry natural variation, which is not a fault. Genuine defects — a broken warp, a failed seam, a dye flaw — are repaired or replaced free of charge within 12 months, regardless of the returns window. Send photographs to care@pashmore.com.',
+          'Handwoven textiles carry natural variation, which is not a fault. Genuine defects — a broken warp, a failed seam, a dye flaw — are repaired or replaced free of charge within 12 months, regardless of the returns window. Send photographs to hello@pashmore.com.',
         ],
       },
     ],
@@ -194,7 +194,7 @@ export const policies: PolicyPage[] = [
       {
         heading: 'Your rights',
         body: [
-          'You may request a copy of the data we hold about you, ask us to correct it, or ask us to delete it, subject to the records we are legally required to retain for tax purposes. Write to care@pashmore.com and we will respond within 30 days.',
+          'You may request a copy of the data we hold about you, ask us to correct it, or ask us to delete it, subject to the records we are legally required to retain for tax purposes. Write to hello@pashmore.com and we will respond within 30 days.',
         ],
       },
       {
@@ -314,7 +314,7 @@ export const generalFaqs: Array<{ heading: string; items: ProductFaq[] }> = [
       {
         question: 'Do you repair damaged pieces?',
         answer:
-          'Yes. Genuine defects are repaired or replaced free within 12 months. Beyond that we repair at cost — send photographs to care@pashmore.com.',
+          'Yes. Genuine defects are repaired or replaced free within 12 months. Beyond that we repair at cost — send photographs to hello@pashmore.com.',
       },
     ],
   },

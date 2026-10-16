@@ -15,7 +15,7 @@ export const site = {
   language: 'en-IN',
   currency: 'INR',
   country: 'IN',
-  email: 'care@pashmore.com',
+  email: 'hello@pashmore.com',
   phone: '+91 194 000 0000',
   address: {
     street: 'Boulevard Road, Dal Gate',

@@ -8,6 +8,7 @@ import { Input, FieldError, FieldLabel } from '@/components/ui/input'
 import { OrderStatusChip } from '@/components/account/order-status-chip'
 import { ApiError } from '@/lib/api/envelope'
 import { bff, errorMessage } from '@/lib/api/browser'
+import { site } from '@/lib/site'
 import { formatDate, pluralise } from '@/lib/utils'
 import type { OrderStatus } from '@/types'
 
@@ -146,8 +147,8 @@ export function TrackOrderForm() {
           {status.kind === 'notFound'
             ? 'No order matches that order number and email address. Please check both and try again, or contact '
             : `${status.message} Please try again shortly, or contact `}
-          <a href="mailto:care@pashmore.com" className="link-underline text-charcoal">
-            care@pashmore.com
+          <a href={`mailto:${site.email}`} className="link-underline text-charcoal">
+            {site.email}
           </a>{' '}
           and we will find it for you.
         </p>
