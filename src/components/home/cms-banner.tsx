@@ -57,17 +57,20 @@ export function CmsBanner({
               quality={82}
               priority={priority}
               fetchPriority={priority ? 'high' : undefined}
-              style={{ width: '100%', height: 'auto', aspectRatio: 'auto' }}
-              className="hidden h-auto w-full md:block"
+              style={{ width: '100%', height: 'auto' }}
+              className="hidden w-full object-cover object-[center_30%] md:block md:aspect-[2.1/1] md:h-auto"
             />
             <Image
               src={banner.mobileImageUrl ?? banner.imageUrl}
               alt={banner.imageAlt}
-              fill
+              width={0}
+              height={0}
               sizes="100vw"
               quality={82}
               priority={priority}
-              className="object-cover object-center md:hidden"
+              fetchPriority={priority ? 'high' : undefined}
+              style={{ width: '100%', height: 'auto' }}
+              className="block h-auto w-full md:hidden"
             />
           </>
         ) : (
@@ -100,12 +103,12 @@ export function CmsBanner({
         aria-hidden
         className={cn(
           'absolute inset-0',
-          // Desktop hero art is short and already carries its own title, so the
-          // scrim is only needed where the caption sits on top of the photo.
-          variant === 'hero' && 'md:hidden',
           variant === 'feature'
             ? 'bg-gradient-to-r from-ink/70 via-ink/30 to-transparent'
             : 'bg-gradient-to-t from-ink/70 via-ink/20 to-transparent',
+          // Desktop hero keeps the same bottom fade, a little deeper, so the
+          // overlay stays readable without dimming the painted wordmark.
+          variant === 'hero' && 'md:from-ink/80 md:via-ink/15 md:to-transparent',
         )}
       />
     </>
@@ -117,10 +120,9 @@ export function CmsBanner({
         <div
           className={cn(
             'relative w-full overflow-hidden',
-            // Phone: one screen between the fixed header and the bottom nav,
-            // so the portrait artwork, title and buttons are all visible.
-            // Header spacer is 2.25rem + 5.5rem; the nav reserve is 4rem.
-            variant === 'hero' && 'h-[calc(100svh-7.75rem-4rem)] md:h-auto',
+            // The phone artwork is a tall portrait with the wordmark painted
+            // at the top. A viewport-height frame with object-cover slices
+            // that name off, so the image keeps its own ratio.
             variant === 'page' && 'h-[46dvh] min-h-[18rem] md:h-[52dvh] md:max-h-[36rem]',
           )}
         >
@@ -129,7 +131,7 @@ export function CmsBanner({
             className={cn(
               'container-luxe flex flex-col items-center text-center',
               variant === 'hero'
-                ? 'absolute inset-x-0 bottom-0 pb-5 md:relative md:py-12 lg:py-14'
+                ? 'absolute inset-x-0 bottom-0 pb-[calc(4.75rem+env(safe-area-inset-bottom))] md:pb-12 lg:pb-16'
                 : 'absolute inset-x-0 bottom-0 pb-10 md:pb-14',
             )}
           >
