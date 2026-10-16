@@ -187,7 +187,7 @@ function FilterLink({
         />
       )}
 
-      <span className="flex-1">{option.label}</span>
+      <span className="min-w-0 flex-1 break-words">{option.label}</span>
       <span className="text-xs tabular-nums text-taupe">{option.count}</span>
     </Link>
   )

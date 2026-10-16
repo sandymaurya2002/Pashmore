@@ -99,4 +99,37 @@ describe('middleware', () => {
     const response = await middleware(request('/checkout'))
     expect(response.headers.get('location')).toBeNull()
   })
+
+  it('remembers an edge-detected country for the rest of the visit', async () => {
+    const response = await middleware(request('/collections/shawls', { headers: { 'cf-ipcountry': 'US' } }))
+    expect(response.headers.get('location')).toBeNull()
+    const cookie = responseCookies(response).pm_geo
+    expect(cookie.value).toBe('US')
+    expect(cookie.attributes).toContain('httponly')
+    expect(response.headers.get('x-middleware-request-cookie')).toContain('pm_geo=US')
+  })
+
+  it('does not override an explicit country choice', async () => {
+    const response = await middleware(
+      request('/about', { cookies: { pm_country: 'IN' }, headers: { 'cf-ipcountry': 'US' } }),
+    )
+    expect(responseCookies(response).pm_geo).toBeUndefined()
+  })
+
+  it('looks up a public address when the edge has no country', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (input: RequestInfo | URL) => {
+        expect(String(input)).toContain('8.8.8.8')
+        return new Response('DE')
+      }),
+    )
+    const response = await middleware(request('/about', { headers: { 'x-forwarded-for': '8.8.8.8' } }))
+    expect(responseCookies(response).pm_geo.value).toBe('DE')
+  })
+
+  it('keeps a remembered country without rewriting the cookie', async () => {
+    const response = await middleware(request('/about', { cookies: { pm_geo: 'GB' } }))
+    expect(response.headers.getSetCookie()).toHaveLength(0)
+  })
 })

@@ -90,14 +90,14 @@ export function SiteHeader({
               <button
                 type="button"
                 onClick={openMobileMenu}
-                className="-ml-2 flex h-10 w-10 items-center justify-center text-ivory lg:hidden"
+                className="-ml-2 flex h-10 w-10 items-center justify-center text-ivory xl:hidden"
                 aria-label="Open navigation menu"
               >
                 <Menu className="h-5 w-5" strokeWidth={1.25} />
               </button>
 
-              <nav aria-label="Primary" className="hidden lg:block">
-                <ul className="flex items-center gap-8">
+              <nav aria-label="Primary" className="hidden xl:block">
+                <ul className="flex items-center gap-5 2xl:gap-8">
                   {primaryNav.map((item) => (
                     <li
                       key={item.label}
@@ -142,7 +142,7 @@ export function SiteHeader({
             </div>
 
             {/* Right — utilities */}
-            <div className="flex items-center justify-end gap-1 sm:gap-2">
+            <div className="flex items-center justify-end gap-1 sm:gap-2 md:pl-4">
               <RegionSelect className="hidden md:flex" />
 
               <button

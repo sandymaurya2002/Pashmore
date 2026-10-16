@@ -93,7 +93,7 @@ export function SizeSelector({
               onClick={() => onChange(size.slug)}
               aria-pressed={active}
               className={cn(
-                'border px-4 py-2.5 text-[0.75rem] uppercase tracking-[0.12em] transition-all duration-300',
+                'max-w-full border px-4 py-2.5 text-left text-[0.75rem] uppercase tracking-[0.12em] transition-all duration-300',
                 active
                   ? 'border-charcoal bg-charcoal text-ivory'
                   : 'border-line-strong text-charcoal hover:border-charcoal',

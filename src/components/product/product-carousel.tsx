@@ -126,7 +126,7 @@ export function ProductCarousel({
         {products.map((product) => (
           <li
             key={product.slug}
-            className="w-[62vw] shrink-0 snap-start sm:w-[42vw] md:w-[30vw] lg:w-[calc((100vw-8rem)/4)] 3xl:w-[calc((100rem-10rem)/4)]"
+            className="w-[min(18rem,62vw)] shrink-0 snap-start sm:w-[42vw] md:w-[30vw] lg:w-[calc((100%-6rem)/4)] 3xl:w-[calc((100rem-10rem)/4)]"
           >
             <ProductCard
               product={product}

@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation'
 import { ChevronDown } from 'lucide-react'
 import { sortOptions } from '@/data/taxonomy'
 import { setParamHref, type SearchParams } from '@/lib/query'
+import { cn } from '@/lib/utils'
 import type { SortKey } from '@/types'
 
 /**
@@ -15,15 +16,17 @@ export function SortSelect({
   value,
   pathname,
   searchParams,
+  className,
 }: {
   value: SortKey
   pathname: string
   searchParams: SearchParams
+  className?: string
 }) {
   const router = useRouter()
 
   return (
-    <div className="relative">
+    <div className={cn('relative w-full min-w-0 sm:w-auto', className)}>
       <label htmlFor="sort" className="sr-only">
         Sort products
       </label>
@@ -35,7 +38,7 @@ export function SortSelect({
             scroll: false,
           })
         }
-        className="appearance-none border border-line-strong bg-transparent py-2.5 pl-4 pr-10 text-[0.6875rem] uppercase tracking-[0.14em] text-charcoal transition-colors hover:border-charcoal focus:border-charcoal focus:outline-none"
+        className="w-full max-w-full appearance-none border border-line-strong bg-transparent py-2.5 pl-4 pr-10 text-[0.6875rem] uppercase tracking-[0.08em] text-charcoal transition-colors hover:border-charcoal focus:border-charcoal focus:outline-none sm:w-auto sm:tracking-[0.14em]"
       >
         {sortOptions.map((option) => (
           <option key={option.value} value={option.value}>

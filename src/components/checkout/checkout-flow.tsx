@@ -656,7 +656,7 @@ export function CheckoutFlow() {
                 <Button
                   type="submit"
                   size="lg"
-                  className="h-13 w-full sm:w-auto sm:px-12"
+                  className="h-auto min-h-13 w-full whitespace-normal px-4 py-3 text-center leading-snug sm:w-auto sm:px-12"
                   disabled={busy || hasUnavailable || regionMismatch || (!onlineAllowed && !codAllowed)}
                 >
                   <Lock className="h-3.5 w-3.5" strokeWidth={1.5} aria-hidden />

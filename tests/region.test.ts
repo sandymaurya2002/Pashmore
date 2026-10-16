@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { DELETE as forgetRegion, GET as getRegion, POST as chooseRegion } from '@/app/api/region/route'
+import { countryFromIp, isPublicAddress } from '@/lib/geo-ip'
 import { countryCode, currencyForDestination, normalizeCountry } from '@/lib/region'
 import { resolveRegion } from '@/server/region'
 import { WORKER_ORIGIN, mockWorker, request, responseCookies, success } from './helpers'
@@ -34,12 +35,36 @@ describe('region resolution', () => {
     })
   })
 
+  it('keeps a previously detected country when this request has no geo header', () => {
+    expect(resolveRegion(null, new Headers(), 'GB')).toEqual({ country: 'GB', currency: 'USD', source: 'geo' })
+    expect(resolveRegion(null, new Headers({ 'cf-ipcountry': 'US' }), 'GB').country).toBe('US')
+    expect(resolveRegion('IN', new Headers(), 'US')).toMatchObject({ country: 'IN', source: 'choice' })
+  })
+
   it('maps delivery countries to their invoicing currency', () => {
     expect(currencyForDestination('India')).toBe('INR')
     expect(currencyForDestination(' bharat ')).toBe('INR')
     expect(currencyForDestination('United States')).toBe('USD')
     expect(countryCode('United Kingdom')).toBe('GB')
     expect(normalizeCountry('<script>')).toBeNull()
+  })
+})
+
+describe('IP lookup', () => {
+  it('skips private and documentation addresses', async () => {
+    const fetchMock = vi.fn()
+    vi.stubGlobal('fetch', fetchMock)
+    expect(isPublicAddress('127.0.0.1')).toBe(false)
+    expect(isPublicAddress('203.0.113.7')).toBe(false)
+    expect(await countryFromIp('10.1.2.3')).toBeNull()
+    expect(fetchMock).not.toHaveBeenCalled()
+  })
+
+  it('reads a country code and ignores a failed lookup', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response('us\n', { status: 200 })))
+    expect(await countryFromIp('8.8.8.8')).toBe('US')
+    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('down')))
+    expect(await countryFromIp('8.8.8.8')).toBeNull()
   })
 })
 
@@ -69,6 +94,13 @@ describe('/api/region', () => {
     expect(response.status).toBe(400)
     expect(responseCookies(response).pm_country).toBeUndefined()
     expect(fetchMock).not.toHaveBeenCalled()
+  })
+
+  it('forgets the choice and falls back to a remembered detection when this request has no geo header', async () => {
+    site()
+    const response = await forgetRegion(request('/api/region', { method: 'DELETE', cookies: { pm_country: 'US', pm_geo: 'GB' } }))
+    expect((await response.json()).data).toMatchObject({ country: 'GB', currency: 'USD', source: 'geo' })
+    expect(responseCookies(response).pm_country.attributes).toContain('max-age=0')
   })
 
   it('forgets the choice and falls back to geolocation', async () => {

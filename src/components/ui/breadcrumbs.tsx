@@ -23,11 +23,11 @@ export function Breadcrumbs({
         {items.map((item, index) => {
           const last = index === items.length - 1
           return (
-            <li key={item.href} className="flex items-center gap-1.5">
+            <li key={item.href} className="flex min-w-0 items-center gap-1.5">
               {last ? (
                 <span
                   aria-current="page"
-                  className={tone === 'light' ? 'text-ivory' : 'text-charcoal'}
+                  className={cn('break-words', tone === 'light' ? 'text-ivory' : 'text-charcoal')}
                 >
                   {item.name}
                 </span>

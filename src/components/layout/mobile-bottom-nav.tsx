@@ -46,7 +46,7 @@ export function MobileBottomNav() {
             className="flex w-full flex-col items-center gap-1 py-2.5 text-ivory/85"
           >
             <Search className="h-[1.15rem] w-[1.15rem]" strokeWidth={1.25} />
-            <span className="text-[0.5625rem] uppercase tracking-[0.14em]">Search</span>
+            <span className="text-[0.5rem] uppercase tracking-[0.08em] xs:text-[0.5625rem] xs:tracking-[0.14em]">Search</span>
           </button>
         </li>
         <BottomItem
@@ -68,7 +68,7 @@ export function MobileBottomNav() {
               <ShoppingBag className="h-[1.15rem] w-[1.15rem]" strokeWidth={1.25} />
               {count > 0 && <Dot value={count} />}
             </span>
-            <span className="text-[0.5625rem] uppercase tracking-[0.14em]">Bag</span>
+            <span className="text-[0.5rem] uppercase tracking-[0.08em] xs:text-[0.5625rem] xs:tracking-[0.14em]">Bag</span>
           </button>
         </li>
       </ul>
@@ -105,7 +105,7 @@ function BottomItem({
         </span>
         <span
           className={cn(
-            'text-[0.5625rem] uppercase tracking-[0.14em]',
+            'text-[0.5rem] uppercase tracking-[0.08em] xs:text-[0.5625rem] xs:tracking-[0.14em]',
             active && 'font-semibold',
           )}
         >

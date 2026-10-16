@@ -187,7 +187,7 @@ function QuickViewBody({
             <Button
               onClick={() => selection.addToCart()}
               disabled={!selection.available || selection.adding}
-              className="h-13 flex-1"
+              className="h-auto min-h-13 min-w-0 flex-1 whitespace-normal px-3 py-3 text-center leading-snug sm:px-6"
               size="lg"
             >
               {!selection.available

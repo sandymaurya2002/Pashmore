@@ -203,15 +203,15 @@ export function CartPageContent({ recommendations }: { recommendations: Product[
             <label htmlFor="coupon" className="eyebrow mb-3 block text-taupe">
               Discount code
             </label>
-            <div className="flex gap-3">
+            <div className="flex flex-col gap-3 xs:flex-row">
               <Input
                 id="coupon"
                 value={code}
                 onChange={(event) => setCode(event.target.value)}
                 placeholder="Enter code"
-                className="max-w-56"
+                className="min-w-0 flex-1 xs:max-w-56"
               />
-              <Button type="submit" variant="outline" disabled={pendingKey === 'coupon'}>
+              <Button type="submit" variant="outline" className="w-full shrink-0 xs:w-auto" disabled={pendingKey === 'coupon'}>
                 {pendingKey === 'coupon' ? 'Applying…' : 'Apply'}
               </Button>
             </div>

@@ -47,7 +47,7 @@ const contentVariants = cva(
         left:
           'inset-y-0 left-0 h-full w-full max-w-[24rem] data-[state=open]:animate-[slide-in-left_420ms_var(--ease-luxe)] data-[state=closed]:animate-[slide-out-left_320ms_var(--ease-luxe)]',
         bottom:
-          'inset-x-0 bottom-0 max-h-[92dvh] rounded-t-[4px] data-[state=open]:animate-[slide-in-bottom_400ms_var(--ease-luxe)] data-[state=closed]:animate-[slide-out-bottom_300ms_var(--ease-luxe)]',
+          'inset-x-0 bottom-0 max-h-[92dvh] rounded-t-[4px] pb-[env(safe-area-inset-bottom)] data-[state=open]:animate-[slide-in-bottom_400ms_var(--ease-luxe)] data-[state=closed]:animate-[slide-out-bottom_300ms_var(--ease-luxe)]',
         top: 'inset-x-0 top-0 data-[state=open]:animate-[slide-in-top_380ms_var(--ease-luxe)] data-[state=closed]:animate-[slide-out-top_260ms_var(--ease-luxe)]',
         center:
           'left-1/2 top-1/2 w-[calc(100%-2rem)] max-w-5xl -translate-x-1/2 -translate-y-1/2 max-h-[90dvh] data-[state=open]:animate-[modal-in_420ms_var(--ease-luxe)] data-[state=closed]:animate-[modal-out_260ms_var(--ease-luxe)]',

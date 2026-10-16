@@ -144,7 +144,7 @@ export function PurchasePanel({ product }: { product: Product }) {
           <div className="flex gap-3">
             <Button
               size="lg"
-              className="h-13 flex-1"
+              className="h-auto min-h-13 min-w-0 flex-1 whitespace-normal px-4 py-3 text-center leading-snug sm:px-6"
               onClick={() => selection.addToCart()}
               disabled={!selection.available || selection.adding}
             >
@@ -199,7 +199,8 @@ export function PurchasePanel({ product }: { product: Product }) {
 
       {/* Sticky mobile purchase bar */}
       <div
-        className={`fixed inset-x-0 bottom-[calc(3.5rem+env(safe-area-inset-bottom))] z-30 border-t border-line bg-ivory/97 px-4 py-3 backdrop-blur-md transition-transform duration-500 ease-[var(--ease-luxe)] md:hidden ${
+        data-mobile-purchase-bar
+        className={`fixed inset-x-0 bottom-[calc(4.25rem+env(safe-area-inset-bottom))] z-30 border-t border-line bg-ivory/97 px-4 py-3 backdrop-blur-md transition-transform duration-500 ease-[var(--ease-luxe)] md:hidden ${
           ctaVisible ? 'translate-y-[130%]' : 'translate-y-0'
         }`}
         aria-hidden={ctaVisible}

@@ -14,7 +14,15 @@ export const DEFAULT_CURRENCY: Currency = 'INR'
 
 /** The customer's explicit choice from the region selector. */
 export const REGION_COOKIE = 'pm_country'
+/** Last country detected from the visitor's IP, kept so later pages stay in the same currency. */
+export const GEO_COOKIE = 'pm_geo'
 export const REGION_COOKIE_MAX_AGE = 60 * 60 * 24 * 365
+
+/** Edge platforms that already geolocate the visitor. The first trustworthy value wins. */
+const GEO_HEADERS = ['x-vercel-ip-country', 'cf-ipcountry', 'cloudfront-viewer-country', 'x-country-code']
+
+/** Cloudflare reports unknown visitors as XX and Tor exits as T1; neither is a country. */
+const NOT_A_COUNTRY = new Set(['XX', 'T1'])
 
 export const CURRENCY_SYMBOL: Record<Currency, string> = { INR: '₹', USD: '$' }
 
@@ -22,13 +30,19 @@ export function isCurrency(value: unknown): value is Currency {
   return typeof value === 'string' && (CURRENCIES as readonly string[]).includes(value)
 }
 
-/** Cloudflare reports unknown visitors as XX and Tor exits as T1; neither is a country. */
-const NOT_A_COUNTRY = new Set(['XX', 'T1'])
-
 /** A two-letter ISO 3166 code, upper-cased, or null. */
 export function normalizeCountry(value: string | null | undefined): string | null {
   const code = value?.trim().toUpperCase()
   return code && /^[A-Z]{2}$/.test(code) && !NOT_A_COUNTRY.has(code) ? code : null
+}
+
+/** Country reported by the edge, or null when the host did not geolocate this request. */
+export function geoCountry(source: { get(name: string): string | null }): string | null {
+  for (const name of GEO_HEADERS) {
+    const country = normalizeCountry(source.get(name))
+    if (country) return country
+  }
+  return null
 }
 
 export function currencyForCountry(country: string | null | undefined): Currency {

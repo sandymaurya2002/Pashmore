@@ -364,3 +364,31 @@ body[data-scroll-locked='true'] {
   overflow: hidden;
   touch-action: none;
 }
+
+/* next/image `fill` is absolutely positioned. `height: auto` from the base
+   layer collapses those frames to 0 in WebKit, so product photos disappear
+   on iOS. These declarations stay unlayered so they win over the base rule. */
+img[data-nimg='fill'] {
+  width: 100%;
+  height: 100%;
+  max-width: none;
+}
+
+/* iOS Safari zooms the page when a focused field is under 16px, which leaves
+   the layout stuck wider than the screen. Phones use 16px; larger screens
+   keep the tighter field size from the component classes. */
+@media (width < 40rem) {
+  input:not([type='checkbox']):not([type='radio']):not([type='range']):not([type='hidden']),
+  textarea,
+  select {
+    font-size: 1rem;
+  }
+}
+
+/* The fixed purchase bar sits above the bottom nav, so the footer needs
+   extra room only on product pages, where that bar is mounted. */
+@media (width < 48rem) {
+  body:has([data-mobile-purchase-bar]) footer {
+    padding-bottom: calc(9.25rem + env(safe-area-inset-bottom));
+  }
+}

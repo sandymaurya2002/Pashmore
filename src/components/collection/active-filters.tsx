@@ -55,7 +55,7 @@ export function ActiveFilters({
         <Link
           key={`${chip.key}-${chip.value}`}
           href={chip.href}
-          className="group inline-flex items-center gap-2 border border-line-strong py-1.5 pl-3 pr-2.5 text-xs text-charcoal transition-colors duration-200 hover:border-charcoal"
+          className="group inline-flex max-w-full items-center gap-2 border border-line-strong py-1.5 pl-3 pr-2.5 text-xs text-charcoal transition-colors duration-200 hover:border-charcoal"
         >
           {chip.label}
           <X

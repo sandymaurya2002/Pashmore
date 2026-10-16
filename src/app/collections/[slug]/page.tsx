@@ -139,7 +139,7 @@ export default async function CollectionPage({ params, searchParams }: PageProps
           </aside>
 
           <div className="min-w-0 flex-1">
-            <div className="flex flex-wrap items-center justify-between gap-4 border-b border-line pb-5">
+            <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3 border-b border-line pb-5">
               <FilterDrawer activeCount={activeCount} resultCount={total}>
                 <FilterSidebar
                   facets={facets}
@@ -157,6 +157,7 @@ export default async function CollectionPage({ params, searchParams }: PageProps
                 value={sort}
                 pathname={pathname}
                 searchParams={resolvedSearchParams}
+                className="w-full sm:ml-auto sm:w-auto"
               />
             </div>
 

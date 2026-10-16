@@ -31,7 +31,7 @@ export function SiteChrome({
   return (
     <>
       {!minimal && header}
-      <main id="main" className="pb-16 md:pb-0">
+      <main id="main" className="pb-[calc(4.5rem+env(safe-area-inset-bottom))] md:pb-0">
         {!minimal && banner}
         {children}
       </main>

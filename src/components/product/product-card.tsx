@@ -121,7 +121,7 @@ export function ProductCard({
         <button
           type="button"
           onClick={() => setQuickViewOpen(true)}
-          className="mt-3 hidden w-full border border-charcoal/20 py-2.5 text-[0.625rem] uppercase tracking-[0.18em] text-charcoal [@media(hover:none)]:block"
+          className="mt-3 hidden w-full border border-charcoal/20 py-2.5 text-[0.5625rem] uppercase tracking-[0.12em] text-charcoal xs:text-[0.625rem] xs:tracking-[0.16em] [@media(hover:none)]:block"
         >
           Quick View
         </button>

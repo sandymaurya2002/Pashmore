@@ -12,7 +12,7 @@ import {
 } from '@/lib/region'
 import { getSiteContent } from '@/server/content'
 import { fail, ok, readJson } from '@/server/http'
-import { regionFromRequest, resolveRegion } from '@/server/region'
+import { detectedRegion, regionFromRequest, resolveRegion } from '@/server/region'
 import { baseCookie } from '@/server/session'
 
 /**
@@ -51,7 +51,7 @@ export async function POST(request: NextRequest) {
 /** Forgets the choice, going back to the detected region. */
 export async function DELETE(request: NextRequest) {
   try {
-    const response = ok(await describe(resolveRegion(null, request.headers)))
+    const response = ok(await describe(detectedRegion(request)))
     response.cookies.set(REGION_COOKIE, '', { ...baseCookie(), maxAge: 0 })
     return response
   } catch (error) {

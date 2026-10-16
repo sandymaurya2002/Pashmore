@@ -22,10 +22,10 @@ export function Pagination({ page, totalPages, pathname, searchParams, className
   return (
     <nav
       aria-label="Pagination"
-      className={cn('flex items-center justify-between gap-4 border-t border-line pt-8', className)}
+      className={cn('flex flex-wrap items-center justify-between gap-3 border-t border-line pt-8', className)}
     >
       {page > 1 ? (
-        <Button asChild variant="outline" size="sm">
+        <Button asChild variant="outline" size="sm" className="px-3 tracking-[0.12em] sm:px-4">
           <Link href={href(page - 1)} rel="prev">
             <ArrowLeft className="h-3.5 w-3.5" strokeWidth={1.5} aria-hidden />
             Previous
@@ -40,7 +40,7 @@ export function Pagination({ page, totalPages, pathname, searchParams, className
       </p>
 
       {page < totalPages ? (
-        <Button asChild variant="outline" size="sm">
+        <Button asChild variant="outline" size="sm" className="px-3 tracking-[0.12em] sm:px-4">
           <Link href={href(page + 1)} rel="next">
             Next
             <ArrowRight className="h-3.5 w-3.5" strokeWidth={1.5} aria-hidden />

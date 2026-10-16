@@ -3,6 +3,8 @@ import { cookies, headers } from 'next/headers'
 import {
   currencyForCountry,
   DEFAULT_REGION,
+  GEO_COOKIE,
+  geoCountry,
   normalizeCountry,
   REGION_COOKIE,
   type Region,
@@ -11,41 +13,51 @@ import {
 /**
  * Where the shopper is shopping from, in priority order:
  *  1. the region they picked in the selector (`pm_country` cookie),
- *  2. the edge's IP geolocation of the visitor (Vercel, Cloudflare or CloudFront),
- *  3. India.
+ *  2. the edge's IP geolocation of this request (Vercel, Cloudflare or CloudFront),
+ *  3. the country remembered from an earlier detection (`pm_geo` cookie),
+ *  4. India.
  *
- * The result is forwarded to the Worker as `X-Client-Country`; the Worker
- * prices everything from it and enforces it again at checkout.
+ * The result is forwarded to the Worker as `X-Client-Country` and as
+ * `?currency=`. The Worker prices from the stored INR or USD amount — it
+ * never converts — and checks the currency against the delivery country
+ * when an order is placed.
  */
 
-const GEO_HEADERS = ['x-vercel-ip-country', 'cf-ipcountry', 'cloudfront-viewer-country', 'x-country-code']
-
-export function geoCountry(source: Headers): string | null {
-  for (const name of GEO_HEADERS) {
-    const country = normalizeCountry(source.get(name))
-    if (country) return country
-  }
-  return null
-}
-
-export function resolveRegion(choice: string | null | undefined, source: Headers): Region {
+export function resolveRegion(
+  choice: string | null | undefined,
+  source: Headers,
+  remembered?: string | null,
+): Region {
   const chosen = normalizeCountry(choice)
   if (chosen) return { country: chosen, currency: currencyForCountry(chosen), source: 'choice' }
-  const detected = geoCountry(source)
+  const detected = geoCountry(source) ?? normalizeCountry(remembered)
   if (detected) return { country: detected, currency: currencyForCountry(detected), source: 'geo' }
   return DEFAULT_REGION
 }
 
-/** For route handlers and middleware, which have the request in hand. */
-export function regionFromRequest(request: Request & { cookies?: { get(name: string): { value: string } | undefined } }): Region {
-  const choice = request.cookies?.get(REGION_COOKIE)?.value ?? readCookie(request.headers.get('cookie'), REGION_COOKIE)
-  return resolveRegion(choice, request.headers)
+type CookieRequest = Request & { cookies?: { get(name: string): { value: string } | undefined } }
+
+function cookieValue(request: CookieRequest, name: string): string | undefined {
+  return request.cookies?.get(name)?.value ?? readCookie(request.headers.get('cookie'), name)
+}
+
+/** For route handlers, which have the request in hand. */
+export function regionFromRequest(request: CookieRequest): Region {
+  return resolveRegion(cookieValue(request, REGION_COOKIE), request.headers, cookieValue(request, GEO_COOKIE))
+}
+
+/**
+ * The detected region, ignoring an explicit choice. Used when the shopper
+ * clears the selector and we return to IP detection.
+ */
+export function detectedRegion(request: CookieRequest): Region {
+  return resolveRegion(null, request.headers, cookieValue(request, GEO_COOKIE))
 }
 
 /** For Server Components. Reading cookies makes the page dynamic, as every priced page already is. */
 export async function getRegion(): Promise<Region> {
   const [jar, source] = await Promise.all([cookies(), headers()])
-  return resolveRegion(jar.get(REGION_COOKIE)?.value, source)
+  return resolveRegion(jar.get(REGION_COOKIE)?.value, source, jar.get(GEO_COOKIE)?.value)
 }
 
 function readCookie(header: string | null, name: string): string | undefined {

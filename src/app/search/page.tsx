@@ -81,7 +81,7 @@ export default async function SearchPage({ searchParams }: PageProps) {
         </section>
       ) : products.length > 0 ? (
         <>
-          <div className="mt-10 flex items-center justify-end border-b border-line pb-5">
+          <div className="mt-10 flex items-center justify-stretch border-b border-line pb-5 sm:justify-end">
             <SortSelect value={sort} pathname="/search" searchParams={params} />
           </div>
           <ProductGrid products={products} className="mt-10" priorityCount={2} />

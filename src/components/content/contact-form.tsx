@@ -154,7 +154,7 @@ export function ContactForm() {
       <Button
         type="submit"
         size="lg"
-        className="mt-2 h-13 self-start px-12"
+        className="mt-2 h-13 w-full sm:w-auto sm:self-start sm:px-12"
         disabled={status === 'pending'}
       >
         {status === 'pending' ? 'Sending…' : 'Send Message'}

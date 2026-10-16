@@ -35,8 +35,8 @@ export function AccountNav() {
   }
 
   return (
-    <nav aria-label="Account" className="lg:sticky lg:top-28 lg:self-start">
-      <ul className="flex gap-x-6 gap-y-2 overflow-x-auto border-b border-line pb-4 lg:flex-col lg:border-b-0 lg:pb-0">
+    <nav aria-label="Account" className="min-w-0 lg:sticky lg:top-28 lg:self-start">
+      <ul className="scrollbar-none flex min-w-0 gap-x-6 gap-y-2 overflow-x-auto border-b border-line pb-4 pr-4 lg:flex-col lg:border-b-0 lg:pb-0 lg:pr-0">
         {LINKS.map((link) => {
           const active =
             link.href === '/account'

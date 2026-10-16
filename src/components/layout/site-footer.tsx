@@ -11,7 +11,7 @@ export function SiteFooter() {
   const year = new Date().getFullYear()
 
   return (
-    <footer className="border-t border-line bg-cream/60">
+    <footer className="border-t border-line bg-cream/60 pb-[calc(4.75rem+env(safe-area-inset-bottom))] md:pb-0">
       <NewsletterForm />
 
       <div className="container-luxe grid grid-cols-2 gap-x-8 gap-y-12 border-t border-line py-16 md:grid-cols-4 lg:py-20">

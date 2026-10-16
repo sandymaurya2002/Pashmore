@@ -81,7 +81,7 @@ export function ProductGallery({ images, productName }: ProductGalleryProps) {
       </div>
 
       {/* ---------------- Mobile ---------------- */}
-      <div className="relative lg:hidden">
+      <div className="relative min-w-0 overflow-hidden lg:hidden">
         <ul
           ref={trackRef}
           onScroll={onScroll}
