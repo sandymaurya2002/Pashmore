@@ -91,7 +91,7 @@ export default async function LandingPageRoute({ params }: PageProps) {
       <PageTitleBanner image={{ url: page.banner.url, alt: page.banner.alt }}>
         <Breadcrumbs items={crumbs} tone="light" className="mb-5" />
         <p className="eyebrow mb-3 text-gold-soft">{page.eyebrow}</p>
-        <h1 className="font-serif text-[2.25rem] leading-[1.05] text-ivory md:text-[3.5rem]">
+        <h1 className="font-serif type-display text-ivory">
           {page.h1}
         </h1>
       </PageTitleBanner>
@@ -129,7 +129,7 @@ export default async function LandingPageRoute({ params }: PageProps) {
         <div className="container-luxe max-w-3xl">
           {page.sections.map((section) => (
             <article key={section.heading} className="mt-14 first:mt-0">
-              <h2 className="font-serif text-[1.75rem] leading-tight text-charcoal md:text-[2.25rem]">
+              <h2 className="font-serif type-chapter text-charcoal">
                 {section.heading}
               </h2>
               {section.body.map((paragraph) => (
@@ -162,7 +162,7 @@ export default async function LandingPageRoute({ params }: PageProps) {
         <div className="container-luxe max-w-3xl">
           <h2
             id="landing-faqs"
-            className="font-serif text-[1.75rem] leading-tight text-charcoal md:text-[2.25rem]"
+            className="font-serif type-chapter text-charcoal"
           >
             Frequently Asked Questions
           </h2>

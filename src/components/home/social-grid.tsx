@@ -36,20 +36,20 @@ export function SocialGrid({ section }: { section?: HomeSection }) {
   const profileUrl = section?.href ?? site.social.instagram
 
   return (
-    <section className="py-20 lg:py-28" aria-labelledby="follow-pashmore">
+    <section className="section-pad" aria-labelledby="follow-pashmore">
       <div className="container-luxe">
         <Reveal className="text-center">
           <p className="eyebrow text-gold">{text(section?.eyebrow, '@pashmore')}</p>
           <h2
             id="follow-pashmore"
-            className="mt-5 font-serif text-[2rem] leading-[1.1] text-charcoal md:text-[2.75rem]"
+            className="mt-5 font-serif type-title text-charcoal"
           >
             {text(section?.heading, 'Follow the World of Pashmore')}
           </h2>
         </Reveal>
       </div>
 
-      <ul className="mt-12 grid grid-cols-2 gap-1 sm:grid-cols-4 lg:grid-cols-8">
+      <ul className="mx-auto mt-[clamp(2rem,3.5vw,3.5rem)] grid w-full max-w-[var(--luxe-max)] grid-cols-2 gap-1 sm:grid-cols-4 lg:grid-cols-8">
         {posts.map((post, index) => (
           <li key={`${index}-${post.url}`}>
             <a

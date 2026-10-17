@@ -72,13 +72,13 @@ export function HeritageStory({ section }: { section?: HomeSection }) {
   })
 
   return (
-    <section className="bg-cream/45 py-24 lg:py-36" aria-labelledby="soul-of-pashmore">
+    <section className="section-pad-lg bg-cream/45" aria-labelledby="soul-of-pashmore">
       <div className="container-luxe">
         <Reveal className="mx-auto max-w-2xl text-center">
           <p className="eyebrow text-gold">{text(section?.eyebrow, 'Heritage')}</p>
           <h2
             id="soul-of-pashmore"
-            className="mt-5 font-serif text-[2.25rem] leading-[1.08] text-charcoal md:text-[3.25rem]"
+            className="mt-5 font-serif type-section text-charcoal"
           >
             {text(section?.heading, 'The Soul of Pashmore')}
           </h2>
@@ -90,13 +90,13 @@ export function HeritageStory({ section }: { section?: HomeSection }) {
           </p>
         </Reveal>
 
-        <div className="mt-20 flex flex-col gap-20 lg:gap-32">
+        <div className="mt-[clamp(3rem,5vw,6rem)] flex flex-col gap-[clamp(3.5rem,5.5vw,8rem)]">
           {chapters.map((chapter, index) => {
             const imageFirst = index % 2 === 0
             return (
               <article
                 key={`${index}-${chapter.heading}`}
-                className="grid items-center gap-10 lg:grid-cols-2 lg:gap-20"
+                className="grid items-center gap-8 lg:grid-cols-2 lg:gap-[clamp(2.5rem,4vw,6rem)]"
               >
                 <Reveal
                   className={cn(
@@ -120,7 +120,7 @@ export function HeritageStory({ section }: { section?: HomeSection }) {
                   className={cn('order-2', imageFirst ? 'lg:order-2' : 'lg:order-1')}
                 >
                   <p className="eyebrow text-gold">{chapter.eyebrow}</p>
-                  <h3 className="mt-4 font-serif text-[1.75rem] leading-[1.15] text-charcoal md:text-[2.25rem]">
+                  <h3 className="mt-4 font-serif type-chapter text-charcoal">
                     {chapter.heading}
                   </h3>
                   {chapter.body.map((paragraph) => (

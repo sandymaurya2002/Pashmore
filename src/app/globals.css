@@ -44,6 +44,13 @@
  * ------------------------------------------------------------------ */
 
 @layer base {
+  :root {
+    /* Shared by the page container and full-bleed rails so the first item
+       lines up with headings at every desktop width. */
+    --luxe-pad: clamp(1.25rem, 2.2vw, 4.5rem);
+    --luxe-max: 112rem;
+  }
+
   * {
     border-color: var(--color-line);
   }
@@ -112,17 +119,163 @@
  * ------------------------------------------------------------------ */
 
 @utility container-luxe {
-  width: 100%;
+  width: min(100%, var(--luxe-max));
   margin-inline: auto;
-  padding-inline: 1.25rem;
-  max-width: 100rem;
+  padding-inline: var(--luxe-pad);
+}
+
+/* Vertical rhythm that tightens on a laptop and opens up on a large monitor. */
+@utility section-pad {
+  padding-block: clamp(4.5rem, 2.4rem + 4.2vw, 8rem);
+}
+
+@utility section-pad-lg {
+  padding-block: clamp(5.25rem, 2.6rem + 5vw, 9.5rem);
+}
+
+/* Display sizes stay put on phones, then track the desktop width. */
+@utility type-display {
+  line-height: 1.05;
+  font-size: 2.25rem;
 
   @media (width >= 48rem) {
-    padding-inline: 2.5rem;
+    font-size: 3rem;
+  }
+
+  @media (width >= 64rem) {
+    font-size: clamp(2.85rem, 1.45rem + 2.05vw, 4.25rem);
+  }
+}
+
+@utility type-section {
+  line-height: 1.08;
+  font-size: 2.25rem;
+
+  @media (width >= 48rem) {
+    font-size: 2.75rem;
+  }
+
+  @media (width >= 64rem) {
+    font-size: clamp(2.6rem, 1.55rem + 1.55vw, 3.5rem);
+  }
+}
+
+@utility type-page {
+  line-height: 1.05;
+  font-size: 2.25rem;
+
+  @media (width >= 48rem) {
+    font-size: 2.7rem;
+  }
+
+  @media (width >= 64rem) {
+    font-size: clamp(2.55rem, 1.55rem + 1.5vw, 3.35rem);
+  }
+}
+
+@utility type-title {
+  line-height: 1.1;
+  font-size: 2rem;
+
+  @media (width >= 48rem) {
+    font-size: 2.45rem;
+  }
+
+  @media (width >= 64rem) {
+    font-size: clamp(2.3rem, 1.4rem + 1.35vw, 3.15rem);
+  }
+}
+
+@utility type-chapter {
+  line-height: 1.15;
+  font-size: 1.75rem;
+
+  @media (width >= 48rem) {
+    font-size: 2rem;
+  }
+
+  @media (width >= 64rem) {
+    font-size: clamp(1.9rem, 1.2rem + 1.05vw, 2.5rem);
+  }
+}
+
+/* Full-bleed editorial bands: short enough for a laptop, capped on a tall screen. */
+@utility band-feature {
+  height: clamp(22rem, 56dvh, 34rem);
+
+  @media (width >= 64rem) {
+    height: clamp(24rem, 58dvh, 42rem);
   }
 
   @media (width >= 90rem) {
-    padding-inline: 4rem;
+    height: clamp(26rem, 56dvh, 46rem);
+  }
+}
+
+/* Hero artwork keeps its own ratio, but its box follows the viewport so a
+   short laptop is not one giant image and a wide monitor does not stretch it. */
+@utility frame-hero {
+  width: 100%;
+  margin-inline: auto;
+
+  /* From tablet up, match the page measure and cap the height so a short
+     laptop and a tall monitor both keep the banner on screen. */
+  @media (width >= 48rem) {
+    width: min(100%, var(--luxe-max));
+    height: min(74dvh, 48rem, calc(min(100vw, var(--luxe-max)) / 2.1));
+  }
+}
+
+@utility frame-hero-wide {
+  width: min(100%, var(--luxe-max), calc(min(72dvh, 44rem) * 16 / 9));
+  margin-inline: auto;
+  aspect-ratio: 16 / 9;
+}
+
+@utility banner-page {
+  min-height: clamp(14rem, 32dvh, 20rem);
+
+  @media (width >= 48rem) {
+    min-height: clamp(16rem, 34dvh, 26rem);
+  }
+}
+
+@utility grid-fit-cards {
+  display: grid;
+  gap: clamp(0.85rem, 1.15vw, 1.35rem);
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 16.5rem), 1fr));
+}
+
+@utility rail-gutter {
+  /* When the page measure is centered on a wide monitor, the rail has to
+     start at that same inset — viewport padding alone sits too far left. */
+  --rail-inset: max(
+    var(--luxe-pad),
+    calc((100% - min(100%, var(--luxe-max))) / 2 + var(--luxe-pad))
+  );
+  padding-inline: var(--rail-inset);
+  scroll-padding-inline: var(--rail-inset);
+}
+
+@utility rail-card {
+  width: min(17.5rem, 74vw);
+
+  @media (width >= 40rem) {
+    width: 42vw;
+  }
+
+  @media (width >= 48rem) {
+    width: 30vw;
+  }
+
+  /* About three cards on a small desktop, four once there is room.
+     Width follows the same measure as container-luxe. */
+  @media (width >= 64rem) {
+    width: calc((min(100vw, var(--luxe-max)) - 2 * var(--luxe-pad) - 2.5rem) / 3.15);
+  }
+
+  @media (width >= 80rem) {
+    width: calc((min(100vw, var(--luxe-max)) - 2 * var(--luxe-pad) - 4.5rem) / 4);
   }
 }
 

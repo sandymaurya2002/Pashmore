@@ -27,7 +27,7 @@ export function MegaMenuPanel({ item, onNavigate }: MegaMenuProps) {
       transition={{ duration: reduceMotion ? 0.001 : 0.34, ease: [0.22, 1, 0.36, 1] }}
       className="absolute inset-x-0 top-full border-t border-line bg-ivory shadow-[0_28px_60px_-32px_rgba(18,17,15,0.3)]"
     >
-      <div className="container-luxe grid grid-cols-12 gap-10 py-12">
+      <div className="container-luxe grid grid-cols-12 gap-[clamp(1.5rem,2.2vw,2.75rem)] py-[clamp(2rem,3vw,3.25rem)]">
         {item.columns.map((column) => (
           <div key={column.title} className="col-span-3">
             <p className="eyebrow mb-6 text-taupe">{column.title}</p>
@@ -71,7 +71,7 @@ export function MegaMenuPanel({ item, onNavigate }: MegaMenuProps) {
               </div>
               <div className="flex flex-col justify-center">
                 <p className="eyebrow text-gold">{item.feature.eyebrow}</p>
-                <h3 className="mt-3 font-serif text-[1.75rem] leading-[1.15] text-charcoal">
+                <h3 className="mt-3 font-serif type-chapter text-charcoal">
                   {item.feature.heading}
                 </h3>
                 <span className="mt-5 inline-flex items-center gap-2 text-[0.75rem] uppercase tracking-[0.18em] text-charcoal">

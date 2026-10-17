@@ -105,7 +105,7 @@ export default async function BlogPostPage({ params }: PageProps) {
               {category.name}
             </Link>
           )}
-          <h1 className="mt-5 font-serif text-[2.25rem] leading-[1.08] text-charcoal md:text-[3.25rem]">
+          <h1 className="mt-5 font-serif type-section text-charcoal">
             {post.title}
           </h1>
           <p className="mt-6 text-[1.0625rem] leading-relaxed text-mocha">{post.excerpt}</p>

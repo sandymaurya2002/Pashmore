@@ -66,7 +66,7 @@ export default async function BlogCategoryPage({ params }: PageProps) {
         <Breadcrumbs items={crumbs} />
         <header className="max-w-2xl py-12">
           <p className="eyebrow text-gold">Journal</p>
-          <h1 className="mt-5 font-serif text-[2.25rem] leading-[1.05] text-charcoal md:text-[3.25rem]">
+          <h1 className="mt-5 font-serif type-section text-charcoal">
             {category.name}
           </h1>
           <p className="mt-6 text-[0.9375rem] leading-relaxed text-mocha">

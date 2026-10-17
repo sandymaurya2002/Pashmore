@@ -65,13 +65,13 @@ export function ProductCarousel({
   if (!products.length) return null
 
   return (
-    <section aria-labelledby={headingId} className="py-20 lg:py-28">
+    <section aria-labelledby={headingId} className="section-pad">
       <div className="container-luxe">
         <div className="flex flex-wrap items-end justify-between gap-6">
           <div>
             <h2
               id={headingId}
-              className="font-serif text-[2rem] leading-[1.1] text-charcoal md:text-[2.75rem]"
+              className="font-serif type-title text-charcoal"
             >
               {heading}
             </h2>
@@ -116,17 +116,15 @@ export function ProductCarousel({
       <ul
         ref={scroller}
         className={cn(
-          'scrollbar-none mt-12 flex snap-x snap-mandatory gap-6 overflow-x-auto',
-          // Matches the container gutters so the first card lines up with the
-          // heading while the rest bleed off the right edge. Scroll padding
-          // must match, or snapping parks each card flush against the edge.
-          'px-5 scroll-px-5 md:px-10 md:scroll-px-10 3xl:px-16 3xl:scroll-px-16',
+          'scrollbar-none rail-gutter mt-12 flex snap-x snap-mandatory gap-4 overflow-x-auto sm:gap-5 lg:gap-6',
+          // Gutters match container-luxe so the first card lines up with the
+          // heading while the rest bleed off the right edge.
         )}
       >
         {products.map((product) => (
           <li
             key={product.slug}
-            className="w-[min(18rem,62vw)] shrink-0 snap-start sm:w-[42vw] md:w-[30vw] lg:w-[calc((100%-6rem)/4)] 3xl:w-[calc((100rem-10rem)/4)]"
+            className="rail-card shrink-0 snap-start"
           >
             <ProductCard
               product={product}

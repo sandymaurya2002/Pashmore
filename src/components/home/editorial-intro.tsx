@@ -17,12 +17,12 @@ export function EditorialIntro({ section }: { section?: HomeSection }) {
 
   return (
     <section
-      className="container-luxe py-20 lg:py-32"
+      className="container-luxe section-pad-lg"
       aria-labelledby="art-of-indian-craft"
     >
-      <div className="grid items-center gap-12 lg:grid-cols-2 lg:gap-16">
+      <div className="grid items-center gap-10 lg:grid-cols-2 lg:gap-[clamp(2.5rem,4vw,5.5rem)]">
         <Reveal className="order-1 lg:order-2">
-          <div className="relative mx-auto aspect-4/5 w-full max-w-md overflow-hidden bg-ivory-deep lg:mr-0">
+          <div className="relative mx-auto aspect-4/5 w-full max-w-[clamp(18rem,32vw,34rem)] overflow-hidden bg-ivory-deep lg:mr-0">
             <Image
               src={section?.imageUrl ?? '/images/editorial/editorial-art-of-craft.png'}
               alt={text(
@@ -40,7 +40,7 @@ export function EditorialIntro({ section }: { section?: HomeSection }) {
           <p className="eyebrow text-gold">{text(section?.eyebrow, 'Our Craft')}</p>
           <h2
             id="art-of-indian-craft"
-            className="mt-5 font-serif text-[2.25rem] leading-[1.08] text-charcoal md:text-[3.25rem]"
+            className="mt-5 font-serif type-section text-charcoal"
           >
             {text(section?.heading, 'The Art of Indian Craft')}
           </h2>

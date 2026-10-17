@@ -51,14 +51,12 @@ export function CmsBanner({
             <Image
               src={banner.imageUrl}
               alt={banner.imageAlt}
-              width={0}
-              height={0}
+              fill
               sizes="100vw"
               quality={82}
               priority={priority}
               fetchPriority={priority ? 'high' : undefined}
-              style={{ width: '100%', height: 'auto' }}
-              className="hidden w-full object-cover object-[center_30%] md:block md:aspect-[2.1/1] md:h-auto"
+              className="hidden object-cover object-[center_30%] md:block"
             />
             <Image
               src={banner.mobileImageUrl ?? banner.imageUrl}
@@ -119,11 +117,14 @@ export function CmsBanner({
       <section className="relative w-full bg-charcoal" aria-labelledby={headingId}>
         <div
           className={cn(
-            'relative w-full overflow-hidden',
+            'relative overflow-hidden',
             // The phone artwork is a tall portrait with the wordmark painted
             // at the top. A viewport-height frame with object-cover slices
-            // that name off, so the image keeps its own ratio.
-            variant === 'page' && 'h-[46dvh] min-h-[18rem] md:h-[52dvh] md:max-h-[36rem]',
+            // that name off, so the image keeps its own ratio. On desktop the
+            // frame tracks viewport height so a laptop and a large monitor
+            // each get a banner that fits the screen.
+            variant === 'hero' && 'frame-hero',
+            variant === 'page' && 'banner-page w-full',
           )}
         >
           {media}
@@ -140,7 +141,7 @@ export function CmsBanner({
               id={headingId}
               className={cn(
                 'mt-4 max-w-3xl font-serif leading-[1.05] text-ivory',
-                variant === 'hero' ? 'text-[2rem] md:text-[3.5rem]' : 'text-[2rem] md:text-[3rem]',
+                variant === 'hero' ? 'type-display' : 'type-page',
               )}
             >
               {banner.heading}
@@ -171,14 +172,14 @@ export function CmsBanner({
   }
 
   const body = (
-    <div className="relative h-[62dvh] min-h-[24rem] w-full overflow-hidden bg-charcoal lg:h-[70dvh]">
+    <div className="band-feature relative w-full overflow-hidden bg-charcoal">
       {media}
       <div className="container-luxe relative flex h-full items-center">
         <div className="max-w-lg">
           {banner.eyebrow && <p className="eyebrow text-gold-soft">{banner.eyebrow}</p>}
           <Heading
             id={headingId}
-            className="mt-5 font-serif text-[2.5rem] leading-[1.05] text-ivory md:text-[3.75rem]"
+            className="mt-5 font-serif type-display text-ivory"
           >
             {banner.heading}
           </Heading>

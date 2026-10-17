@@ -103,7 +103,7 @@ export default async function CollectionPage({ params, searchParams }: PageProps
         image={{ url: collection.bannerImage.url, alt: collection.bannerImage.alt }}
       >
         <Breadcrumbs items={crumbs} tone="light" className="mb-5" />
-        <h1 className="font-serif text-[2.25rem] leading-[1.05] text-ivory md:text-[3.5rem]">
+        <h1 className="font-serif type-display text-ivory">
           {heading}
         </h1>
       </PageTitleBanner>
@@ -196,7 +196,7 @@ export default async function CollectionPage({ params, searchParams }: PageProps
       {collection.seoContent?.length ? (
         <section className="border-t border-line bg-cream/40 py-20">
           <div className="container-luxe max-w-3xl">
-            <h2 className="font-serif text-[1.75rem] leading-tight text-charcoal md:text-[2.25rem]">
+            <h2 className="font-serif type-chapter text-charcoal">
               About {heading}
             </h2>
             {collection.seoContent.map((paragraph) => (
@@ -216,7 +216,7 @@ export default async function CollectionPage({ params, searchParams }: PageProps
           <div className="container-luxe max-w-3xl">
             <h2
               id="collection-faqs"
-              className="font-serif text-[1.75rem] leading-tight text-charcoal md:text-[2.25rem]"
+              className="font-serif type-chapter text-charcoal"
             >
               Frequently Asked Questions
             </h2>

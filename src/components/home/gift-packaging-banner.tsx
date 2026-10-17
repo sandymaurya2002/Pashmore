@@ -7,14 +7,14 @@ import type { HomeSection } from '@/server/content'
 export function GiftPackagingBanner({ section }: { section?: HomeSection }) {
   return (
     <section aria-labelledby="gift-box-packaging" className="bg-cream">
-      <div className="container-luxe grid items-center gap-12 py-16 md:grid-cols-2 md:gap-8 lg:py-20">
+      <div className="container-luxe grid items-center gap-10 py-[clamp(3rem,5vw,5.5rem)] md:grid-cols-2 md:gap-[clamp(2rem,4vw,5rem)]">
         <Reveal className="order-2 text-center md:order-1">
           <p className="text-[0.6875rem] uppercase tracking-[0.35em] text-taupe">
             {text(section?.eyebrow, 'Complimentary')}
           </p>
           <h2
             id="gift-box-packaging"
-            className="mt-3 font-serif text-[1.75rem] uppercase leading-tight tracking-[0.12em] text-gold md:text-[2.25rem]"
+            className="mt-3 font-serif text-[clamp(1.6rem,1.1rem+1.1vw,2.5rem)] uppercase leading-tight tracking-[0.12em] text-gold"
           >
             {text(section?.heading, 'Gift Box Packaging')}
           </h2>
@@ -24,7 +24,7 @@ export function GiftPackagingBanner({ section }: { section?: HomeSection }) {
         </Reveal>
 
         <Reveal y={0} delay={0.1} className="order-1 md:order-2">
-          <div className="relative mx-auto aspect-square w-full max-w-[34rem] overflow-hidden rounded-t-full bg-sand">
+          <div className="relative mx-auto aspect-square w-full max-w-[clamp(16rem,38vw,34rem)] overflow-hidden rounded-t-full bg-sand">
             <Image
               src={section?.imageUrl ?? '/images/editorial/gifting-box.png'}
               alt={text(

@@ -97,7 +97,7 @@ export function SiteHeader({
               </button>
 
               <nav aria-label="Primary" className="hidden xl:block">
-                <ul className="flex items-center gap-5 2xl:gap-8">
+                <ul className="flex items-center gap-[clamp(0.65rem,1.05vw,2rem)]">
                   {primaryNav.map((item) => (
                     <li
                       key={item.label}

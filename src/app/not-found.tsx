@@ -11,7 +11,7 @@ export default function NotFound() {
   return (
     <div className="container-luxe flex min-h-[70dvh] flex-col items-center justify-center py-24 text-center">
       <p className="eyebrow text-gold">404</p>
-      <h1 className="mt-6 font-serif text-[2.5rem] leading-[1.05] text-charcoal md:text-[3.5rem]">
+      <h1 className="mt-6 font-serif type-display text-charcoal">
         Lost among the threads?
       </h1>
       <p className="mt-6 max-w-md text-[0.9375rem] leading-relaxed text-mocha">

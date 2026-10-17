@@ -85,15 +85,15 @@ export default function AboutPage() {
       >
         <Breadcrumbs items={crumbs} tone="light" className="mb-5" />
         <p className="eyebrow mb-3 text-gold-soft">Since {site.founded}</p>
-        <h1 className="max-w-3xl font-serif text-[2.25rem] leading-[1.05] text-ivory md:text-[3.5rem]">
+        <h1 className="max-w-3xl font-serif type-display text-ivory">
           Timeless Indian craftsmanship, woven for modern luxury
         </h1>
       </PageTitleBanner>
 
-      <section className="container-luxe py-20 lg:py-28">
-        <div className="grid gap-12 lg:grid-cols-2 lg:gap-20">
+      <section className="container-luxe section-pad">
+        <div className="grid gap-10 lg:grid-cols-2 lg:gap-[clamp(2.5rem,4vw,5.5rem)]">
           <Reveal>
-            <h2 className="font-serif text-[1.875rem] leading-[1.1] text-charcoal md:text-[2.5rem]">
+            <h2 className="font-serif type-title text-charcoal">
               We are a workshop before we are a brand
             </h2>
           </Reveal>
@@ -114,13 +114,13 @@ export default function AboutPage() {
         </div>
       </section>
 
-      <section className="border-y border-line bg-cream/40 py-20 lg:py-28" aria-labelledby="milestones">
+      <section className="section-pad border-y border-line bg-cream/40" aria-labelledby="milestones">
         <div className="container-luxe">
           <Reveal>
             <p className="eyebrow text-gold">Our history</p>
             <h2
               id="milestones"
-              className="mt-5 max-w-xl font-serif text-[1.875rem] leading-[1.1] text-charcoal md:text-[2.5rem]"
+              className="mt-5 max-w-xl font-serif type-title text-charcoal"
             >
               Five moments that shaped the workshop
             </h2>
@@ -147,8 +147,8 @@ export default function AboutPage() {
         </div>
       </section>
 
-      <section className="container-luxe py-20 lg:py-28">
-        <div className="grid items-center gap-12 lg:grid-cols-2 lg:gap-20">
+      <section className="container-luxe section-pad">
+        <div className="grid items-center gap-10 lg:grid-cols-2 lg:gap-[clamp(2.5rem,4vw,5.5rem)]">
           <Reveal>
             <div className="relative aspect-4/3 w-full overflow-hidden bg-ivory-deep">
               <Image
@@ -162,7 +162,7 @@ export default function AboutPage() {
           </Reveal>
           <Reveal delay={0.1}>
             <p className="eyebrow text-gold">The people</p>
-            <h2 className="mt-5 font-serif text-[1.875rem] leading-[1.1] text-charcoal md:text-[2.5rem]">
+            <h2 className="mt-5 font-serif type-title text-charcoal">
               Forty-one families, four generations
             </h2>
             <p className="mt-6 text-[0.9375rem] leading-relaxed text-mocha">

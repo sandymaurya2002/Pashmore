@@ -53,7 +53,7 @@ export default function FaqsPage() {
         <Breadcrumbs items={crumbs} />
         <header className="max-w-2xl py-12">
           <p className="eyebrow text-gold">Customer Care</p>
-          <h1 className="mt-5 font-serif text-[2.25rem] leading-[1.05] text-charcoal md:text-[3rem]">
+          <h1 className="mt-5 font-serif type-page text-charcoal">
             Frequently Asked Questions
           </h1>
           <p className="mt-6 text-[0.9375rem] leading-relaxed text-mocha">{DESCRIPTION}</p>

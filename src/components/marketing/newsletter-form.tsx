@@ -39,13 +39,13 @@ export function NewsletterForm() {
   return (
     <section
       aria-labelledby="newsletter-heading"
-      className="container-luxe py-20 lg:py-28"
+      className="container-luxe section-pad"
     >
       <div className="mx-auto flex max-w-2xl flex-col items-center text-center">
         <p className="eyebrow text-gold">Newsletter</p>
         <h2
           id="newsletter-heading"
-          className="mt-5 font-serif text-[2.25rem] leading-[1.1] text-charcoal md:text-[3rem]"
+          className="mt-5 font-serif type-page text-charcoal"
         >
           Enter the World of Pashmore
         </h2>

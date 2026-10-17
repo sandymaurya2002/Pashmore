@@ -45,7 +45,7 @@ export function ProductPageBanner({
           {eyebrow}
         </Link>
       ) : null}
-      <h1 className="mt-4 max-w-3xl font-serif text-[2rem] leading-[1.1] text-ivory md:text-[2.75rem]">
+      <h1 className="mt-4 max-w-3xl font-serif type-title text-ivory">
         {name}
       </h1>
     </PageTitleBanner>
@@ -81,7 +81,7 @@ export function ProductColumnHeading({
         {children}
       </div>
       {!onPhoto && (
-        <h1 className="mt-4 font-serif text-[2rem] leading-[1.1] text-charcoal md:text-[2.75rem]">
+        <h1 className="mt-4 font-serif type-title text-charcoal">
           {name}
         </h1>
       )}

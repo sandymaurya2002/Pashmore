@@ -67,12 +67,12 @@ export function CategoryCards({ section }: { section?: HomeSection }) {
   const linkLabel = text(section?.linkLabel, 'Explore')
 
   return (
-    <section className="container-luxe py-8 lg:py-12" aria-labelledby="shop-by-category">
+    <section className="container-luxe py-[clamp(1.75rem,3vw,3.5rem)]" aria-labelledby="shop-by-category">
       <h2 id="shop-by-category" className="sr-only">
         {text(section?.heading, 'Shop by category')}
       </h2>
 
-      <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 lg:gap-5">
+      <ul className="grid-fit-cards">
         {cards.map((card, index) => (
           <Reveal as="li" key={`${index}-${card.href}`} delay={index * 0.08}>
             <Link href={card.href} className="group block">
@@ -91,7 +91,7 @@ export function CategoryCards({ section }: { section?: HomeSection }) {
 
                 <div className="absolute inset-x-0 bottom-0 p-6 transition-transform duration-700 ease-[var(--ease-luxe)] group-hover:-translate-y-1.5">
                   <p className="eyebrow text-ivory/70">{card.label}</p>
-                  <h3 className="mt-2.5 font-serif text-[1.375rem] leading-tight text-ivory">
+                  <h3 className="mt-2.5 font-serif text-[clamp(1.2rem,0.85rem+0.7vw,1.6rem)] leading-tight text-ivory">
                     {card.heading}
                   </h3>
                   <span className="mt-4 inline-block border-b border-ivory/45 pb-1 text-[0.625rem] uppercase tracking-[0.2em] text-ivory transition-colors duration-500 group-hover:border-ivory">

@@ -8,10 +8,10 @@ import type { HomeSection } from '@/server/content'
 /** Copy is edited in the admin (Website → Homepage); an active "Home gifting" banner replaces it. */
 export function GiftingBanner({ section }: { section?: HomeSection }) {
   return (
-    <section className="container-luxe py-20 lg:py-28" aria-labelledby="art-of-gifting">
+    <section className="container-luxe section-pad" aria-labelledby="art-of-gifting">
       <div className="grid items-center gap-0 overflow-hidden bg-charcoal lg:grid-cols-2">
         <Reveal y={0} className="relative">
-          <div className="relative aspect-4/3 w-full lg:aspect-square">
+          <div className="relative aspect-4/3 w-full lg:aspect-auto lg:h-[clamp(22rem,38vw,36rem)]">
             <Image
               src={section?.imageUrl ?? '/images/editorial/gifting-box.png'}
               alt={text(
@@ -25,11 +25,11 @@ export function GiftingBanner({ section }: { section?: HomeSection }) {
           </div>
         </Reveal>
 
-        <Reveal delay={0.1} className="px-6 py-12 sm:px-8 sm:py-14 md:px-14 lg:px-16 lg:py-20">
+        <Reveal delay={0.1} className="px-[clamp(1.5rem,3vw,4.5rem)] py-[clamp(2.5rem,4vw,5rem)]">
           <p className="eyebrow text-gold-soft">{text(section?.eyebrow, 'Gifting')}</p>
           <h2
             id="art-of-gifting"
-            className="mt-5 font-serif text-[2.25rem] leading-[1.08] text-ivory md:text-[3rem]"
+            className="mt-5 font-serif type-section text-ivory"
           >
             {text(section?.heading, 'The Art of Gifting')}
           </h2>

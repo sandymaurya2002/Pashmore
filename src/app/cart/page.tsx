@@ -22,7 +22,7 @@ export default async function CartPage() {
       <PageTitleBanner plainClassName="container-luxe pt-12">
         <header className="max-w-2xl pb-4">
           <p className="eyebrow text-gold">Your Bag</p>
-          <h1 className="mt-5 font-serif text-[2.25rem] leading-[1.05] text-charcoal md:text-[3rem]">
+          <h1 className="mt-5 font-serif type-page text-charcoal">
             Shopping Bag
           </h1>
         </header>

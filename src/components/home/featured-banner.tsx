@@ -11,7 +11,7 @@ export function FeaturedBanner({ section }: { section?: HomeSection }) {
     <section aria-labelledby="crafted-for-generations" className="relative">
       <Reveal y={0}>
         <Link href={section?.href ?? '/collections/pure-pashmina'} className="group block">
-          <div className="relative h-[62dvh] min-h-[24rem] w-full overflow-hidden bg-charcoal lg:h-[70dvh]">
+          <div className="band-feature relative w-full overflow-hidden bg-charcoal">
             <Image
               src={section?.imageUrl ?? '/images/editorial/featured-pure-pashmina.png'}
               alt={text(
@@ -33,7 +33,7 @@ export function FeaturedBanner({ section }: { section?: HomeSection }) {
                 <p className="eyebrow text-gold-soft">{text(section?.eyebrow, 'Crafted for Generations')}</p>
                 <h2
                   id="crafted-for-generations"
-                  className="mt-5 font-serif text-[2.5rem] leading-[1.05] text-ivory md:text-[3.75rem]"
+                  className="mt-5 font-serif type-display text-ivory"
                 >
                   {text(section?.heading, 'Pure Pashmina')}
                 </h2>

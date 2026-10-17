@@ -73,7 +73,7 @@ export default async function CollectionsIndexPage() {
         <Breadcrumbs items={crumbs} />
         <header className="max-w-2xl py-12">
           <p className="eyebrow text-gold">Collections</p>
-          <h1 className="mt-5 font-serif text-[2.5rem] leading-[1.05] text-charcoal md:text-[3.5rem]">
+          <h1 className="mt-5 font-serif type-display text-charcoal">
             {TITLE}
           </h1>
           <p className="mt-6 text-[0.9375rem] leading-relaxed text-mocha">{DESCRIPTION}</p>

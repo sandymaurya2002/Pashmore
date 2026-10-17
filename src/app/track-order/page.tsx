@@ -43,7 +43,7 @@ export default function TrackOrderPage() {
         <Breadcrumbs items={crumbs} />
         <header className="mx-auto max-w-lg py-12">
           <p className="eyebrow text-gold">Customer Care</p>
-          <h1 className="mt-5 font-serif text-[2.25rem] leading-[1.05] text-charcoal md:text-[2.75rem]">
+          <h1 className="mt-5 font-serif type-page text-charcoal">
             Track your order
           </h1>
           <p className="mt-5 text-[0.9375rem] leading-relaxed text-mocha">

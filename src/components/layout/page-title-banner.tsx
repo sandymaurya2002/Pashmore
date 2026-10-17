@@ -35,7 +35,7 @@ export function PageTitleBanner({
   }
 
   return (
-    <section className="relative min-h-[16rem] w-full overflow-hidden bg-charcoal md:min-h-[18rem]">
+    <section className="banner-page relative w-full overflow-hidden bg-charcoal">
       {video ? (
         <video
           className="absolute inset-0 h-full w-full object-cover"
@@ -77,7 +77,7 @@ export function PageTitleBanner({
       <span aria-hidden className="absolute inset-0 bg-ink/45" />
       <div
         className={cn(
-          'container-luxe relative flex min-h-[38dvh] flex-col justify-end pb-10 pt-16 md:min-h-[46dvh]',
+          'banner-page container-luxe relative flex flex-col justify-end pb-10 pt-16',
           '[&_h1]:!text-ivory [&_.eyebrow]:!text-gold-soft [&_p]:!text-ivory/85',
           '[&_nav[aria-label=Breadcrumb]_a]:!text-ivory/65',
           '[&_nav[aria-label=Breadcrumb]_span]:!text-ivory',

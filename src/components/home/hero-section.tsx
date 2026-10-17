@@ -16,7 +16,7 @@ import type { HomeSection } from '@/server/content'
 export function HeroSection({ section }: { section?: HomeSection }) {
   return (
     <section className="relative w-full bg-charcoal" aria-labelledby="hero-heading">
-      <div className="relative aspect-video w-full">
+      <div className="frame-hero-wide relative">
         <Image
           src={section?.imageUrl ?? '/images/editorial/hero-kashmiri-shawls.png'}
           alt={text(

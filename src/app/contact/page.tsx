@@ -45,7 +45,7 @@ export default function ContactPage() {
         <Breadcrumbs items={crumbs} />
         <header className="max-w-2xl py-12">
           <p className="eyebrow text-gold">Get in touch</p>
-          <h1 className="mt-5 font-serif text-[2.25rem] leading-[1.05] text-charcoal md:text-[3rem]">
+          <h1 className="mt-5 font-serif type-page text-charcoal">
             Contact Pashmore
           </h1>
           <p className="mt-6 text-[0.9375rem] leading-relaxed text-mocha">
@@ -57,7 +57,7 @@ export default function ContactPage() {
       </PageTitleBanner>
 
       <div className="container-luxe pb-24">
-        <div className="grid gap-14 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)] lg:gap-20">
+        <div className="grid gap-12 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)] lg:gap-[clamp(2.5rem,4vw,5.5rem)]">
           <aside>
             <ul className="flex flex-col gap-8">
               <ContactItem icon={Mail} label="Email">

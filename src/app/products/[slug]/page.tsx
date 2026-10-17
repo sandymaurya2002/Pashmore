@@ -99,7 +99,7 @@ export default async function ProductPage({ params }: PageProps) {
         eyebrowHref={categoryHref}
       />
 
-      <div className="container-luxe grid gap-12 pb-20 pt-8 lg:grid-cols-2 lg:gap-16 lg:pb-28">
+      <div className="container-luxe grid gap-10 pb-[clamp(4rem,6vw,7rem)] pt-8 lg:grid-cols-2 lg:gap-[clamp(2.5rem,4vw,5rem)]">
         <div className="min-w-0 lg:sticky lg:top-28 lg:self-start">
           <ProductGallery images={product.images} productName={product.name} />
         </div>

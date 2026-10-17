@@ -142,7 +142,7 @@ export default async function CraftsmanshipPage() {
         <Breadcrumbs items={crumbs} />
         <header className="max-w-3xl py-14">
           <p className="eyebrow text-gold">Craftsmanship</p>
-          <h1 className="mt-5 font-serif text-[2.25rem] leading-[1.05] text-charcoal md:text-[3.25rem]">
+          <h1 className="mt-5 font-serif type-section text-charcoal">
             Four stages, three hundred kilometres, one shawl
           </h1>
           <p className="mt-7 text-[1.0625rem] leading-relaxed text-mocha">
@@ -157,7 +157,7 @@ export default async function CraftsmanshipPage() {
         {STAGES.map((stage, index) => (
           <section
             key={stage.step}
-            className="container-luxe grid items-center gap-10 lg:grid-cols-2 lg:gap-20"
+            className="container-luxe grid items-center gap-8 lg:grid-cols-2 lg:gap-[clamp(2.5rem,4vw,6rem)]"
             aria-labelledby={`stage-${stage.step}`}
           >
             <Reveal className={index % 2 === 0 ? 'lg:order-1' : 'lg:order-2'}>
@@ -176,7 +176,7 @@ export default async function CraftsmanshipPage() {
               <p className="font-serif text-3xl text-gold">{stage.step}</p>
               <h2
                 id={`stage-${stage.step}`}
-                className="mt-4 font-serif text-[1.75rem] leading-[1.15] text-charcoal md:text-[2.25rem]"
+                className="mt-4 font-serif type-chapter text-charcoal"
               >
                 {stage.heading}
               </h2>
@@ -193,7 +193,7 @@ export default async function CraftsmanshipPage() {
         <div className="container-luxe max-w-3xl">
           <h2
             id="craft-faqs"
-            className="font-serif text-[1.75rem] leading-tight text-charcoal md:text-[2.25rem]"
+            className="font-serif type-chapter text-charcoal"
           >
             Questions about how we work
           </h2>

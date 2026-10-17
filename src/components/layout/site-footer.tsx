@@ -14,7 +14,7 @@ export function SiteFooter() {
     <footer className="border-t border-line bg-cream/60 pb-[calc(4.75rem+env(safe-area-inset-bottom))] md:pb-0">
       <NewsletterForm />
 
-      <div className="container-luxe grid grid-cols-2 gap-x-8 gap-y-12 border-t border-line py-16 md:grid-cols-4 lg:py-20">
+      <div className="container-luxe grid grid-cols-2 gap-x-[clamp(1.5rem,2.5vw,3rem)] gap-y-12 border-t border-line py-[clamp(3rem,4vw,5rem)] md:grid-cols-4">
         {footerColumns.map((column) => (
           <nav key={column.title} aria-labelledby={`footer-${column.title}`}>
             <h2

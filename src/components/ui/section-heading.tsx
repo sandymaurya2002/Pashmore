@@ -37,7 +37,7 @@ export function SectionHeading({
         {eyebrow && <p className="eyebrow mb-4 text-gold">{eyebrow}</p>}
         <Tag
           id={id}
-          className="font-serif text-[2rem] leading-[1.1] text-charcoal md:text-[2.75rem]"
+          className="font-serif type-title text-charcoal"
         >
           {title}
         </Tag>

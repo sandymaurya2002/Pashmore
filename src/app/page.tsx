@@ -105,7 +105,7 @@ const STATIC_SECTIONS: Record<string, (section: HomeSection) => ReactNode> = {
   'category-cards': (section) => <CategoryCards section={section} />,
   'heritage-story': (section) => <HeritageStory section={section} />,
   'trust-bar': () => (
-    <section className="container-luxe border-y border-line py-12">
+    <section className="container-luxe border-y border-line py-[clamp(2.5rem,4vw,4rem)]">
       <h2 className="sr-only">Why shop with Pashmore</h2>
       <TrustBar />
     </section>
@@ -156,7 +156,7 @@ export default async function HomePage() {
     if (section.type === 'PRODUCT_GRID') {
       const headingId = `home-${section.key}`
       return (
-        <section className="container-luxe py-20 lg:py-28" aria-labelledby={headingId}>
+        <section className="container-luxe section-pad" aria-labelledby={headingId}>
           <SectionHeading
             id={headingId}
             eyebrow={section.eyebrow ?? (section.key === 'best-sellers' ? 'Best Sellers' : undefined)}

@@ -52,7 +52,7 @@ export default function BlogIndexPage() {
         <Breadcrumbs items={crumbs} />
         <header className="max-w-2xl py-12">
           <p className="eyebrow text-gold">Journal</p>
-          <h1 className="mt-5 font-serif text-[2.5rem] leading-[1.05] text-charcoal md:text-[3.5rem]">
+          <h1 className="mt-5 font-serif type-display text-charcoal">
             The Pashmore Journal
           </h1>
           <p className="mt-6 text-[0.9375rem] leading-relaxed text-mocha">{DESCRIPTION}</p>
@@ -90,7 +90,7 @@ export default function BlogIndexPage() {
               </div>
               <div className="flex flex-col justify-center">
                 <PostMeta post={lead} />
-                <h2 className="mt-4 font-serif text-[1.875rem] leading-tight text-charcoal transition-colors duration-300 group-hover:text-gold md:text-[2.5rem]">
+                <h2 className="mt-4 font-serif type-title text-charcoal transition-colors duration-300 group-hover:text-gold">
                   {lead.title}
                 </h2>
                 <p className="mt-5 max-w-lg text-[0.9375rem] leading-relaxed text-mocha">
