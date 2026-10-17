@@ -49,6 +49,13 @@ export function SiteFooter() {
             {site.tagline} Handcrafted in Srinagar, Kashmir, and shipped worldwide.
           </p>
 
+          <a
+            href={`tel:${site.phone.replace(/\s/g, '')}`}
+            className="text-sm tracking-[0.06em] text-charcoal transition-colors duration-300 hover:text-gold"
+          >
+            {site.phone}
+          </a>
+
           <ul className="flex items-center gap-6">
             <li>
               <a
