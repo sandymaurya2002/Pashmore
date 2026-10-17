@@ -4,6 +4,7 @@ import { Mail, MapPin, Phone, Clock } from 'lucide-react'
 import { Breadcrumbs } from '@/components/ui/breadcrumbs'
 import { PageTitleBanner } from '@/components/layout/page-title-banner'
 import { ContactForm } from '@/components/content/contact-form'
+import { EmailLink } from '@/components/content/email-link'
 import { JsonLd } from '@/components/seo/json-ld'
 
 import { buildMetadata, pageTitle } from '@/lib/seo'
@@ -61,9 +62,9 @@ export default function ContactPage() {
           <aside>
             <ul className="flex flex-col gap-8">
               <ContactItem icon={Mail} label="Email">
-                <a href={`mailto:${site.email}`} className="link-underline">
+                <EmailLink email={site.email} className="link-underline">
                   {site.email}
-                </a>
+                </EmailLink>
               </ContactItem>
               <ContactItem icon={Phone} label="Telephone">
                 <a href={`tel:${site.phone.replace(/\s/g, '')}`} className="link-underline">

@@ -3,6 +3,7 @@
 import * as React from 'react'
 import { z } from 'zod'
 
+import { EmailLink } from '@/components/content/email-link'
 import { Button } from '@/components/ui/button'
 import { Input, FieldError, FieldLabel } from '@/components/ui/input'
 import { OrderStatusChip } from '@/components/account/order-status-chip'
@@ -147,9 +148,9 @@ export function TrackOrderForm() {
           {status.kind === 'notFound'
             ? 'No order matches that order number and email address. Please check both and try again, or contact '
             : `${status.message} Please try again shortly, or contact `}
-          <a href={`mailto:${site.email}`} className="link-underline text-charcoal">
+          <EmailLink email={site.email} className="link-underline text-charcoal">
             {site.email}
-          </a>{' '}
+          </EmailLink>{' '}
           and we will find it for you.
         </p>
       )}

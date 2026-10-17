@@ -10,6 +10,7 @@ import {
   AccordionTrigger,
 } from '@/components/ui/accordion'
 
+import { TextWithEmails } from '@/components/content/email-link'
 import { policyBySlug, type PolicyPage } from '@/data/policies'
 import { breadcrumbSchema, faqSchema, graph, webPageSchema } from '@/lib/jsonld'
 import { buildMetadata, metaDescription } from '@/lib/seo'
@@ -90,7 +91,9 @@ export async function PolicyView({ slug }: { slug: string }) {
           <h1 className="mt-5 font-serif type-page text-charcoal">
             {policy.title}
           </h1>
-          <p className="mt-6 text-[0.9375rem] leading-relaxed text-mocha">{policy.intro}</p>
+          <p className="mt-6 text-[0.9375rem] leading-relaxed text-mocha">
+            <TextWithEmails text={policy.intro} linkClassName="link-underline text-charcoal" />
+          </p>
           {policy.updated && (
             <p className="mt-4 text-xs text-taupe">Last updated {policy.updated}</p>
           )}
@@ -109,7 +112,7 @@ export async function PolicyView({ slug }: { slug: string }) {
                   key={`${paragraphIndex}-${paragraph.slice(0, 32)}`}
                   className="mt-4 text-[0.9375rem] leading-relaxed text-mocha"
                 >
-                  {paragraph}
+                  <TextWithEmails text={paragraph} linkClassName="link-underline text-charcoal" />
                 </p>
               ))}
               {section.list && (
@@ -120,7 +123,7 @@ export async function PolicyView({ slug }: { slug: string }) {
                       className="flex items-start gap-3 text-[0.9375rem] leading-relaxed text-mocha"
                     >
                       <span aria-hidden className="mt-2.5 h-px w-3 shrink-0 bg-gold" />
-                      {item}
+                      <TextWithEmails text={item} linkClassName="link-underline text-charcoal" />
                     </li>
                   ))}
                 </ul>
@@ -140,7 +143,9 @@ export async function PolicyView({ slug }: { slug: string }) {
                 {policy.faqs.map((faq, index) => (
                   <AccordionItem key={faq.question} value={`faq-${index}`}>
                     <AccordionTrigger>{faq.question}</AccordionTrigger>
-                    <AccordionContent>{faq.answer}</AccordionContent>
+                    <AccordionContent>
+                      <TextWithEmails text={faq.answer} linkClassName="link-underline text-charcoal" />
+                    </AccordionContent>
                   </AccordionItem>
                 ))}
               </Accordion>

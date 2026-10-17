@@ -11,6 +11,7 @@ import {
   AccordionTrigger,
 } from '@/components/ui/accordion'
 
+import { TextWithEmails } from '@/components/content/email-link'
 import { generalFaqs } from '@/data/policies'
 import { buildMetadata, pageTitle } from '@/lib/seo'
 import { breadcrumbSchema, faqSchema, graph, webPageSchema } from '@/lib/jsonld'
@@ -71,7 +72,9 @@ export default function FaqsPage() {
                 {group.items.map((faq, index) => (
                   <AccordionItem key={faq.question} value={`${group.heading}-${index}`}>
                     <AccordionTrigger>{faq.question}</AccordionTrigger>
-                    <AccordionContent>{faq.answer}</AccordionContent>
+                    <AccordionContent>
+                      <TextWithEmails text={faq.answer} linkClassName="link-underline text-charcoal" />
+                    </AccordionContent>
                   </AccordionItem>
                 ))}
               </Accordion>
