@@ -33,6 +33,7 @@ const TOKEN_MAP: Record<string, string> = {
   scarves: 'scarf',
   scarfs: 'scarf',
   stoles: 'stole',
+  stols: 'stole',
   wraps: 'wrap',
   gifts: 'gift',
   deals: 'deal',

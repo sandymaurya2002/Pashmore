@@ -43,6 +43,7 @@ export const spellingVariants = [
   'pashmina shawl',
   'pashm',
   'pashm shawl',
+  'stols',
 ] as const
 
 /** The head terms — the product itself. */
@@ -67,6 +68,7 @@ export const pashminaKeywords = [
   'buy pashmina online',
   'pashmina shawl online india',
   'pashmina shawl price',
+  'semi pashmina',
 ] as const
 
 export const kashmiriKeywords = [
@@ -154,7 +156,7 @@ const collectionKeywordMap: Record<string, readonly string[]> = {
   'mens-scarves': ['mens scarf', 'mens muffler', 'cashmere muffler', 'pashmina muffler'],
   'mens-accessories': ['mens accessories', 'pocket square', 'pashmina muffler'],
   shawls: ['shawls', 'shawls online', 'woollen shawl', 'winter shawls', ...kashmiriKeywords.slice(0, 4)],
-  stoles: ['stoles', 'pashmina stole', 'stoles online', 'lightweight stole', 'woollen stole'],
+  stoles: ['stoles', 'stols', 'pashmina stole', 'stoles online', 'lightweight stole', 'woollen stole'],
   scarves: ['scarves', 'pashmina scarf', 'cashmere scarf', 'muffler'],
   accessories: ['luxury accessories', 'pashmina accessories'],
   'gift-sets': ['gift sets', ...giftingKeywords],
@@ -182,7 +184,7 @@ const landingKeywordMap: Record<string, readonly string[]> = {
   'pure-pashmina-shawls': ['100% pure pashmina', 'how to identify real pashmina', ...pashminaKeywords],
   'womens-shawls': womenKeywords,
   'mens-shawls': menKeywords,
-  'pashmina-stoles': ['pashmina stole', 'pashmina stoles online', 'lightweight pashmina stole', 'pashmina scarf'],
+  'pashmina-stoles': ['pashmina stole', 'stols', 'pashmina stoles online', 'lightweight pashmina stole', 'pashmina scarf'],
   'luxury-shawls': [...luxuryKeywords, 'kani shawl', 'sozni shawl'],
   'wedding-gifts': collectionKeywordMap['wedding-gifts'],
   'corporate-gifts': collectionKeywordMap['corporate-gifts'],
@@ -222,6 +224,7 @@ export const siteKeywords = mergeKeywords(
   pashminaKeywords.slice(0, 10),
   kashmiriKeywords.slice(0, 5),
   spellingVariants.slice(0, 4),
+  ['kani shawl', 'semi pashmina', 'stols'],
 )
 
 /** Topics the business is an authority on — feeds Organization `knowsAbout`. */
@@ -274,6 +277,8 @@ export function productKeywords(product: Product): string[] {
     [name, `${material} ${type}`, `${pattern} ${type}`, `${product.colors[0]?.name ?? ''} ${type}`],
     audience,
     isPashmina ? ['pashmina ' + type, 'pure pashmina', 'kashmiri pashmina', 'pashmeena'] : [],
+    type === 'stole' ? ['stols'] : [],
+    pattern.includes('kani') ? ['kani shawl'] : [],
     pattern === 'solid' ? [] : [`kashmiri ${pattern}`],
     [`buy ${type} online`, `kashmiri ${type}`, 'handwoven in kashmir', 'pashmore'],
   )
