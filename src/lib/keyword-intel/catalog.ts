@@ -72,7 +72,7 @@ export function sellableProducts(facts: CatalogFacts): CatalogProduct[] {
 const TYPE_TERMS: Array<{ terms: string[]; types: ProductType[] }> = [
   { terms: ['shawl', 'shawls'], types: ['shawl', 'wrap'] },
   { terms: ['wrap', 'wraps'], types: ['wrap', 'shawl'] },
-  { terms: ['stole', 'stoles'], types: ['stole'] },
+  { terms: ['stole', 'stoles', 'stols'], types: ['stole'] },
   { terms: ['scarf', 'scarves', 'muffler'], types: ['scarf'] },
   { terms: ['dupatta', 'dupattas'], types: ['dupatta'] },
   { terms: ['pocket square'], types: ['pocket-square'] },

@@ -12,7 +12,7 @@ import type { KeywordCategory } from '@/types/keywords'
 export const keywordSeeds: Record<KeywordCategory, string[]> = {
   core: [
     'pashmina', 'pashmina shawl', 'pashmina shawls', 'pashmina scarf', 'pashmina scarves',
-    'pashmina stole', 'pashmina wrap', 'pashmina wraps', 'pashmina wool', 'pashmina fabric',
+    'pashmina stole', 'stols', 'pashmina wrap', 'pashmina wraps', 'pashmina wool', 'pashmina fabric',
     'pashmina material', 'pashmina cloth', 'pashmina products', 'pashmina collection',
     'pashmina fashion', 'pashmina clothing', 'pashmina accessories',
   ],
@@ -48,7 +48,7 @@ export const keywordSeeds: Record<KeywordCategory, string[]> = {
   ],
 
   material: [
-    'pure pashmina', '100% pashmina', 'authentic pashmina', 'genuine pashmina', 'real pashmina',
+    'pure pashmina', 'semi pashmina', '100% pashmina', 'authentic pashmina', 'genuine pashmina', 'real pashmina',
     'original pashmina', 'pashmina wool', 'pashmina cashmere', 'pashmina and cashmere',
     'cashmere pashmina', 'cashmere shawl', 'cashmere scarf', 'cashmere wrap',
     'pure cashmere shawl', 'pure cashmere scarf', 'wool pashmina', 'fine wool shawl',
@@ -57,7 +57,7 @@ export const keywordSeeds: Record<KeywordCategory, string[]> = {
   ],
 
   kashmiri: [
-    'Kashmiri pashmina', 'Kashmiri pashmina shawl', 'Kashmiri shawl', 'Kashmir shawl',
+    'Kashmiri pashmina', 'Kashmiri pashmina shawl', 'kani shawl', 'Kashmiri shawl', 'Kashmir shawl',
     'Kashmir pashmina', 'Kashmiri wool shawl', 'Kashmiri embroidered shawl',
     'Kashmiri handmade shawl', 'Kashmiri handwoven shawl', 'Kashmiri traditional shawl',
     'Kashmiri winter shawl', 'Kashmiri scarf', 'Kashmiri stole', 'Kashmiri pashmina online',

@@ -253,7 +253,7 @@ export const clusterDefs: ClusterDef[] = [
     id: 'stoles',
     name: 'Pashmina stoles',
     primary: 'pashmina stole',
-    match: (k) => has(k, 'stole', 'stoles'),
+    match: (k) => has(k, 'stole', 'stoles', 'stols'),
     target: { url: '/pashmina-stoles', type: 'landing-page' },
   },
   {

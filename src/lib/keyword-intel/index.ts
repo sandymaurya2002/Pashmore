@@ -135,7 +135,7 @@ function relevanceFor(keyword: string, c: Classification, stock: StockCheck, def
 
   let value = 0.55
   if (hasAny(keyword, ['pashmina', 'pashm', 'pashmeena', 'kashmiri', 'kashmir', 'pashmore'])) value += 0.25
-  else if (hasAny(keyword, ['cashmere', 'shawl', 'shawls', 'stole', 'stoles', 'scarf', 'wrap'])) value += 0.1
+  else if (hasAny(keyword, ['cashmere', 'shawl', 'shawls', 'stole', 'stoles', 'stols', 'scarf', 'wrap'])) value += 0.1
 
   if (stock.matches.length >= keywordConfig.minProductsForCuratedPage) value += 0.1
   if (stock.gap) {
