@@ -86,12 +86,17 @@ const UNSOLD_TYPE_TERMS: Record<string, string[]> = {
 }
 
 const MATERIAL_TERMS: Array<{ terms: string[]; materials: string[] }> = [
+  { terms: ['semi pashmina'], materials: ['semi-pashmina'] },
+  { terms: ['pashmina wool', 'wool pashmina'], materials: ['pashmina-wool'] },
+  { terms: ['wool silk', 'silk wool'], materials: ['wool-silk'] },
   { terms: ['pure pashmina', '100% pashmina', '100% pure'], materials: ['pure-pashmina'] },
-  { terms: ['pashmina', 'pashm', 'pashmeena'], materials: ['pure-pashmina', 'pashmina-silk'] },
+  { terms: ['pashmina', 'pashm', 'pashmeena'], materials: ['pure-pashmina', 'pashmina-silk', 'semi-pashmina', 'pashmina-wool'] },
   // Pashmina is the finest grade of cashmere, so it honestly answers a cashmere search.
   { terms: ['cashmere'], materials: ['cashmere', 'pure-pashmina'] },
-  { terms: ['merino', 'wool'], materials: ['fine-wool', 'handloom-wool'] },
-  { terms: ['silk'], materials: ['pashmina-silk', 'banarasi-silk', 'cotton-silk'] },
+  { terms: ['linen'], materials: ['linen'] },
+  { terms: ['cotton'], materials: ['cotton', 'cotton-silk'] },
+  { terms: ['merino', 'wool'], materials: ['fine-wool', 'handloom-wool', 'pashmina-wool', 'wool-silk'] },
+  { terms: ['silk'], materials: ['pashmina-silk', 'banarasi-silk', 'cotton-silk', 'wool-silk'] },
 ]
 
 const PATTERN_TERMS: Array<{ terms: string[]; patterns: string[] }> = [
@@ -103,10 +108,18 @@ const PATTERN_TERMS: Array<{ terms: string[]; patterns: string[] }> = [
   { terms: ['tilla'], patterns: ['tilla'] },
   { terms: ['ombre', 'ombré'], patterns: ['ombre'] },
   { terms: ['herringbone'], patterns: ['herringbone'] },
-  { terms: ['patterned'], patterns: ['sozni', 'kani', 'jamawar', 'paisley', 'tilla', 'ombre', 'herringbone'] },
+  { terms: ['checked', 'checks'], patterns: ['checked'] },
+  { terms: ['striped', 'stripe', 'stripes'], patterns: ['striped'] },
+  { terms: ['plaid'], patterns: ['plaid'] },
+  { terms: ['geometric'], patterns: ['geometric'] },
+  { terms: ['border'], patterns: ['border'] },
+  { terms: ['floral'], patterns: ['floral'] },
+  { terms: ['printed', 'print'], patterns: ['printed'] },
+  {
+    terms: ['patterned'],
+    patterns: ['sozni', 'kani', 'jamawar', 'paisley', 'tilla', 'ombre', 'herringbone', 'checked', 'striped', 'plaid', 'floral', 'printed', 'geometric', 'border'],
+  },
   { terms: ['plain', 'solid'], patterns: ['solid'] },
-  // Nothing in the catalogue is printed or floral-printed.
-  { terms: ['printed', 'print', 'floral'], patterns: [] },
 ]
 
 export interface Constraint {

@@ -58,25 +58,56 @@ export const keywordConfig = {
  * Colour families: the words people search with, and the catalogue colour
  * slugs that honestly answer them. One family = at most one colour page, so
  * "white", "ivory" and "off white" never become three pages of the same
- * products. Families with no slugs are searched but not stocked.
+ * products. A family only matches products that use one of its colour slugs.
  */
 export const colorFamilies: Record<string, { terms: string[]; slugs: string[] }> = {
-  white: { terms: ['white', 'off white', 'ivory', 'cream'], slugs: ['ivory', 'cream'] },
-  beige: { terms: ['beige', 'camel', 'sand'], slugs: ['beige', 'sand', 'camel'] },
-  brown: { terms: ['brown', 'taupe'], slugs: ['brown', 'taupe'] },
-  grey: { terms: ['grey', 'gray', 'charcoal'], slugs: ['charcoal', 'slate', 'mist'] },
-  blue: { terms: ['blue', 'navy'], slugs: ['midnight'] },
-  red: { terms: ['red', 'maroon', 'burgundy', 'wine'], slugs: ['crimson', 'burgundy'] },
-  pink: { terms: ['pink', 'dusty pink', 'rose'], slugs: ['rose'] },
-  green: { terms: ['green', 'olive', 'emerald'], slugs: ['emerald', 'olive'] },
-  orange: { terms: ['orange', 'mustard', 'saffron'], slugs: ['saffron'] },
-  gold: { terms: ['gold', 'golden'], slugs: ['gold'] },
-  black: { terms: ['black'], slugs: [] },
-  purple: { terms: ['purple', 'lavender'], slugs: [] },
-  silver: { terms: ['silver'], slugs: [] },
-  yellow: { terms: ['yellow'], slugs: [] },
-  peach: { terms: ['peach'], slugs: [] },
-  magenta: { terms: ['magenta'], slugs: [] },
+  white: {
+    terms: ['white', 'off white', 'ivory', 'cream', 'champagne'],
+    slugs: ['white', 'off-white', 'ivory', 'cream', 'champagne'],
+  },
+  beige: {
+    terms: ['beige', 'camel', 'sand', 'tan', 'nude', 'khaki'],
+    slugs: ['beige', 'sand', 'camel', 'tan', 'nude', 'khaki'],
+  },
+  brown: {
+    terms: ['brown', 'taupe', 'chocolate', 'bronze'],
+    slugs: ['brown', 'taupe', 'chocolate', 'bronze'],
+  },
+  grey: { terms: ['grey', 'gray', 'charcoal'], slugs: ['grey', 'charcoal', 'slate', 'mist'] },
+  blue: {
+    terms: ['blue', 'navy', 'royal blue', 'sky blue', 'teal', 'turquoise', 'indigo', 'aqua'],
+    slugs: ['blue', 'navy', 'royal-blue', 'sky-blue', 'teal', 'turquoise', 'indigo', 'aqua', 'midnight'],
+  },
+  red: {
+    terms: ['red', 'maroon', 'burgundy', 'wine', 'rust', 'terracotta'],
+    slugs: ['red', 'maroon', 'wine', 'crimson', 'burgundy', 'rust', 'terracotta'],
+  },
+  pink: {
+    terms: ['pink', 'dusty pink', 'rose', 'blush', 'hot pink'],
+    slugs: ['pink', 'rose', 'blush', 'hot-pink'],
+  },
+  green: {
+    terms: ['green', 'olive', 'emerald', 'mint', 'sage', 'lime'],
+    slugs: ['green', 'emerald', 'olive', 'mint', 'sage', 'forest-green', 'lime'],
+  },
+  orange: {
+    terms: ['orange', 'mustard', 'saffron', 'coral', 'copper'],
+    slugs: ['orange', 'mustard', 'saffron', 'coral', 'copper'],
+  },
+  gold: { terms: ['gold', 'golden', 'rose gold'], slugs: ['gold', 'rose-gold'] },
+  black: { terms: ['black'], slugs: ['black'] },
+  purple: {
+    terms: ['purple', 'lavender', 'lilac', 'plum', 'violet'],
+    slugs: ['purple', 'lavender', 'lilac', 'plum', 'violet'],
+  },
+  silver: { terms: ['silver'], slugs: ['silver'] },
+  yellow: { terms: ['yellow'], slugs: ['yellow'] },
+  peach: { terms: ['peach'], slugs: ['peach'] },
+  magenta: { terms: ['magenta', 'fuchsia'], slugs: ['magenta', 'fuchsia'] },
+  multicolour: {
+    terms: ['multicolour', 'multicolor', 'multi colour', 'multi color'],
+    slugs: ['multicolour'],
+  },
 }
 
 /** Search term → catalogue slugs and family. */
