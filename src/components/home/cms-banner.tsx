@@ -151,9 +151,9 @@ export function CmsBanner({
           variant === 'feature'
             ? 'bg-gradient-to-r from-ink/70 via-ink/30 to-transparent'
             : 'bg-gradient-to-t from-ink/70 via-ink/20 to-transparent',
-          // Desktop hero keeps the same bottom fade, a little deeper, so the
-          // overlay stays readable without dimming the painted wordmark.
-          variant === 'hero' && 'md:from-ink/80 md:via-ink/15 md:to-transparent',
+          // Desktop hero: a deeper fade over the lower half, where the copy
+          // sits, clearing to transparent before the painted wordmark.
+          variant === 'hero' && 'md:from-ink/90 md:via-ink/45 md:via-35% md:to-transparent md:to-65%',
         )}
       />
     </>
@@ -175,7 +175,7 @@ export function CmsBanner({
             className={cn(
               'container-luxe flex flex-col items-center text-center',
               variant === 'hero'
-                ? 'absolute inset-x-0 bottom-0 z-10 pb-[calc(4.75rem+env(safe-area-inset-bottom))] md:pb-12 lg:pb-16'
+                ? 'absolute inset-x-0 bottom-0 z-10 pb-[calc(4.75rem+env(safe-area-inset-bottom))] [text-shadow:0_1px_14px_rgba(18,17,15,0.6)] md:pb-12 lg:pb-16'
                 : 'absolute inset-x-0 bottom-0 pb-10 md:pb-14',
             )}
           >
@@ -195,7 +195,7 @@ export function CmsBanner({
               </p>
             )}
             {(banner.href || banner.secondaryHref) && (
-              <div className="mt-5 flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:gap-4 md:mt-8">
+              <div className="mt-5 flex w-full flex-col gap-3 [text-shadow:none] sm:w-auto sm:flex-row sm:gap-4 md:mt-8">
                 {banner.href && (
                   <Button asChild variant="light" size="lg" className="w-full sm:w-auto">
                     <Link href={banner.href}>{banner.ctaLabel ?? 'Explore'}</Link>

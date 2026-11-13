@@ -219,19 +219,19 @@
 }
 
 /* Homepage hero art. Phones keep the file's own ratio (the portrait upload).
-   From the md breakpoint the image is full width and still uncropped. The
-   height cap only applies on a screen wider than the artwork, so a 16:9
-   monitor shows it edge to edge and a short window letterboxes instead of
-   slicing the wordmark. */
+   From the md breakpoint the image always spans the full width: no dark
+   side bars. When its natural height would exceed the cap, the box is wider
+   than the artwork, so `cover` only trims the bottom edge — the image is
+   anchored to the top, where the wordmark is painted, so it is never cut. */
 @utility hero-art {
   display: block;
   width: 100%;
   height: auto;
 
   @media (width >= 48rem) {
-    max-height: 74dvh;
-    object-fit: contain;
-    object-position: center;
+    max-height: 80dvh;
+    object-fit: cover;
+    object-position: center top;
     background-color: var(--color-charcoal);
   }
 }
