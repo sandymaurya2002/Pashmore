@@ -35,15 +35,28 @@ export function RegionProvider({ children }: { children: React.ReactNode }) {
 
   React.useEffect(() => {
     let cancelled = false
-    bff<RegionInfo>('/api/region')
-      .then(({ data }) => {
-        if (!cancelled) setRegion(data)
-      })
-      .catch(() => {
-        /* The selector stays hidden; prices still come from the server. */
-      })
+    // Prices are already in the server HTML. This request only fills the
+    // region selector, so it waits until the browser is idle and does not
+    // compete with the hero image on a phone.
+    const load = () => {
+      if (cancelled) return
+      bff<RegionInfo>('/api/region')
+        .then(({ data }) => {
+          if (!cancelled) setRegion(data)
+        })
+        .catch(() => {
+          /* The selector stays hidden; prices still come from the server. */
+        })
+    }
+    const idleId =
+      typeof window.requestIdleCallback === 'function'
+        ? window.requestIdleCallback(load, { timeout: 2000 })
+        : null
+    const timer = idleId == null ? window.setTimeout(load, 1200) : null
     return () => {
       cancelled = true
+      if (idleId != null) window.cancelIdleCallback(idleId)
+      if (timer != null) window.clearTimeout(timer)
     }
   }, [])
 

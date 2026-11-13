@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { Instagram, Facebook, Youtube } from 'lucide-react'
 import { Logo } from '@/components/layout/logo'
 import { NewsletterForm } from '@/components/marketing/newsletter-form'
+import { InstallAppButton } from '@/components/pwa/install-app-button'
 import { footerColumns } from '@/data/navigation'
 import { site } from '@/lib/site'
 
@@ -91,6 +92,8 @@ export function SiteFooter() {
               </a>
             </li>
           </ul>
+
+          <InstallAppButton />
         </div>
       </div>
 

@@ -68,6 +68,21 @@ const nextConfig = {
         ],
       },
       {
+        // The service worker must always be re-checked, or a deploy could leave
+        // customers on an old worker for up to a day.
+        source: '/sw.js',
+        headers: [
+          { key: 'Cache-Control', value: 'no-cache, no-store, must-revalidate' },
+          { key: 'Content-Type', value: 'application/javascript; charset=utf-8' },
+          { key: 'Service-Worker-Allowed', value: '/' },
+        ],
+      },
+      {
+        // Shown by the service worker when there is no connection; never indexed.
+        source: '/offline.html',
+        headers: [{ key: 'X-Robots-Tag', value: 'noindex, nofollow' }],
+      },
+      {
         // Bundled imagery is addressed by name and never mutates.
         source: '/images/:path*',
         headers: [

@@ -18,6 +18,8 @@ import { JsonLd } from '@/components/seo/json-ld'
 import { graph, organisationSchema, websiteSchema } from '@/lib/jsonld'
 import { site, siteUrl } from '@/lib/site'
 import { siteKeywords } from '@/lib/keywords'
+import { PWA_BOOTSTRAP_SCRIPT } from '@/lib/pwa-bootstrap'
+import { PwaManager } from '@/components/pwa/pwa-manager'
 
 const serif = Cormorant_Garamond({
   subsets: ['latin'],
@@ -41,6 +43,15 @@ export const metadata: Metadata = {
   description: site.description,
   keywords: siteKeywords,
   applicationName: site.name,
+  // iOS home-screen app: full-screen launch, "Pashmore" under the icon.
+  appleWebApp: {
+    capable: true,
+    title: site.name,
+    statusBarStyle: 'default',
+  },
+  // Next.js now emits only the standard `mobile-web-app-capable`; iOS versions
+  // before 16.4 still look for Apple's original tag.
+  other: { 'apple-mobile-web-app-capable': 'yes' },
   authors: [{ name: site.name, url: siteUrl }],
   creator: site.name,
   publisher: site.legalName,
@@ -111,6 +122,8 @@ gtag('js', new Date());
 gtag('config', 'G-EQFP2ZRX7P');`,
           }}
         />
+        {/* Catches Chrome's install prompt even if it fires before hydration. */}
+        <script dangerouslySetInnerHTML={{ __html: PWA_BOOTSTRAP_SCRIPT }} />
       </head>
       <body className="min-h-dvh bg-ivory antialiased">
         <JsonLd id="site-graph" data={graph([organisationSchema(), websiteSchema()])} />
@@ -144,6 +157,8 @@ gtag('config', 'G-EQFP2ZRX7P');`,
             </SiteChrome>
           </PageBannerProvider>
         </Providers>
+
+        <PwaManager />
 
         <Script
           id="gtag-loader"

@@ -46,6 +46,7 @@ export function Reveal({
 
   return (
     <Component
+      data-reveal=""
       className={className}
       initial="hidden"
       whileInView="visible"

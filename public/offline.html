@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en-IN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="robots" content="noindex, nofollow" />
+    <meta name="theme-color" content="#faf7f2" />
+    <title>You're offline | Pashmore</title>
+    <link rel="icon" href="/icon-192.png" type="image/png" />
+    <style>
+      :root {
+        --ivory: #faf7f2;
+        --sand: #e7dcc9;
+        --charcoal: #1f1d1a;
+        --mocha: #665642;
+        --taupe: #7f6e5b;
+        --gold: #b08d4f;
+        --line: #e4ddd1;
+      }
+      * { box-sizing: border-box; }
+      html, body { margin: 0; height: 100%; }
+      body {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: max(24px, env(safe-area-inset-top)) 16px max(24px, env(safe-area-inset-bottom));
+        background: var(--ivory);
+        color: var(--charcoal);
+        font-family: 'Cormorant Garamond', Georgia, 'Times New Roman', serif;
+        -webkit-font-smoothing: antialiased;
+        text-align: center;
+      }
+      main { width: 100%; max-width: 30rem; }
+      img { width: 72px; height: auto; margin: 0 auto 20px; display: block; }
+      .wordmark {
+        margin: 0 0 40px;
+        font-size: 1.25rem;
+        font-weight: 600;
+        letter-spacing: 0.34em;
+      }
+      .rule { width: 48px; height: 1px; margin: 0 auto 28px; background: var(--gold); }
+      h1 { margin: 0 0 16px; font-size: clamp(1.75rem, 6vw, 2.25rem); font-weight: 400; line-height: 1.2; }
+      p {
+        margin: 0 0 32px;
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+        font-size: 0.9375rem;
+        line-height: 1.7;
+        color: var(--mocha);
+      }
+      button {
+        height: 48px;
+        padding: 0 32px;
+        border: 0;
+        background: var(--charcoal);
+        color: var(--ivory);
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+        font-size: 0.75rem;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        cursor: pointer;
+        transition: background 0.3s;
+      }
+      button:hover { background: #12110f; }
+      button:focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; }
+      .note {
+        margin-top: 28px;
+        font-size: 0.75rem;
+        letter-spacing: 0.08em;
+        color: var(--taupe);
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <img src="/images/brand/pashmore-mark.png" width="221" height="256" alt="" />
+      <p class="wordmark" aria-label="Pashmore">PASHMORE</p>
+      <div class="rule" aria-hidden="true"></div>
+      <h1>You're offline</h1>
+      <p>
+        We can't reach Pashmore right now. Please check your internet connection —
+        your bag and wishlist are safe and will be right where you left them.
+      </p>
+      <button type="button" onclick="location.reload()">Try again</button>
+      <p class="note">This page will refresh automatically once you're back online.</p>
+    </main>
+    <script>
+      window.addEventListener('online', function () { location.reload() })
+    </script>
+  </body>
+</html>

@@ -1,4 +1,4 @@
-import Image from 'next/image'
+import Image, { getImageProps } from 'next/image'
 import Link from 'next/link'
 import { ArrowRight } from 'lucide-react'
 
@@ -13,6 +13,76 @@ import type { Banner } from '@/server/content'
  * and carries the page's h1; `page` is a shorter opener above a page's own
  * content (which keeps its h1); `feature` is the full-bleed editorial band.
  */
+
+/**
+ * Homepage hero artwork. The desktop file is a wide scene with the wordmark
+ * painted in; the phone file is a tall portrait. One `<picture>` so each
+ * viewport downloads only its own file, and the desktop file keeps its own
+ * ratio (`hero-art`) instead of being covered into a fixed frame.
+ */
+function HeroArt({ banner, priority }: { banner: Banner; priority: boolean }) {
+  const alt = banner.imageAlt
+  const desktop = getImageProps({
+    alt,
+    src: banner.imageUrl!,
+    width: 2400,
+    height: 1000,
+    sizes: '100vw',
+    quality: 82,
+  }).props
+  const mobile = banner.mobileImageUrl
+    ? getImageProps({
+        alt,
+        src: banner.mobileImageUrl,
+        width: 1080,
+        height: 1920,
+        sizes: '100vw',
+        quality: 82,
+      }).props
+    : null
+
+  return (
+    <>
+      {priority && mobile?.srcSet && (
+        <link
+          rel="preload"
+          as="image"
+          media="(max-width: 767px)"
+          imageSrcSet={mobile.srcSet}
+          imageSizes="100vw"
+          fetchPriority="high"
+        />
+      )}
+      {priority && desktop.srcSet && (
+        <link
+          rel="preload"
+          as="image"
+          media={mobile ? '(min-width: 768px)' : undefined}
+          imageSrcSet={desktop.srcSet}
+          imageSizes="100vw"
+          fetchPriority="high"
+        />
+      )}
+      <picture>
+        {mobile?.srcSet && (
+          <source media="(max-width: 767px)" srcSet={mobile.srcSet} sizes="100vw" />
+        )}
+        {/* Art direction needs a real img; next/image cannot switch files by viewport. */}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          alt={alt}
+          src={desktop.src}
+          srcSet={desktop.srcSet}
+          sizes="100vw"
+          decoding="async"
+          fetchPriority={priority ? 'high' : undefined}
+          loading={priority ? 'eager' : 'lazy'}
+          className="hero-art"
+        />
+      </picture>
+    </>
+  )
+}
 export function CmsBanner({
   banner,
   variant,
@@ -34,7 +104,7 @@ export function CmsBanner({
       {banner.mediaType === 'VIDEO' && banner.videoUrl ? (
         <video
           className={cn(
-            natural ? 'block h-auto w-full' : 'absolute inset-0 h-full w-full object-cover',
+            natural ? 'hero-art' : 'absolute inset-0 h-full w-full object-cover',
           )}
           src={banner.videoUrl}
           poster={banner.imageUrl}
@@ -47,30 +117,7 @@ export function CmsBanner({
         />
       ) : banner.imageUrl ? (
         natural ? (
-          <>
-            <Image
-              src={banner.imageUrl}
-              alt={banner.imageAlt}
-              fill
-              sizes="100vw"
-              quality={82}
-              priority={priority}
-              fetchPriority={priority ? 'high' : undefined}
-              className="hidden object-cover object-[center_30%] md:block"
-            />
-            <Image
-              src={banner.mobileImageUrl ?? banner.imageUrl}
-              alt={banner.imageAlt}
-              width={0}
-              height={0}
-              sizes="100vw"
-              quality={82}
-              priority={priority}
-              fetchPriority={priority ? 'high' : undefined}
-              style={{ width: '100%', height: 'auto' }}
-              className="block h-auto w-full md:hidden"
-            />
-          </>
+          <HeroArt banner={banner} priority={priority} />
         ) : (
           <>
             <Image
@@ -118,12 +165,8 @@ export function CmsBanner({
         <div
           className={cn(
             'relative overflow-hidden',
-            // The phone artwork is a tall portrait with the wordmark painted
-            // at the top. A viewport-height frame with object-cover slices
-            // that name off, so the image keeps its own ratio. On desktop the
-            // frame tracks viewport height so a laptop and a large monitor
-            // each get a banner that fits the screen.
-            variant === 'hero' && 'frame-hero',
+            // Phone artwork is a tall portrait and sizes the box itself.
+            // Desktop artwork is a wide scene; hero-art shows it whole.
             variant === 'page' && 'banner-page w-full',
           )}
         >
@@ -132,7 +175,7 @@ export function CmsBanner({
             className={cn(
               'container-luxe flex flex-col items-center text-center',
               variant === 'hero'
-                ? 'absolute inset-x-0 bottom-0 pb-[calc(4.75rem+env(safe-area-inset-bottom))] md:pb-12 lg:pb-16'
+                ? 'absolute inset-x-0 bottom-0 z-10 pb-[calc(4.75rem+env(safe-area-inset-bottom))] md:pb-12 lg:pb-16'
                 : 'absolute inset-x-0 bottom-0 pb-10 md:pb-14',
             )}
           >

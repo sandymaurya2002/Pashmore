@@ -79,7 +79,6 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
             return (
               <m.div
                 key={entry.id}
-                layout
                 initial={reduceMotion ? { opacity: 0 } : { opacity: 0, y: 16, scale: 0.98 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 exit={reduceMotion ? { opacity: 0 } : { opacity: 0, y: 8, scale: 0.98 }}

@@ -66,7 +66,7 @@ export function SiteHeader({
       <div aria-hidden className="h-[calc(2.25rem+5.5rem)]" />
       <header
         className={cn(
-          'fixed inset-x-0 top-0 z-40 w-full border-b bg-burgundy/95 backdrop-blur-md will-change-transform transition-[transform,border-color] duration-500 ease-[var(--ease-luxe)]',
+          'fixed inset-x-0 top-0 z-40 w-full border-b bg-burgundy/95 backdrop-blur-md transition-[transform,border-color] duration-500 ease-[var(--ease-luxe)]',
           scrolled ? '-translate-y-9 border-ivory/10' : 'translate-y-0 border-transparent',
         )}
         onKeyDown={(event) => {

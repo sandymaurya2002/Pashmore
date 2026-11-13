@@ -218,17 +218,30 @@
   }
 }
 
-/* Hero artwork keeps its own ratio, but its box follows the viewport so a
-   short laptop is not one giant image and a wide monitor does not stretch it. */
-@utility frame-hero {
+/* Homepage hero art. Phones keep the file's own ratio (the portrait upload).
+   From the md breakpoint the image is full width and still uncropped. The
+   height cap only applies on a screen wider than the artwork, so a 16:9
+   monitor shows it edge to edge and a short window letterboxes instead of
+   slicing the wordmark. */
+@utility hero-art {
+  display: block;
   width: 100%;
-  margin-inline: auto;
+  height: auto;
 
-  /* From tablet up, match the page measure and cap the height so a short
-     laptop and a tall monitor both keep the banner on screen. */
   @media (width >= 48rem) {
-    width: min(100%, var(--luxe-max));
-    height: min(74dvh, 48rem, calc(min(100vw, var(--luxe-max)) / 2.1));
+    max-height: 74dvh;
+    object-fit: contain;
+    object-position: center;
+    background-color: var(--color-charcoal);
+  }
+}
+
+/* Scroll reveals start at opacity 0 until the animation chunk hydrates.
+   On a phone that wait reads as a stuck page, so the content stays visible. */
+@media (width < 48rem) {
+  [data-reveal] {
+    opacity: 1 !important;
+    transform: none !important;
   }
 }
 
