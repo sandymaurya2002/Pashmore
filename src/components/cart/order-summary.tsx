@@ -7,15 +7,18 @@ export function OrderSummary({
   currency,
   coupon,
   title = 'Order Summary',
+  headingId = 'order-summary',
 }: {
   totals: CartTotals
   currency: Currency
   coupon?: Coupon | null
   title?: string
+  /** Override when the summary renders more than once on a page. */
+  headingId?: string
 }) {
   return (
-    <section aria-labelledby="order-summary" className="border border-line bg-cream/40 p-6">
-      <h2 id="order-summary" className="font-serif text-xl text-charcoal">
+    <section aria-labelledby={headingId} className="border border-line bg-cream/40 p-6">
+      <h2 id={headingId} className="font-serif text-xl text-charcoal">
         {title}
       </h2>
 

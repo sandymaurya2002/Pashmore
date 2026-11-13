@@ -4,7 +4,7 @@ import * as React from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { ChevronLeft, Lock, ShoppingBag } from 'lucide-react'
+import { ChevronDown, ChevronLeft, Lock, ShoppingBag } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import { EmptyState } from '@/components/ui/empty-state'
@@ -375,10 +375,52 @@ export function CheckoutFlow() {
     )
   }
 
+  // Items and totals: in the sticky sidebar on desktop, in a collapsible panel on phones.
+  const orderDetails = (idPrefix: string) => (
+    <>
+      <ul className="mb-6 flex flex-col gap-4 border border-line bg-cream/30 p-4 sm:p-5">
+        {(placed?.items ?? items).map((item) => (
+          <li key={item.key} className="flex gap-4">
+            <span className="relative aspect-4/5 w-14 shrink-0 overflow-hidden bg-ivory-deep">
+              <Image
+                src={item.image.url}
+                alt={item.image.alt}
+                fill
+                sizes="56px"
+                className="object-cover"
+              />
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block truncate text-sm text-charcoal">{item.name}</span>
+              <span className="block text-xs text-taupe">
+                {[item.color, item.size, `Qty ${item.quantity}`].filter(Boolean).join(' · ')}
+              </span>
+              {!item.inStock && (
+                <span className="block text-xs text-burgundy">
+                  {item.regionUnavailable ? 'Not available in your region' : 'No longer available'}
+                </span>
+              )}
+            </span>
+            <span className="shrink-0 text-sm text-charcoal">
+              {item.regionUnavailable ? '—' : formatPrice(item.unitPrice * item.quantity, placed?.currency ?? currency)}
+            </span>
+          </li>
+        ))}
+      </ul>
+
+      <OrderSummary
+        totals={placed?.totals ?? shownTotals}
+        currency={placed?.currency ?? currency}
+        coupon={placed ? placed.coupon : coupon}
+        headingId={`${idPrefix}-order-summary`}
+      />
+    </>
+  )
+
   return (
-    <div className="container-luxe py-10 lg:py-14">
-      <div className="grid gap-12 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)] lg:gap-16">
-        <section aria-labelledby="checkout-heading">
+    <div className="container-luxe py-6 md:py-10 lg:py-14">
+      <div className="grid gap-10 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)] lg:gap-16">
+        <section aria-labelledby="checkout-heading" className="min-w-0">
           <Link
             href="/cart"
             className="inline-flex items-center gap-1.5 text-[0.6875rem] uppercase tracking-[0.14em] text-taupe transition-colors hover:text-charcoal"
@@ -392,6 +434,27 @@ export function CheckoutFlow() {
           >
             Checkout
           </h1>
+
+          {/* Phones: what's being bought, and for how much, before the form —
+              collapsed so the address fields stay near the top. */}
+          <details className="group mt-6 border border-line bg-cream/30 lg:hidden">
+            <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-3.5 text-sm text-charcoal [&::-webkit-details-marker]:hidden">
+              <span className="flex items-center gap-2">
+                <ShoppingBag className="h-4 w-4 text-taupe" strokeWidth={1.25} aria-hidden />
+                <span className="group-open:hidden">Show order summary</span>
+                <span className="hidden group-open:inline">Hide order summary</span>
+                <ChevronDown
+                  className="h-3.5 w-3.5 text-taupe transition-transform group-open:rotate-180"
+                  strokeWidth={1.5}
+                  aria-hidden
+                />
+              </span>
+              <span className="font-serif text-lg">
+                {formatPrice((placed?.totals ?? shownTotals).total, placed?.currency ?? currency)}
+              </span>
+            </summary>
+            <div className="border-t border-line p-4">{orderDetails('mobile')}</div>
+          </details>
 
           {status !== 'authenticated' ? (
             <div className="mt-8 border border-line bg-cream/40 p-6 md:p-8">
@@ -450,7 +513,7 @@ export function CheckoutFlow() {
                       >
                         <span className="eyebrow block text-taupe">{entry.label}</span>
                         <span className="mt-2 block text-charcoal">{entry.fullName}</span>
-                        <span className="mt-1 block leading-relaxed text-mocha">
+                        <span className="mt-1 block break-words leading-relaxed text-mocha">
                           {entry.line1}
                           {entry.line2 ? `, ${entry.line2}` : ''}, {entry.city}, {entry.state}{' '}
                           {entry.postalCode}, {entry.country}
@@ -483,7 +546,7 @@ export function CheckoutFlow() {
                         onChange={(event) => setAddress((current) => ({ ...current, country: event.target.value }))}
                         autoComplete="country"
                         disabled={busy}
-                        className="h-12 w-full border border-line-strong bg-transparent px-4 text-sm text-charcoal focus:border-charcoal focus:outline-none disabled:opacity-60"
+                        className="h-12 w-full min-w-0 border border-line-strong bg-transparent px-4 text-base text-charcoal focus:border-charcoal focus:outline-none disabled:opacity-60 md:text-sm"
                       >
                         {COUNTRIES.map((entry) => (
                           <option key={entry.code} value={entry.code}>
@@ -510,7 +573,7 @@ export function CheckoutFlow() {
                     {address.country === HOME_COUNTRY
                       ? addressField('postalCode', 'PIN code', { autoComplete: 'postal-code', inputMode: 'numeric' })
                       : addressField('postalCode', 'Postal code', { autoComplete: 'postal-code' })}
-                    <p className="self-end pb-3 text-xs text-taupe">
+                    <p className="break-words text-xs text-taupe sm:self-end sm:pb-3">
                       Order updates go to {customer?.email}.
                     </p>
                   </div>
@@ -679,44 +742,10 @@ export function CheckoutFlow() {
           )}
         </section>
 
-        <aside className="lg:sticky lg:top-10 lg:self-start">
-          <ul className="mb-6 flex flex-col gap-4 border border-line bg-cream/30 p-5">
-            {(placed?.items ?? items).map((item) => (
-              <li key={item.key} className="flex gap-4">
-                <span className="relative aspect-4/5 w-14 shrink-0 overflow-hidden bg-ivory-deep">
-                  <Image
-                    src={item.image.url}
-                    alt={item.image.alt}
-                    fill
-                    sizes="56px"
-                    className="object-cover"
-                  />
-                </span>
-                <span className="min-w-0 flex-1">
-                  <span className="block truncate text-sm text-charcoal">{item.name}</span>
-                  <span className="block text-xs text-taupe">
-                    {[item.color, item.size, `Qty ${item.quantity}`].filter(Boolean).join(' · ')}
-                  </span>
-                  {!item.inStock && (
-                    <span className="block text-xs text-burgundy">
-                      {item.regionUnavailable ? 'Not available in your region' : 'No longer available'}
-                    </span>
-                  )}
-                </span>
-                <span className="shrink-0 text-sm text-charcoal">
-                  {item.regionUnavailable ? '—' : formatPrice(item.unitPrice * item.quantity, placed?.currency ?? currency)}
-                </span>
-              </li>
-            ))}
-          </ul>
+        <aside className="min-w-0 lg:sticky lg:top-10 lg:self-start">
+          <div className="hidden lg:block">{orderDetails('desktop')}</div>
 
-          <OrderSummary
-            totals={placed?.totals ?? shownTotals}
-            currency={placed?.currency ?? currency}
-            coupon={placed ? placed.coupon : coupon}
-          />
-
-          <div className="mt-8 border-t border-line pt-8">
+          <div className="border-t border-line pt-8 lg:mt-8">
             <TrustBar compact />
           </div>
         </aside>

@@ -55,6 +55,12 @@
     border-color: var(--color-line);
   }
 
+  /* Fieldsets default to min-width: min-content, so a wide child (a <select>
+     sized to its longest option) would push the form past a phone's edge. */
+  fieldset {
+    min-inline-size: 0;
+  }
+
   html {
     scroll-behavior: smooth;
     -webkit-text-size-adjust: 100%;

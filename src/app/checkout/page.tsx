@@ -17,9 +17,9 @@ export default function CheckoutPage() {
   return (
     <div className="min-h-dvh bg-ivory">
       <header className="border-b border-line">
-        <div className="container-luxe flex items-center justify-between py-6">
+        <div className="container-luxe flex items-center justify-between gap-4 py-4 md:py-6">
           <Logo compact />
-          <p className="flex items-center gap-2 text-[0.625rem] uppercase tracking-[0.16em] text-taupe">
+          <p className="flex shrink-0 items-center gap-2 whitespace-nowrap text-[0.625rem] uppercase tracking-[0.12em] text-taupe sm:tracking-[0.16em]">
             <Lock className="h-3 w-3" strokeWidth={1.5} aria-hidden />
             Secure checkout
           </p>
@@ -31,7 +31,7 @@ export default function CheckoutPage() {
       <footer className="border-t border-line py-8">
         <div className="container-luxe flex flex-wrap items-center justify-between gap-4 text-xs text-taupe">
           <p>© {new Date().getFullYear()} Pashmore</p>
-          <ul className="flex gap-6">
+          <ul className="flex flex-wrap gap-x-6 gap-y-2">
             <li>
               <Link href="/shipping" className="transition-colors hover:text-charcoal">
                 Shipping
