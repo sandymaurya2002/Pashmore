@@ -3,7 +3,7 @@
 import * as React from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { motion } from 'framer-motion'
+import { m } from 'framer-motion'
 import { ArrowRight } from 'lucide-react'
 import type { NavItem } from '@/data/navigation'
 import { usePrefersReducedMotion } from '@/hooks/use-media-query'
@@ -20,7 +20,7 @@ export function MegaMenuPanel({ item, onNavigate }: MegaMenuProps) {
   if (!item.columns) return null
 
   return (
-    <motion.div
+    <m.div
       initial={reduceMotion ? { opacity: 0 } : { opacity: 0, y: -8 }}
       animate={{ opacity: 1, y: 0 }}
       exit={reduceMotion ? { opacity: 0 } : { opacity: 0, y: -8 }}
@@ -86,6 +86,6 @@ export function MegaMenuPanel({ item, onNavigate }: MegaMenuProps) {
           </div>
         )}
       </div>
-    </motion.div>
+    </m.div>
   )
 }

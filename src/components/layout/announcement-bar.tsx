@@ -1,7 +1,7 @@
 'use client'
 
 import * as React from 'react'
-import { AnimatePresence, motion } from 'framer-motion'
+import { AnimatePresence, m } from 'framer-motion'
 import { usePrefersReducedMotion } from '@/hooks/use-media-query'
 
 const ROTATE_MS = 5200
@@ -44,7 +44,7 @@ export function AnnouncementBar({
         <div className="relative h-4 w-full overflow-hidden text-center">
           <AnimatePresence mode="wait" initial={false}>
             {message && (
-              <motion.p
+              <m.p
                 key={index}
                 initial={reduceMotion ? { opacity: 0 } : { opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -56,7 +56,7 @@ export function AnnouncementBar({
                 className="eyebrow absolute inset-0 truncate text-[0.5625rem] tracking-[0.02em] text-ivory/85 xs:tracking-[0.1em] sm:text-[0.625rem] sm:tracking-[0.22em]"
               >
                 {message}
-              </motion.p>
+              </m.p>
             )}
           </AnimatePresence>
         </div>

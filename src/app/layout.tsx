@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next'
 import { Cormorant_Garamond, Inter } from 'next/font/google'
+import Script from 'next/script'
 import './globals.css'
 
 import { Providers } from '@/components/providers'
@@ -98,10 +99,10 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   return (
     <html lang="en-IN" className={`${serif.variable} ${sans.variable}`}>
       <head>
-        {/* Google's install snippet, once, in <head>. next/script would rewrite
-            this and load it after hydration, so the raw async tag stays. */}
-        {/* eslint-disable-next-line @next/next/next-script-for-ga */}
-        <script async src="https://www.googletagmanager.com/gtag/js?id=G-EQFP2ZRX7P" />
+        {/* The dataLayer queue is set up inline so the page-start timestamp and
+            config are recorded immediately; gtag.js (~190 KB) is loaded below
+            with `lazyOnload` and replays the queue, keeping it off the
+            critical path for LCP and TBT on mobile. */}
         <script
           dangerouslySetInnerHTML={{
             __html: `window.dataLayer = window.dataLayer || [];
@@ -143,6 +144,12 @@ gtag('config', 'G-EQFP2ZRX7P');`,
             </SiteChrome>
           </PageBannerProvider>
         </Providers>
+
+        <Script
+          id="gtag-loader"
+          src="https://www.googletagmanager.com/gtag/js?id=G-EQFP2ZRX7P"
+          strategy="lazyOnload"
+        />
       </body>
     </html>
   )

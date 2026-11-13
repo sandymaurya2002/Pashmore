@@ -49,7 +49,7 @@ export const keywordSeeds: Record<KeywordCategory, string[]> = {
 
   material: [
     'pure pashmina', 'semi pashmina', '100% pashmina', 'authentic pashmina', 'genuine pashmina', 'real pashmina',
-    'original pashmina', 'pashmina wool', 'pashmina cashmere', 'pashmina and cashmere',
+    'original pashmina', 'pashmina wool', 'cashmere', 'pashmina cashmere', 'pashmina and cashmere',
     'cashmere pashmina', 'cashmere shawl', 'cashmere scarf', 'cashmere wrap',
     'pure cashmere shawl', 'pure cashmere scarf', 'wool pashmina', 'fine wool shawl',
     'soft wool shawl', 'premium wool shawl', 'luxury wool shawl', 'natural wool shawl',

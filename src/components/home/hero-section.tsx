@@ -2,7 +2,6 @@
 
 import Image from 'next/image'
 import Link from 'next/link'
-import { motion } from 'framer-motion'
 
 import { Button } from '@/components/ui/button'
 import { text } from '@/lib/home-copy'
@@ -44,11 +43,9 @@ export function HeroSection({ section }: { section?: HomeSection }) {
           {text(section?.heading, 'Pashmore — The Art of Kashmiri Shawls')}
         </h1>
 
-        <motion.div
-          initial={{ opacity: 0, y: 14 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.9, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
-          className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:gap-4"
+        {/* Pure CSS entrance: runs before hydration and ships no JS. */}
+        <div
+          className="flex w-full animate-[pashmore-fade-up_900ms_var(--ease-luxe)_200ms_both] flex-col gap-3 sm:w-auto sm:flex-row sm:gap-4"
         >
           <Button asChild variant="light" size="lg">
             <Link href={section?.href ?? '/collections/pure-pashmina'}>
@@ -60,7 +57,7 @@ export function HeroSection({ section }: { section?: HomeSection }) {
               {text(section?.secondaryLinkLabel, 'Discover Our Craft')}
             </Link>
           </Button>
-        </motion.div>
+        </div>
       </div>
     </section>
   )

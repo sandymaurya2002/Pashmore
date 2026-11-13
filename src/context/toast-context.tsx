@@ -1,7 +1,7 @@
 'use client'
 
 import * as React from 'react'
-import { AnimatePresence, motion } from 'framer-motion'
+import { AnimatePresence, m } from 'framer-motion'
 import { Check, X, Info } from 'lucide-react'
 import { createId } from '@/lib/utils'
 import { usePrefersReducedMotion } from '@/hooks/use-media-query'
@@ -77,7 +77,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
           {toasts.map((entry) => {
             const Icon = TONE_ICON[entry.tone]
             return (
-              <motion.div
+              <m.div
                 key={entry.id}
                 layout
                 initial={reduceMotion ? { opacity: 0 } : { opacity: 0, y: 16, scale: 0.98 }}
@@ -112,7 +112,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
                 >
                   <X className="h-3.5 w-3.5" strokeWidth={1.5} />
                 </button>
-              </motion.div>
+              </m.div>
             )
           })}
         </AnimatePresence>

@@ -1,6 +1,7 @@
 'use client'
 
 import type { ReactNode } from 'react'
+import { LazyMotion } from 'framer-motion'
 import { CartProvider } from '@/context/cart-context'
 import { SessionProvider } from '@/context/session-context'
 import { WishlistProvider } from '@/context/wishlist-context'
@@ -16,8 +17,12 @@ import { UIProvider } from '@/context/ui-context'
  * The session sits above the wishlist and cart: both wait for it to resolve
  * so a token refresh never races their first request.
  */
+const loadMotionFeatures = () => import('@/components/motion/features').then((mod) => mod.default)
+
 export function Providers({ children }: { children: ReactNode }) {
   return (
+    // `strict` throws if a full `motion.*` component sneaks back in: use `m.*`.
+    <LazyMotion features={loadMotionFeatures} strict>
     <ToastProvider>
       <SessionProvider>
         <UIProvider>
@@ -31,5 +36,6 @@ export function Providers({ children }: { children: ReactNode }) {
         </UIProvider>
       </SessionProvider>
     </ToastProvider>
+    </LazyMotion>
   )
 }

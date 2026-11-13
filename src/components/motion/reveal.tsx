@@ -1,7 +1,7 @@
 'use client'
 
 import * as React from 'react'
-import { motion, type Variants } from 'framer-motion'
+import { m, type Variants } from 'framer-motion'
 import { usePrefersReducedMotion } from '@/hooks/use-media-query'
 
 interface RevealProps {
@@ -26,7 +26,7 @@ export function Reveal({
   as = 'div',
 }: RevealProps) {
   const reduceMotion = usePrefersReducedMotion()
-  const Component = motion[as]
+  const Component = m[as]
 
   const variants: Variants = React.useMemo(
     () => ({
