@@ -1,11 +1,38 @@
 /**
- * Remote image hosts allowed for next/image. Mirrors `allowedImageHosts()` in
- * src/lib/media.ts: the R2 public bucket domain, the Worker origin (which
- * serves `/media/*`) and any extra hosts listed in IMAGE_REMOTE_HOSTS.
+ * Hosts that must be present in every build. Cloudflare injects
+ * CLOUDFLARE_R2_PUBLIC_URL and CLOUDFLARE_API_URL as Worker runtime bindings,
+ * which are not available while next.config.mjs is evaluated, so reading them
+ * alone serializes `"remotePatterns": []`.
+ *
+ * Keep these hostnames in step with `BUILTIN_IMAGE_HOSTS` in src/lib/media.ts.
  */
-function remoteImagePatterns() {
-  const patterns = []
-  for (const value of [process.env.CLOUDFLARE_R2_PUBLIC_URL, process.env.CLOUDFLARE_API_URL]) {
+const BUILTIN_REMOTE_PATTERNS = [
+  { protocol: 'https', hostname: 'media.pashmore.com', pathname: '/**' },
+  { protocol: 'https', hostname: 'api.pashmore.com', pathname: '/**' },
+]
+
+function patternKey(pattern) {
+  return `${pattern.protocol}|${pattern.hostname}|${pattern.port ?? ''}|${pattern.pathname}`
+}
+
+/**
+ * Remote image hosts allowed for next/image. Always includes the production
+ * R2 and Worker origins, then any build-time hosts from
+ * CLOUDFLARE_R2_PUBLIC_URL, CLOUDFLARE_API_URL (local or preview) and
+ * IMAGE_REMOTE_HOSTS. Mirrors `allowedImageHosts()` in src/lib/media.ts.
+ */
+export function remoteImagePatterns(env = process.env) {
+  const patterns = BUILTIN_REMOTE_PATTERNS.map((pattern) => ({ ...pattern }))
+  const seen = new Set(patterns.map(patternKey))
+
+  const add = (pattern) => {
+    const key = patternKey(pattern)
+    if (seen.has(key)) return
+    seen.add(key)
+    patterns.push(pattern)
+  }
+
+  for (const value of [env.CLOUDFLARE_R2_PUBLIC_URL, env.CLOUDFLARE_API_URL]) {
     if (!value) continue
     let url
     try {
@@ -13,16 +40,19 @@ function remoteImagePatterns() {
     } catch {
       throw new Error(`Invalid URL in environment: ${value}`)
     }
-    patterns.push({
+    add({
       protocol: url.protocol.replace(':', ''),
       hostname: url.hostname,
       ...(url.port ? { port: url.port } : {}),
       pathname: '/**',
     })
   }
-  for (const host of (process.env.IMAGE_REMOTE_HOSTS ?? '').split(',')) {
-    if (host.trim()) patterns.push({ protocol: 'https', hostname: host.trim(), pathname: '/**' })
+
+  for (const host of (env.IMAGE_REMOTE_HOSTS ?? '').split(',')) {
+    const hostname = host.trim()
+    if (hostname) add({ protocol: 'https', hostname, pathname: '/**' })
   }
+
   return patterns
 }
 

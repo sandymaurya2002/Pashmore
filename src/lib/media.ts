@@ -6,9 +6,13 @@ import type { ProductImage } from '@/types'
  * The Worker may return absolute URLs (R2 custom domain / r2.dev), its own
  * `/media/*` paths, or bare object keys. `/media/*` is joined onto the Worker
  * origin and keys onto CLOUDFLARE_R2_PUBLIC_URL. Absolute URLs are
- * only accepted from hosts that next.config.mjs also allows for next/image —
- * keep `allowedImageHosts` in step with `remotePatterns` there.
+ * only accepted from hosts that next.config.mjs also allows for next/image.
+ * The production hosts below are always trusted, matching the patterns that
+ * are baked into every build. Extra hosts still come from the environment.
  */
+
+/** Must match `BUILTIN_REMOTE_PATTERNS` in next.config.mjs. */
+const BUILTIN_IMAGE_HOSTS = ['media.pashmore.com', 'api.pashmore.com']
 
 export const PRODUCT_PLACEHOLDER = {
   url: '/images/placeholders/product.png',
@@ -36,11 +40,13 @@ export function allowedImageHosts(): string[] {
     .split(',')
     .map((entry) => entry.trim())
     .filter(Boolean)
-  return [
+  const hosts = [
+    ...BUILTIN_IMAGE_HOSTS,
     hostOf(process.env.CLOUDFLARE_R2_PUBLIC_URL),
     hostOf(process.env.CLOUDFLARE_API_URL),
     ...extra,
   ].filter((host): host is string => Boolean(host))
+  return [...new Set(hosts)]
 }
 
 function mediaBaseUrl(): string {
