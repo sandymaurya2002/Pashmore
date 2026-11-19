@@ -1,0 +1,52 @@
+/**
+ * Cloudflare Worker config for the Pashmore storefront (OpenNext).
+ *
+ * Preserve these production bindings/vars on every deploy:
+ * - CLOUDFLARE_API_URL, CLOUDFLARE_R2_PUBLIC_URL, NEXT_PUBLIC_SITE_URL
+ * - ENABLE_ADMIN=false
+ * - CF Access / gateway secrets (never commit plaintext values)
+ * - IMAGES, ASSETS, NEXT_INC_CACHE_R2_BUCKET, WORKER_SELF_REFERENCE
+ *
+ * Do not point this file at the API worker (`pashmore-api`) bindings.
+ */
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "pashmore",
+  "main": ".open-next/worker.js",
+  "compatibility_date": "2026-10-01",
+  "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS"
+  },
+  "images": {
+    "binding": "IMAGES"
+  },
+  "services": [
+    {
+      "binding": "WORKER_SELF_REFERENCE",
+      "service": "pashmore"
+    }
+  ],
+  "r2_buckets": [
+    {
+      "binding": "NEXT_INC_CACHE_R2_BUCKET",
+      "bucket_name": "pashmore-opennext-cache"
+    }
+  ],
+  // Vars that must remain set in production (also configure via dashboard /
+  // `wrangler secret` so a deploy cannot silently wipe encrypted secrets):
+  // CLOUDFLARE_API_URL, CLOUDFLARE_R2_PUBLIC_URL, NEXT_PUBLIC_SITE_URL,
+  // ENABLE_ADMIN, CLOUDFLARE_GATEWAY_SECRET, REVALIDATE_SECRET,
+  // CF_ACCESS_CLIENT_ID, CF_ACCESS_CLIENT_SECRET
+  "vars": {
+    "ENABLE_ADMIN": "false"
+  }
+  // Optional upgrade (requires billing approval): Durable Object queue for
+  // production ISR. Replace memoryQueue in open-next.config.ts with doQueue and
+  // uncomment:
+  // "durable_objects": {
+  //   "bindings": [{ "name": "NEXT_CACHE_DO_QUEUE", "class_name": "DOQueueHandler" }]
+  // },
+  // "migrations": [{ "tag": "v1-opennext-queue", "new_sqlite_classes": ["DOQueueHandler"] }]
+}

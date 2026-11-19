@@ -3,6 +3,9 @@ import { PageTitleBanner } from '@/components/layout/page-title-banner'
 import { WishlistContent } from '@/components/wishlist/wishlist-content'
 import { buildMetadata, pageTitle } from '@/lib/seo'
 
+/** Wishlist state is per-shopper; never serve a shared cached shell. */
+export const dynamic = 'force-dynamic'
+
 export const metadata: Metadata = buildMetadata({
   title: pageTitle('Wishlist'),
   description: 'The Pashmore pieces you have saved.',

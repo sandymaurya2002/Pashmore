@@ -53,4 +53,42 @@ describe('admin-managed redirects', () => {
     const { findRedirect } = await load()
     expect(await findRedirect('/old-shawls')).toBeNull()
   })
+
+  it('does not share an in-flight redirects Promise across concurrent callers', async () => {
+    let releases = 0
+    let release!: () => void
+    const gate = new Promise<void>((resolve) => {
+      release = resolve
+    })
+
+    const { calls } = mockWorker({
+      'GET /content/redirects': async () => {
+        releases += 1
+        await gate
+        return success([{ fromPath: '/old', toPath: '/new', statusCode: 301 }])
+      },
+    })
+
+    const { findRedirect } = await load()
+    const first = findRedirect('/old')
+    const second = findRedirect('/old')
+    // Two independent loads may start before either resolves — never one shared Promise.
+    expect(calls.length).toBeGreaterThanOrEqual(1)
+    release()
+    await expect(Promise.all([first, second])).resolves.toEqual([
+      { toPath: '/new', statusCode: 301 },
+      { toPath: '/new', statusCode: 301 },
+    ])
+    expect(releases).toBeGreaterThanOrEqual(1)
+  })
+
+  it('reuses resolved redirect data after the first successful load', async () => {
+    const { calls } = mockWorker({
+      'GET /content/redirects': success([{ fromPath: '/a', toPath: '/b', statusCode: 301 }]),
+    })
+    const { findRedirect } = await load()
+    expect(await findRedirect('/a')).toEqual({ toPath: '/b', statusCode: 301 })
+    expect(await findRedirect('/a')).toEqual({ toPath: '/b', statusCode: 301 })
+    expect(calls).toHaveLength(1)
+  })
 })

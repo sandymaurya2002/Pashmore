@@ -5,6 +5,11 @@ import { workerFetch } from '@/server/worker'
  * Redirects managed in the admin dashboard (SEO & Redirects), applied by the
  * middleware. The list is held per server instance for a minute so page loads
  * never wait on the Worker; if it is unreachable, no redirects apply.
+ *
+ * Only fully resolved redirect maps are retained. Pending fetch Promises are
+ * never shared across Cloudflare Worker invocations — awaiting another
+ * request's in-flight load can throw "promise was created by a request that
+ * has since ended" / cross-request I/O errors.
  */
 
 export interface Redirect {
@@ -17,7 +22,6 @@ const RETRY_AFTER_FAILURE_MS = 15_000
 const STATUS_CODES = new Set([301, 302, 307, 308])
 
 let table: { redirects: Map<string, Redirect>; expiresAt: number } | null = null
-let loading: Promise<Map<string, Redirect>> | null = null
 
 /** Same rule as the Worker: no query or hash, no trailing slash, lower case. */
 export function normalizeRedirectPath(path: string): string {
@@ -61,13 +65,10 @@ async function load(): Promise<Map<string, Redirect>> {
 }
 
 export async function findRedirect(pathname: string): Promise<Redirect | null> {
-  let redirects = table && table.expiresAt > Date.now() ? table.redirects : null
-  if (!redirects) {
-    loading ??= load().finally(() => {
-      loading = null
-    })
-    redirects = await loading
-  }
+  const cached = table && table.expiresAt > Date.now() ? table.redirects : null
+  // Misses always load in this request. Concurrent first hits may each call the
+  // Worker once; that is preferred over sharing a pending Promise across isolates.
+  const redirects = cached ?? (await load())
   const from = normalizeRedirectPath(pathname)
   const match = redirects.get(from)
   if (!match) return null

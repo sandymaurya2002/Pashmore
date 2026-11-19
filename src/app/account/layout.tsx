@@ -3,6 +3,9 @@ import { PageTitleBanner } from '@/components/layout/page-title-banner'
 import { AccountNav } from '@/components/account/account-nav'
 import { site } from '@/lib/site'
 
+/** Account pages are session-specific; never share an ISR/OpenNext cache entry. */
+export const dynamic = 'force-dynamic'
+
 export const metadata: Metadata = {
   title: { default: 'My Account', template: `%s | Account | ${site.name}` },
   robots: { index: false, follow: false },

@@ -6,6 +6,9 @@ import { Logo } from '@/components/layout/logo'
 import { CheckoutFlow } from '@/components/checkout/checkout-flow'
 import { buildMetadata, pageTitle } from '@/lib/seo'
 
+/** Checkout is customer-specific; keep it off the OpenNext incremental cache. */
+export const dynamic = 'force-dynamic'
+
 export const metadata: Metadata = buildMetadata({
   title: pageTitle('Checkout'),
   description: 'Complete your Pashmore order.',

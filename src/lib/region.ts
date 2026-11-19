@@ -45,6 +45,18 @@ export function geoCountry(source: { get(name: string): string | null }): string
   return null
 }
 
+/**
+ * True when the edge already answered geolocation for this request — including
+ * Cloudflare's non-country codes (`XX`, `T1`). When set, the middleware must
+ * not call an external IP lookup; that burns Worker CPU and can time out.
+ */
+export function edgeGeolocated(source: { get(name: string): string | null }): boolean {
+  for (const name of GEO_HEADERS) {
+    if (source.get(name)?.trim()) return true
+  }
+  return false
+}
+
 export function currencyForCountry(country: string | null | undefined): Currency {
   const code = normalizeCountry(country)
   if (!code) return DEFAULT_CURRENCY

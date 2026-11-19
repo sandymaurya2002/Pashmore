@@ -128,6 +128,16 @@ describe('middleware', () => {
     expect(responseCookies(response).pm_geo.value).toBe('DE')
   })
 
+  it('never calls external geo lookup when Cloudflare already sent cf-ipcountry', async () => {
+    const fetchMock = vi.fn()
+    vi.stubGlobal('fetch', fetchMock)
+    const response = await middleware(
+      request('/about', { headers: { 'cf-ipcountry': 'XX', 'x-forwarded-for': '8.8.8.8' } }),
+    )
+    expect(fetchMock).not.toHaveBeenCalled()
+    expect(responseCookies(response).pm_geo).toBeUndefined()
+  })
+
   it('keeps a remembered country without rewriting the cookie', async () => {
     const response = await middleware(request('/about', { cookies: { pm_geo: 'GB' } }))
     expect(response.headers.getSetCookie()).toHaveLength(0)

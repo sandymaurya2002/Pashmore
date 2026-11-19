@@ -17,6 +17,8 @@ interface PageProps {
   searchParams: Promise<SearchParams>
 }
 
+export const dynamic = 'force-dynamic'
+
 /**
  * Internal search results are deliberately noindex: they are infinite, they
  * duplicate collection pages, and Google treats them as thin content. Customers

@@ -2,6 +2,9 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 
+/** Avoid a stale shared ISR shell for 404 after OpenNext cache expiry. */
+export const dynamic = 'force-dynamic'
+
 export const metadata: Metadata = {
   title: 'Page not found',
   robots: { index: false, follow: true },

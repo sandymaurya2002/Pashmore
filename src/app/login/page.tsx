@@ -3,6 +3,9 @@ import { AuthShell } from '@/components/account/auth-shell'
 import { AuthForm } from '@/components/account/auth-form'
 import { buildMetadata, pageTitle } from '@/lib/seo'
 
+/** Auth UI must never be served from a shared ISR/OpenNext cache entry. */
+export const dynamic = 'force-dynamic'
+
 export const metadata: Metadata = buildMetadata({
   title: pageTitle('Sign In'),
   description: 'Sign in to your Pashmore account.',

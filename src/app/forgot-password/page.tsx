@@ -3,6 +3,8 @@ import { AuthShell } from '@/components/account/auth-shell'
 import { AuthForm } from '@/components/account/auth-form'
 import { buildMetadata, pageTitle } from '@/lib/seo'
 
+export const dynamic = 'force-dynamic'
+
 export const metadata: Metadata = buildMetadata({
   title: pageTitle('Reset Password'),
   description: 'Reset your Pashmore account password.',

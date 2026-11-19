@@ -1,9 +1,13 @@
 node_modules
 .next
+.open-next
 out
 coverage
 *.tsbuildinfo
 .vercel
+.wrangler
+.dev.vars
 .env
 .env*.local
 .DS_Store
+cloudflare-env.d.ts

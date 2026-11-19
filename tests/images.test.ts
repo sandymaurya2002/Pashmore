@@ -92,6 +92,16 @@ describe('resolveMediaUrl production sources', () => {
     expect(resolveMediaUrl('https://evil.example/products/example.webp')).toBeNull()
   })
 
+  it('rewrites legacy www.pashmore.com media paths onto the R2 / API hosts', () => {
+    expect(resolveMediaUrl('https://www.pashmore.com/images/banners/shawls.webp')).toBe(
+      'https://media.pashmore.com/images/banners/shawls.webp',
+    )
+    expect(resolveMediaUrl('https://pashmore.com/media/products/example.webp')).toBe(
+      'https://api.pashmore.com/media/products/example.webp',
+    )
+    expect(resolveMediaUrl('https://www.pashmore.com/about')).toBeNull()
+  })
+
   it('still accepts a production R2 URL when the runtime env points elsewhere', () => {
     vi.stubEnv('CLOUDFLARE_R2_PUBLIC_URL', 'https://media.preview.example')
     vi.stubEnv('CLOUDFLARE_API_URL', 'https://api.preview.example')

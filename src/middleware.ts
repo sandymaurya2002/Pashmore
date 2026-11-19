@@ -1,7 +1,14 @@
 import { NextResponse, type NextRequest } from 'next/server'
 
 import { clientAddress, countryFromIp } from '@/lib/geo-ip'
-import { GEO_COOKIE, geoCountry, normalizeCountry, REGION_COOKIE, REGION_COOKIE_MAX_AGE } from '@/lib/region'
+import {
+  GEO_COOKIE,
+  edgeGeolocated,
+  geoCountry,
+  normalizeCountry,
+  REGION_COOKIE,
+  REGION_COOKIE_MAX_AGE,
+} from '@/lib/region'
 import {
   SESSION_COOKIE,
   REFRESH_COOKIE,
@@ -83,7 +90,11 @@ async function rememberCountry(request: NextRequest): Promise<string | null> {
   if (normalizeCountry(request.cookies.get(REGION_COOKIE)?.value)) return null
   const live = geoCountry(request.headers)
   const remembered = normalizeCountry(request.cookies.get(GEO_COOKIE)?.value)
-  const country = live ?? remembered ?? (isPrefetch(request) ? null : await countryFromIp(clientAddress(request.headers)))
+  // Cloudflare always sends cf-ipcountry (sometimes XX/T1). Trust that answer
+  // and skip the external geojs.io round-trip that previously inflated CPU.
+  const skipLookup = isPrefetch(request) || edgeGeolocated(request.headers)
+  const country =
+    live ?? remembered ?? (skipLookup ? null : await countryFromIp(clientAddress(request.headers)))
   if (!country || request.cookies.get(GEO_COOKIE)?.value === country) return null
   request.cookies.set(GEO_COOKIE, country)
   return country

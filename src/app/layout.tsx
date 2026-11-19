@@ -92,9 +92,13 @@ export const viewport: Viewport = {
   maximumScale: 5,
 }
 
-// Pages that render statically still pick up admin edits (announcements,
-// policies, SEO) within five minutes, even if the CMS was unreachable at build.
-export const revalidate = 300
+/**
+ * Do not set `revalidate` on the root layout. Time-based ISR under OpenNext
+ * requires a real revalidation queue; the previous `revalidate = 300` paired
+ * with the Dummy queue produced `Failed to revalidate stale page` once entries
+ * expired (including /login, /wishlist, /404). CMS freshness comes from the
+ * tagged Next Data Cache (`content`, 300s) plus on-demand `/api/revalidate`.
+ */
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const [{ announcement }, pageBanners, home] = await Promise.all([

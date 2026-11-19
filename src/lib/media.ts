@@ -14,6 +14,13 @@ import type { ProductImage } from '@/types'
 /** Must match `BUILTIN_REMOTE_PATTERNS` in next.config.mjs. */
 const BUILTIN_IMAGE_HOSTS = ['media.pashmore.com', 'api.pashmore.com']
 
+/**
+ * Older CMS/catalogue rows sometimes stored absolute URLs on the storefront
+ * host before R2 used media.pashmore.com. Rewrite media-shaped paths; leave
+ * ordinary page URLs rejected so the warning still surfaces for real mistakes.
+ */
+const LEGACY_SITE_HOSTS = new Set(['www.pashmore.com', 'pashmore.com'])
+
 export const PRODUCT_PLACEHOLDER = {
   url: '/images/placeholders/product.png',
   width: 800,
@@ -72,6 +79,20 @@ export function resolveMediaUrl(value: string | undefined | null): string | null
     const absolute = url.startsWith('//') ? `https:${url}` : url
     const host = hostOf(absolute)
     if (host && allowedImageHosts().includes(host)) return absolute
+    if (host && LEGACY_SITE_HOSTS.has(host)) {
+      try {
+        const parsed = new URL(absolute)
+        if (parsed.pathname.startsWith('/media/')) {
+          return resolveMediaUrl(`${parsed.pathname}${parsed.search}`)
+        }
+        if (parsed.pathname.startsWith('/images/')) {
+          const base = mediaBaseUrl() || 'https://media.pashmore.com'
+          return `${base}${parsed.pathname}${parsed.search}`
+        }
+      } catch {
+        /* fall through to the warning below */
+      }
+    }
     console.warn(`[media] Ignoring image from unconfigured host: ${host ?? absolute}`)
     return null
   }

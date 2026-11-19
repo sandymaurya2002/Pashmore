@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { DELETE as forgetRegion, GET as getRegion, POST as chooseRegion } from '@/app/api/region/route'
 import { countryFromIp, isPublicAddress } from '@/lib/geo-ip'
-import { countryCode, currencyForDestination, normalizeCountry } from '@/lib/region'
+import { countryCode, currencyForDestination, edgeGeolocated, normalizeCountry } from '@/lib/region'
 import { resolveRegion } from '@/server/region'
 import { WORKER_ORIGIN, mockWorker, request, responseCookies, success } from './helpers'
 
@@ -25,6 +25,9 @@ describe('region resolution', () => {
     // Cloudflare's "unknown" and "Tor" codes are not countries.
     expect(resolveRegion(null, new Headers({ 'cf-ipcountry': 'XX' })).source).toBe('default')
     expect(resolveRegion(null, new Headers({ 'cf-ipcountry': 'T1' })).source).toBe('default')
+    expect(edgeGeolocated(new Headers({ 'cf-ipcountry': 'XX' }))).toBe(true)
+    expect(edgeGeolocated(new Headers({ 'cf-ipcountry': 'T1' }))).toBe(true)
+    expect(edgeGeolocated(new Headers())).toBe(false)
   })
 
   it('prefers the shopper choice over geolocation', () => {

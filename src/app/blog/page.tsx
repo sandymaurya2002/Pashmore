@@ -27,7 +27,12 @@ export function generateMetadata(): Promise<Metadata> {
   return withSeoOverride('/blog', BASE_METADATA)
 }
 
-export const revalidate = 3600
+/**
+ * Journal content is local static data. Time-based ISR previously triggered
+ * OpenNext's Dummy queue (`Failed to revalidate stale page`) once the entry
+ * expired. Rebuild / on-demand revalidation is enough here.
+ */
+export const dynamic = 'force-static'
 
 const crumbs: Breadcrumb[] = [
   { name: 'Home', href: '/' },

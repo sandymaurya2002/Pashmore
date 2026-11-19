@@ -26,6 +26,10 @@ export const SORT_KEYS: SortKey[] = [
   'best-selling',
 ]
 
+/** Caps crawler-generated combinatorial filter URLs before they reach the Worker. */
+export const MAX_FILTER_VALUES = 12
+export const MAX_PAGE = 200
+
 /** Next passes `searchParams` as this shape. */
 export type SearchParams = Record<string, string | string[] | undefined>
 
@@ -36,6 +40,7 @@ function toArray(value: string | string[] | undefined): string[] {
     .flatMap((entry) => entry.split(','))
     .map((entry) => entry.trim())
     .filter(Boolean)
+    .slice(0, MAX_FILTER_VALUES)
 }
 
 export function parseFilters(searchParams: SearchParams): ProductFilters {
@@ -65,7 +70,8 @@ export function parseSort(searchParams: SearchParams): SortKey {
 export function parsePage(searchParams: SearchParams): number {
   const value = Array.isArray(searchParams.page) ? searchParams.page[0] : searchParams.page
   const page = Number(value)
-  return Number.isFinite(page) && page > 1 ? Math.floor(page) : 1
+  if (!Number.isFinite(page) || page < 2) return 1
+  return Math.min(Math.floor(page), MAX_PAGE)
 }
 
 export function countActiveFilters(filters: ProductFilters): number {
